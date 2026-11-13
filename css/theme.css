@@ -1,0 +1,57 @@
+/*
+	Design tokens. Every colour and font in the other stylesheets comes from here,
+	so the dark theme only has to redefine these variables.
+	Look: trail-signage condensed type, mist-grey paper, sandstone ochre accent, Elbe blue.
+*/
+:root {
+	--color-paper: #eef0eb;
+	--color-panel: #f8f9f6;
+	--color-ink: #1d2a23;
+	--color-muted: #5b6960;
+	--color-line: #d3d9d1;
+	--color-accent: #b0731c;
+	--color-elbe: #2e6d8e;
+	--color-map-background: #e6e9e1;
+
+	--color-viewpoint: #b0731c;
+	--color-rock-formation: #9c4a2f;
+	--color-castle: #575c93;
+	--color-leisure: #2b7c7f;
+
+	--color-ok: #2f7a4b;
+	--color-warning: #a8641a;
+	--color-user-location: #1a73e8;
+
+	--shadow-floating: 0 10px 30px rgba(29, 42, 35, .18), 0 2px 6px rgba(29, 42, 35, .10);
+
+	--font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+	--font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-paper: #121815;
+		--color-panel: #18201c;
+		--color-ink: #e4eae5;
+		--color-muted: #9aa89f;
+		--color-line: #2c3731;
+		--color-accent: #e0a24a;
+		--color-elbe: #6fb0d2;
+		--color-map-background: #1b2420;
+
+		/* Category colours are lifted in dark mode so white pin numbers stay readable and pins stand out on dark tiles. */
+		--color-viewpoint: #e0a24a;
+		--color-rock-formation: #e07f5c;
+		--color-castle: #9ca2e6;
+		--color-leisure: #5cc0c2;
+
+		--color-ok: #6cc28b;
+		--color-warning: #e6a35a;
+
+		--shadow-floating: 0 10px 30px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .35);
+
+		color-scheme: dark;
+	}
+}

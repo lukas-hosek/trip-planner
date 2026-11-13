@@ -1,0 +1,28 @@
+# Editor / tooling
+.vscode/
+.claude/
+.idea/
+*.code-workspace
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependencies and build output (in case tooling is added later)
+node_modules/
+dist/
+build/
+.cache/
+
+# Logs and env
+*.log
+npm-debug.log*
+.env
+.env.*
+
+# Archives (e.g. the original exported copy of this project)
+*.tar.gz
+*.zip

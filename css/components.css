@@ -1,0 +1,75 @@
+/* Small building blocks shared by the sidebar and the detail card. */
+
+.place-number {
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	flex: none;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+	color: #fff;
+}
+
+.filter-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 10px;
+	border: 1px solid var(--color-line);
+	border-radius: 999px;
+	background: transparent;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+.filter-chip:hover {
+	border-color: var(--color-muted);
+}
+
+.filter-chip[aria-pressed="true"] {
+	background: var(--color-ink);
+	border-color: var(--color-ink);
+	color: var(--color-panel);
+}
+
+.category-swatch {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+}
+
+/* Status tags: the colour carries meaning (ok / warning / info), the outline keeps them light. */
+.tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0 7px;
+	border: 1px solid currentColor;
+	border-radius: 4px;
+	font-size: 12px;
+	line-height: 1.4;
+	white-space: nowrap;
+}
+
+.tag--planned {
+	background: var(--color-ink);
+	border-color: var(--color-ink);
+	color: var(--color-panel);
+}
+
+.tag--ok {
+	color: var(--color-ok);
+}
+
+.tag--warning {
+	color: var(--color-warning);
+}
+
+.tag--info {
+	color: var(--color-muted);
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Saské Švýcarsko: 15 míst</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+		integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+	<link rel="stylesheet" href="css/theme.css">
+	<link rel="stylesheet" href="css/layout.css">
+	<link rel="stylesheet" href="css/components.css">
+	<link rel="stylesheet" href="css/sidebar.css">
+	<link rel="stylesheet" href="css/map.css">
+	<link rel="stylesheet" href="css/detail-card.css">
+</head>
+<body>
+	<div class="app">
+		<aside class="sidebar">
+			<header class="sidebar-header">
+				<p class="sidebar-intro">Klikni na špendlík nebo na místo v seznamu. Tmavě orámovaná místa jsou ve vašem víkendovém plánu.</p>
+				<div class="filter-chips" id="filter-chips" role="group" aria-label="Filtr kategorií"></div>
+			</header>
+			<ol class="place-list" id="place-list"></ol>
+			<footer class="sidebar-footer">Stav zavírek k 13. 11. 2026. Otevírací doby v zimě si ověřte před cestou.</footer>
+		</aside>
+
+		<main class="map-area">
+			<div id="map" aria-label="Mapa míst"></div>
+			<div class="map-notice" id="map-notice" hidden></div>
+			<div class="toast" id="toast" role="status" hidden></div>
+
+			<section class="detail-card" id="detail-card" aria-live="polite" hidden>
+				<div class="detail-card-scroll-area" id="detail-card-scroll-area">
+					<div class="detail-card-photo" id="detail-card-photo"></div>
+					<button class="detail-card-close" id="detail-card-close" type="button" aria-label="Zavřít detail">×</button>
+					<div class="detail-card-content" id="detail-card-content"></div>
+				</div>
+				<nav class="detail-card-pager" aria-label="Procházení míst">
+					<button id="detail-card-previous" type="button">← Předchozí</button>
+					<span id="detail-card-position"></span>
+					<button id="detail-card-next" type="button">Další →</button>
+				</nav>
+			</section>
+		</main>
+	</div>
+
+	<!-- Leaflet is loaded as a classic script so the modules can use the global `L`. -->
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+	<script type="module" src="js/main.js"></script>
+</body>
+</html>

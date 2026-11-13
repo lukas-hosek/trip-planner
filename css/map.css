@@ -1,0 +1,242 @@
+/* Map canvas, place pins, the offline fallback map, the user's location and map overlays. */
+
+#map {
+	position: absolute;
+	inset: 0;
+	background: var(--color-map-background);
+	font-family: var(--font-body);
+}
+
+/* Leaflet ships light-only controls; these overrides make them follow the theme. */
+.leaflet-container a {
+	color: var(--color-elbe);
+}
+
+.leaflet-control-attribution {
+	background: color-mix(in srgb, var(--color-panel) 85%, transparent) !important;
+	color: var(--color-muted);
+}
+
+.leaflet-bar a,
+.leaflet-control-layers {
+	background: var(--color-panel);
+	border-color: var(--color-line);
+	color: var(--color-ink);
+}
+
+/* ---------- place pins ---------- */
+
+.place-pin-anchor {
+	background: none;
+	border: 0;
+}
+
+.place-pin {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	border: 2px solid #fff;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 14px;
+	color: #fff;
+	transition: transform .15s ease;
+}
+
+.place-pin--planned {
+	border-color: var(--color-ink);
+	box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0, 0, 0, .35);
+}
+
+.place-pin--selected {
+	transform: scale(1.32);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 45%, transparent), 0 2px 8px rgba(0, 0, 0, .4);
+}
+
+/* Filtered-out pins stay faintly visible so the user keeps a sense of where everything is. */
+.place-pin--dimmed {
+	opacity: .28;
+}
+
+/* ---------- offline fallback map ---------- */
+
+.offline-river {
+	stroke: var(--color-elbe);
+}
+
+.offline-border {
+	stroke: var(--color-muted);
+}
+
+.offline-town-label {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--color-muted);
+	white-space: nowrap;
+}
+
+.offline-town-label::before {
+	content: "";
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	margin-right: 5px;
+	border-radius: 50%;
+	background: var(--color-muted);
+	vertical-align: 1px;
+}
+
+.offline-country-label {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 13px;
+	letter-spacing: .3em;
+	color: var(--color-muted);
+	opacity: .7;
+	white-space: nowrap;
+}
+
+.offline-river-label {
+	font-size: 13px;
+	font-style: italic;
+	letter-spacing: .1em;
+	color: var(--color-elbe);
+	white-space: nowrap;
+}
+
+/* ---------- user location ---------- */
+
+.location-button {
+	width: 34px;
+	height: 34px;
+	display: grid;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	background: var(--color-panel);
+	color: var(--color-ink);
+	cursor: pointer;
+}
+
+.location-button svg {
+	width: 20px;
+	height: 20px;
+}
+
+.location-button[aria-pressed="true"] {
+	color: var(--color-user-location);
+}
+
+.location-button--searching svg {
+	animation: spin 1.2s linear infinite;
+}
+
+.user-location-marker {
+	position: relative;
+}
+
+.user-location-dot {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	border: 3px solid #fff;
+	background: var(--color-user-location);
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, .25), 0 1px 4px rgba(0, 0, 0, .4);
+}
+
+/* Grey dot = last known position is old, so the user doesn't trust it blindly. */
+.user-location-dot--stale {
+	background: #8a96a3;
+}
+
+.user-location-pulse {
+	position: absolute;
+	inset: -12px;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--color-user-location) 25%, transparent);
+	animation: pulse 2s ease-out infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes pulse {
+	from {
+		transform: scale(.4);
+		opacity: 1;
+	}
+	to {
+		transform: scale(1.4);
+		opacity: 0;
+	}
+}
+
+/* ---------- overlays ---------- */
+
+/* z-index values sit above Leaflet's own panes and controls (which go up to 1000). */
+.map-notice {
+	position: absolute;
+	left: 54px;
+	top: 10px;
+	z-index: 1050;
+	max-width: min(420px, calc(100% - 80px));
+	padding: 8px 12px;
+	border: 1px solid var(--color-line);
+	border-left: 3px solid var(--color-accent);
+	border-radius: 6px;
+	background: var(--color-panel);
+	box-shadow: var(--shadow-floating);
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+.toast {
+	position: absolute;
+	left: 50%;
+	bottom: 28px;
+	z-index: 1200;
+	transform: translateX(-50%);
+	max-width: min(440px, calc(100% - 32px));
+	padding: 9px 14px;
+	border-radius: 8px;
+	background: var(--color-ink);
+	color: var(--color-panel);
+	box-shadow: var(--shadow-floating);
+	font-size: 13.5px;
+	line-height: 1.4;
+}
+
+.map-notice[hidden],
+.toast[hidden] {
+	display: none;
+}
+
+@media (max-width: 760px) {
+	.map-notice {
+		font-size: 12px;
+	}
+
+	/* The detail card covers the bottom of a phone screen, so messages go to the top. */
+	.toast {
+		position: fixed;
+		top: 10px;
+		bottom: auto;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.place-pin {
+		transition: none;
+	}
+
+	.user-location-pulse,
+	.location-button--searching svg {
+		animation: none;
+	}
+}
