@@ -4,6 +4,9 @@
 	- App files (same origin): network first, so an online visit always gets the latest version
 	  and local edits show up on reload; the cache answers when offline or when the network is too slow.
 	- Map tiles, photos, Leaflet and fonts: cache first; they don't change.
+	  Tiles and photos seen while browsing go to shared caches, which are trimmed when they grow too large.
+	  "Stáhnout pro offline" (js/services/offline-download.js) keeps its files in one cache per plan;
+	  those are only read here, never trimmed, and the app deletes them together with the plan.
 	- Photo lookups (Wikimedia Commons and Wikipedia APIs): network first, cache as fallback.
 
 	APP_SHELL_FILES must list every file the app loads. Bump APP_SHELL_VERSION whenever the list changes.
@@ -17,6 +20,8 @@ const TILE_CACHE = "map-tiles";
 const PHOTO_CACHE = "photos";
 const PHOTO_LOOKUP_CACHE = "photo-lookups";
 const CURRENT_CACHES = new Set([APP_SHELL_CACHE, LIBRARY_CACHE, TILE_CACHE, PHOTO_CACHE, PHOTO_LOOKUP_CACHE]);
+// Caches written by js/services/offline-download.js, one per downloaded plan; keep the prefix in sync with it.
+const DOWNLOADED_PLAN_CACHE_PREFIX = "downloaded-plan:";
 
 const APP_SHELL_FILES = [
 	"./",
@@ -100,7 +105,8 @@ self.addEventListener("install", installEvent => {
 self.addEventListener("activate", activateEvent => {
 	activateEvent.waitUntil((async () => {
 		// Older app versions and caches this version no longer uses (e.g. renamed ones) are removed.
-		const outdatedCaches = (await caches.keys()).filter(name => !CURRENT_CACHES.has(name));
+		const outdatedCaches = (await caches.keys())
+			.filter(name => !CURRENT_CACHES.has(name) && !name.startsWith(DOWNLOADED_PLAN_CACHE_PREFIX));
 		await Promise.all(outdatedCaches.map(name => caches.delete(name)));
 		await self.clients.claim();
 	})());
@@ -166,8 +172,8 @@ async function networkFirst(fetchEvent, cacheName, { isNavigation = false } = {}
 
 async function cacheFirst(fetchEvent, cacheName, maximumEntries = Infinity) {
 	const request = fetchEvent.request;
-	const cache = await caches.open(cacheName);
-	const cachedResponse = await cache.match(request, { ignoreVary: true });
+	// Searches all caches, so tiles and photos downloaded for a plan are found in that plan's cache.
+	const cachedResponse = await caches.match(request, { ignoreVary: true });
 	// An opaque (no-cors) copy can't answer a CORS request; fetch a proper one instead.
 	const isUsable = cachedResponse && !(cachedResponse.type === "opaque" && request.mode === "cors");
 	if (isUsable) {
@@ -176,7 +182,12 @@ async function cacheFirst(fetchEvent, cacheName, maximumEntries = Infinity) {
 
 	const networkResponse = await fetch(request);
 	if (networkResponse.ok || networkResponse.type === "opaque") {
-		fetchEvent.waitUntil(cache.put(request, networkResponse.clone()).then(() => trimCacheNowAndThen(cacheName, maximumEntries)));
+		const responseCopy = networkResponse.clone();
+		fetchEvent.waitUntil((async () => {
+			const cache = await caches.open(cacheName);
+			await cache.put(request, responseCopy);
+			await trimCacheNowAndThen(cacheName, maximumEntries);
+		})());
 	}
 	return networkResponse;
 }
@@ -186,9 +197,11 @@ async function trimCacheNowAndThen(cacheName, maximumEntries) {
 	if (!Number.isFinite(maximumEntries)) {
 		return;
 	}
-	const writeCount = (writeCountsByCacheName.get(cacheName) ?? 0) + 1;
-	writeCountsByCacheName.set(cacheName, writeCount);
-	if (writeCount % WRITES_BETWEEN_CACHE_TRIMS !== 0) {
+	// The browser stops an idle worker and the counts start again from zero, so the first write after
+	// every start trims too; otherwise a cache that fills slowly would never be trimmed.
+	const earlierWriteCount = writeCountsByCacheName.get(cacheName) ?? 0;
+	writeCountsByCacheName.set(cacheName, earlierWriteCount + 1);
+	if (earlierWriteCount % WRITES_BETWEEN_CACHE_TRIMS !== 0) {
 		return;
 	}
 	const cache = await caches.open(cacheName);

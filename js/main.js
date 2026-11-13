@@ -40,7 +40,7 @@ async function startApp() {
 	const map = createMap("map", placesBounds);
 	addBaseLayers(map);
 	addPlaceMarkers(map);
-	addUserLocationControl(map, placesBounds);
+	addUserLocationControl(map);
 
 	// The detail card must subscribe before map focusing, so the card is visible when the map measures it.
 	const detailCardElement = initDetailCard();
@@ -83,7 +83,14 @@ async function choosePlanToOpen() {
 	try {
 		const rawPlan = await decodePlanFragment(planLink);
 		const plan = normalizePlan(rawPlan);
-		const { key, wasReplaced } = savePlan(rawPlan, plan);
+		const { key, wasReplaced, wasSaved } = savePlan(rawPlan, plan);
+		if (!wasSaved) {
+			return {
+				plan,
+				startupMessage: `Plán „${plan.name}“ se nepodařilo uložit do prohlížeče. Zůstane otevřený jen do zavření stránky.`,
+				planLinkForInstalledApp: null,
+			};
+		}
 		setLastOpenedPlanKey(key);
 		return {
 			plan,
@@ -119,6 +126,7 @@ async function openStoredPlanOrDemo() {
 	}
 	const rawDemoPlan = await response.json();
 	const plan = normalizePlan(rawDemoPlan);
+	// If the demo can't be stored, nothing is lost: it is fetched again on the next visit.
 	const { key } = savePlan(rawDemoPlan, plan);
 	setLastOpenedPlanKey(key);
 	return plan;

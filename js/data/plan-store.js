@@ -3,15 +3,14 @@
 	so sharing or exporting a plan later reproduces what the AI produced.
 	A plan's key is its normalised name: importing a plan with the same name replaces the old one.
 
-	If storage is unavailable (private mode, blocked site data), plans live in memory for this visit only.
+	If storage is unavailable or full (blocked site data, quota), nothing is stored: savePlan() says so,
+	and the callers tell the user.
 */
 
 import { getPlanKey } from "./plan-format.js";
 
 const PLANS_STORAGE_KEY = "tripPlanner.plans";
 const LAST_OPENED_PLAN_STORAGE_KEY = "tripPlanner.lastOpenedPlanKey";
-
-const memoryStorage = new Map();
 
 /**
  * @returns stored plans, most recently saved first: [{ key, name, placeCount, savedAt, rawPlan }]
@@ -33,12 +32,14 @@ export function getStoredPlan(planKey) {
 /**
  * @param rawPlan         the plan as imported
  * @param normalizedPlan  the same plan after normalizePlan(), for the name and the place count
- * @returns {{ key, wasReplaced }}  wasReplaced is true when a plan with the same name was already stored
+ * @returns {{ key, wasReplaced, wasSaved }}  wasReplaced is true when a plan with the same name was already stored;
+ *   wasSaved is false when the browser refused to store the plan
  */
 export function savePlan(rawPlan, normalizedPlan) {
 	const key = getPlanKey(normalizedPlan.name);
-	const otherPlans = listStoredPlans().filter(storedPlan => storedPlan.key !== key);
-	const wasReplaced = otherPlans.length < listStoredPlans().length;
+	const storedPlans = listStoredPlans();
+	const otherPlans = storedPlans.filter(storedPlan => storedPlan.key !== key);
+	const wasReplaced = otherPlans.length < storedPlans.length;
 	const storedPlan = {
 		key,
 		name: normalizedPlan.name,
@@ -46,9 +47,11 @@ export function savePlan(rawPlan, normalizedPlan) {
 		savedAt: new Date().toISOString(),
 		rawPlan,
 	};
-	writeJson(PLANS_STORAGE_KEY, [storedPlan, ...otherPlans]);
-	requestPersistentStorage();
-	return { key, wasReplaced };
+	const wasSaved = writeJson(PLANS_STORAGE_KEY, [storedPlan, ...otherPlans]);
+	if (wasSaved) {
+		requestPersistentStorage();
+	}
+	return { key, wasReplaced, wasSaved };
 }
 
 export function deleteStoredPlan(planKey) {
@@ -80,23 +83,25 @@ function readJson(storageKey) {
 }
 
 function writeJson(storageKey, value) {
-	writeItem(storageKey, JSON.stringify(value));
+	return writeItem(storageKey, JSON.stringify(value));
 }
 
 function readItem(storageKey) {
 	try {
 		return localStorage.getItem(storageKey);
 	} catch {
-		return memoryStorage.get(storageKey) ?? null;
+		return null;
 	}
 }
 
+/** @returns whether the value was stored */
 function writeItem(storageKey, value) {
 	try {
 		localStorage.setItem(storageKey, value);
+		return true;
 	} catch (error) {
-		console.warn("Plans could not be saved to localStorage, keeping them in memory:", error);
-		memoryStorage.set(storageKey, value);
+		console.warn(`"${storageKey}" could not be saved to localStorage:`, error);
+		return false;
 	}
 }
 
@@ -104,6 +109,6 @@ function removeItem(storageKey) {
 	try {
 		localStorage.removeItem(storageKey);
 	} catch {
-		memoryStorage.delete(storageKey);
+		// Storage that can't be reached has nothing to remove.
 	}
 }

@@ -27,6 +27,8 @@ PLAN_FORMAT_NAME = "trip-plan"
 SUPPORTED_VERSION = 1
 # Longer links still work in browsers, but some chat apps and messengers cut them.
 LINK_LENGTH_WARNING_THRESHOLD = 30_000
+# The app refuses to unpack a link into more than this (MAXIMUM_PLAN_JSON_BYTES in js/data/plan-link.js).
+MAXIMUM_PLAN_JSON_BYTES = 1_000_000
 # A place this far from the middle of all the others is probably a typo (or swapped lat/lng).
 OUTLIER_DISTANCE_IN_KILOMETERS = 300
 
@@ -90,7 +92,8 @@ def validate_plan(plan):
 				warnings.append(f'{label}: "id" should use only lowercase letters, digits and hyphens.')
 			elif place_id in seen_place_ids:
 				warnings.append(f'{label}: "id" "{place_id}" is used twice; the app will rename one.')
-			seen_place_ids.add(place_id)
+			else:
+				seen_place_ids.add(place_id)
 
 		category = place.get("category")
 		if not is_non_empty_string(category):
@@ -103,6 +106,9 @@ def validate_plan(plan):
 			warnings.append(f'{label}: "tags" should be a list of tag ids.')
 			place_tags = []
 		for tag_id in place_tags:
+			if not isinstance(tag_id, str):
+				warnings.append(f'{label}: "tags" must contain tag ids (strings), not {json.dumps(tag_id, ensure_ascii=False)}.')
+				continue
 			if tag_id not in tag_ids:
 				warnings.append(f'{label}: tag "{tag_id}" is not defined in "tags"; it will show its id as the label.')
 			used_tag_ids.add(tag_id)
@@ -198,10 +204,14 @@ def distance_in_kilometers(latitude1, longitude1, latitude2, longitude2):
 	return 2 * earth_radius_in_kilometers * math.asin(math.sqrt(haversine))
 
 
-def encode_plan(plan):
-	plan_json = json.dumps(plan, ensure_ascii=False, separators=(",", ":"))
+def minify_plan(plan):
+	"""Returns the plan as the UTF-8 JSON bytes that travel in the link."""
+	return json.dumps(plan, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+
+def encode_plan(plan_json_bytes):
 	compressor = zlib.compressobj(level=9, wbits=-15)  # negative wbits = raw DEFLATE, no zlib header
-	compressed = compressor.compress(plan_json.encode("utf-8")) + compressor.flush()
+	compressed = compressor.compress(plan_json_bytes) + compressor.flush()
 	return base64.urlsafe_b64encode(compressed).decode("ascii").rstrip("=")
 
 
@@ -233,6 +243,9 @@ def main():
 		return 1
 
 	errors, warnings = validate_plan(plan)
+	plan_json_bytes = minify_plan(plan)
+	if len(plan_json_bytes) > MAXIMUM_PLAN_JSON_BYTES:
+		errors.append(f"The plan is {len(plan_json_bytes):,} bytes of JSON; the app accepts at most {MAXIMUM_PLAN_JSON_BYTES:,} in a link.")
 	for warning in warnings:
 		print(f"WARNING: {warning}")
 	if errors:
@@ -241,7 +254,7 @@ def main():
 		print("No link was built. Fix the errors and run again.", file=sys.stderr)
 		return 1
 
-	link = f"{arguments.base_url.split('#')[0]}#plan={encode_plan(plan)}"
+	link = f"{arguments.base_url.split('#')[0]}#plan={encode_plan(plan_json_bytes)}"
 	place_count = len(plan["places"])
 	print(f"OK: \"{plan['name']}\", {place_count} places, link length {len(link)} characters.")
 	if len(link) > LINK_LENGTH_WARNING_THRESHOLD:

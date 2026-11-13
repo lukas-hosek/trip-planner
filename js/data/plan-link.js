@@ -9,6 +9,9 @@ import { PlanFormatError } from "./plan-format.js";
 
 const PLAN_FRAGMENT_PATTERN = /[#&]plan=([A-Za-z0-9_-]+)/;
 const COMPRESSION_FORMAT = "deflate-raw";
+// A plan is tens of kilobytes. The limit stops a crafted link from unpacking into gigabytes;
+// build_link.py refuses to build a link for a larger plan.
+const MAXIMUM_PLAN_JSON_BYTES = 1_000_000;
 
 export function hasPlanInFragment(fragment) {
 	return PLAN_FRAGMENT_PATTERN.test(fragment);
@@ -23,7 +26,10 @@ export async function decodePlanFragment(fragment) {
 	let planJson;
 	try {
 		planJson = await decompressToText(base64UrlToBytes(encodedPlan));
-	} catch {
+	} catch (error) {
+		if (error instanceof PlanFormatError) {
+			throw error;
+		}
 		throw new PlanFormatError("Odkaz na plán je poškozený nebo neúplný. Zkopírujte ho prosím celý znovu.");
 	}
 	return parsePlanJson(planJson);
@@ -71,7 +77,22 @@ async function compressText(text) {
 
 async function decompressToText(bytes) {
 	const decompressedStream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream(COMPRESSION_FORMAT));
-	return new Response(decompressedStream).text();
+	const reader = decompressedStream.getReader();
+	const chunks = [];
+	let byteCount = 0;
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) {
+			break;
+		}
+		byteCount += value.length;
+		if (byteCount > MAXIMUM_PLAN_JSON_BYTES) {
+			await reader.cancel();
+			throw new PlanFormatError("Plán v odkazu je příliš velký.");
+		}
+		chunks.push(value);
+	}
+	return new Blob(chunks).text();
 }
 
 function base64UrlToBytes(base64Url) {

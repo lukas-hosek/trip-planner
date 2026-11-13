@@ -20,6 +20,8 @@ const ROCK_SILHOUETTE_SVG = `
 		<path d="M0 250v-40l40-6 30 10 50-12 40 14 60-10 50 12 60-8 70 10v30z" fill="rgba(0,0,0,.18)"/>
 	</svg>`;
 
+const PHOTO_FAILED_MESSAGE = "Fotku se nepodařilo načíst.";
+
 let elements = null;
 
 export function initDetailCard() {
@@ -37,7 +39,8 @@ export function initDetailCard() {
 	elements.closeButton.addEventListener("click", clearSelectedPlace);
 	elements.previousButton.addEventListener("click", () => selectNeighbourPlace(-1));
 	elements.nextButton.addEventListener("click", () => selectNeighbourPlace(+1));
-	document.addEventListener("keydown", handleKeyboardShortcuts);
+	// In the capture phase, so the shortcuts are handled before Leaflet's own keyboard handler sees the key.
+	document.addEventListener("keydown", handleKeyboardShortcuts, { capture: true });
 
 	subscribe(STATE_EVENTS.selectedPlaceChanged, ({ place }) => {
 		if (place) {
@@ -111,6 +114,14 @@ function renderPhoto(place) {
 		elements.photo.innerHTML = `
 			<img src="${escapeHtml(photo.imageUrl)}" alt="${escapeHtml(photo.subject || place.name)}" crossorigin="anonymous">
 			<a class="photo-credit" href="${escapeHtml(photo.sourcePageUrl)}" target="_blank" rel="noopener">${escapeHtml(buildPhotoCredit(photo))}</a>`;
+		// Offline, the photo is known from an earlier visit but the image itself may never have been stored.
+		const imageElement = elements.photo.querySelector("img");
+		imageElement.addEventListener("error", () => {
+			// A late error from a photo that has been replaced meanwhile must not overwrite the current one.
+			if (imageElement.isConnected) {
+				renderPhotoPlaceholder(place, PHOTO_FAILED_MESSAGE);
+			}
+		});
 		return;
 	}
 
@@ -119,8 +130,12 @@ function renderPhoto(place) {
 	if (hasPhotoSource) {
 		placeholderMessage = appState.photoLoadingStatus === PHOTO_LOADING_STATUS.loading
 			? "Načítám fotku…"
-			: "Fotku se nepodařilo načíst.";
+			: PHOTO_FAILED_MESSAGE;
 	}
+	renderPhotoPlaceholder(place, placeholderMessage);
+}
+
+function renderPhotoPlaceholder(place, placeholderMessage) {
 	elements.photo.innerHTML = `
 		<div class="photo-placeholder" style="${planColorStyle(place.category.color)}">
 			${ROCK_SILHOUETTE_SVG}
@@ -168,10 +183,10 @@ function handleKeyboardShortcuts(keyboardEvent) {
 	}
 	if (keyboardEvent.key === "Escape") {
 		clearSelectedPlace();
-	} else if (keyboardEvent.key === "ArrowRight") {
-		selectNeighbourPlace(+1);
-	} else if (keyboardEvent.key === "ArrowLeft") {
-		selectNeighbourPlace(-1);
+	} else if (keyboardEvent.key === "ArrowRight" || keyboardEvent.key === "ArrowLeft") {
+		// A focused map (e.g. after a click on a pin) would also pan on these keys; with a card open they only page through the places.
+		keyboardEvent.stopPropagation();
+		selectNeighbourPlace(keyboardEvent.key === "ArrowRight" ? +1 : -1);
 	}
 }
 

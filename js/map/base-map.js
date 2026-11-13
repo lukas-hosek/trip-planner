@@ -29,6 +29,12 @@ export const BASE_LAYER_DEFINITIONS = [
 	},
 ];
 
+/**
+ * "Stáhnout pro offline" saves the default layer up to this zoom. While offline, the layer stretches
+ * these tiles for deeper zooms instead of showing blank ones.
+ */
+export const HIGHEST_DOWNLOADED_ZOOM = 16;
+
 // Below this span (in degrees, about 2 km) the map would zoom in absurdly far on a one-place plan.
 const MINIMUM_BOUNDS_SPAN_IN_DEGREES = 0.02;
 // Zoom 9 shows a whole region; plans spread wider than that may zoom out further, just enough to see all places.
@@ -70,8 +76,18 @@ export function addBaseLayers(map) {
 		// (opaque responses count as megabytes each against the storage quota).
 		tileLayersByName[layerDefinition.name] = L.tileLayer(layerDefinition.urlTemplate, { ...layerDefinition.options, crossOrigin: true });
 	}
-	tileLayersByName[BASE_LAYER_DEFINITIONS[0].name].addTo(map);
+	const defaultLayer = tileLayersByName[BASE_LAYER_DEFINITIONS[0].name];
+	// Leaflet reads maxNativeZoom every time it lays tiles out, so changing the option and redrawing is enough.
+	function stretchDownloadedTilesWhileOffline() {
+		defaultLayer.options.maxNativeZoom = navigator.onLine ? undefined : HIGHEST_DOWNLOADED_ZOOM;
+	}
+	stretchDownloadedTilesWhileOffline();
+	defaultLayer.addTo(map);
 	L.control.layers(tileLayersByName, null, { position: "topright" }).addTo(map);
+	window.addEventListener("offline", () => {
+		stretchDownloadedTilesWhileOffline();
+		defaultLayer.redraw();
+	});
 
 	let failedTileCount = 0;
 	for (const tileLayer of Object.values(tileLayersByName)) {
@@ -87,6 +103,7 @@ export function addBaseLayers(map) {
 	window.addEventListener("online", () => {
 		failedTileCount = 0;
 		hideMapNotice();
+		stretchDownloadedTilesWhileOffline();
 		Object.values(tileLayersByName).filter(tileLayer => map.hasLayer(tileLayer)).forEach(tileLayer => tileLayer.redraw());
 	});
 }

@@ -3,6 +3,7 @@
 	"short_name": "TripMap",
 	"description": "Mapa míst z plánů výletů, i offline.",
 	"lang": "cs",
+	"id": "/trip-planner/",
 	"start_url": "./",
 	"scope": "./",
 	"display": "standalone",

@@ -17,7 +17,8 @@ Plans are made with Claude. Plan a trip in a chat, then ask Claude to export it 
 - **Installing:** use your browser's "Add to Home screen" / "Install app". On an iPhone, the home-screen app keeps its own storage, separate from Safari. Bring plans into it with **Moje plány → Importovat plán → Vložit ze schránky**.
 - **Offline:**
   - The app, your plans, every map tile you've viewed and every photo you've opened stay available offline.
-  - **Stáhnout pro offline** also downloads the map around every place (zoom 9–15) and all photos of the plan. That's a few hundred tiles.
+  - **Stáhnout pro offline** also downloads the map around every place (zoom 9–16) and all photos of the plan. That's about 50 tiles per place. The download stays until you delete the plan; tiles and photos you only viewed are dropped once their caches grow too large.
+  - Offline, zooming in past level 16 stretches the downloaded map instead of showing blank tiles.
 
 ## Creating plans with Claude
 

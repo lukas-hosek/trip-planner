@@ -12,7 +12,8 @@ export function readPlaceFromUrlHash() {
 	if (hasPlanInFragment(window.location.hash)) {
 		return null;
 	}
-	const placeId = decodeURIComponent(window.location.hash.slice(1));
+	// Place ids are slugs (a–z, 0–9, hyphens), so the hash needs no decoding.
+	const placeId = window.location.hash.slice(1);
 	return placeId ? findPlaceById(placeId) : null;
 }
 

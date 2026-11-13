@@ -9,7 +9,7 @@ import { getActivePlan, getPlaces } from "../data/active-plan.js";
 import { getPlanKey, normalizePlan, PlanFormatError, slugify } from "../data/plan-format.js";
 import { encodePlanLink, extractRawPlanFromText } from "../data/plan-link.js";
 import { deleteStoredPlan, getStoredPlan, listStoredPlans, savePlan, setLastOpenedPlanKey } from "../data/plan-store.js";
-import { downloadPlanForOffline } from "../services/offline-download.js";
+import { deletePlanDownload, downloadPlanForOffline } from "../services/offline-download.js";
 import { loadPlacePhotos } from "../services/place-photos.js";
 import { escapeHtml } from "../utils/html.js";
 import { isPhoneLayout } from "../utils/media-queries.js";
@@ -121,7 +121,7 @@ function openStoredPlan(planKey) {
 	reloadApp();
 }
 
-function handleDeleteClick(deleteButton) {
+async function handleDeleteClick(deleteButton) {
 	if (!deleteButton.classList.contains("stored-plan-delete--confirming")) {
 		resetDeleteConfirmations();
 		deleteButton.classList.add("stored-plan-delete--confirming");
@@ -134,6 +134,8 @@ function handleDeleteClick(deleteButton) {
 	const planKey = deleteButton.dataset.deletePlanKey;
 	const planName = getStoredPlan(planKey)?.name ?? "";
 	deleteStoredPlan(planKey);
+	// Waits for the plan's offline map to go too, so a reload right after can't cut the deletion short.
+	await deletePlanDownload(planKey);
 	// Deleting the open plan leaves nothing to show; the reload opens another one (or the demo when none is left).
 	if (planKey === getPlanKey(getActivePlan().name)) {
 		showToastAfterReload(`Plán „${planName}“ je smazaný.`);
@@ -213,7 +215,8 @@ async function downloadForOffline() {
 		// Looking the photos up again goes through the service worker, which keeps the answer for offline use
 		// (on the very first visit the original lookup ran before the service worker was in control).
 		await loadPlacePhotos(getPlaces());
-		const { totalCount, failedCount } = await downloadPlanForOffline(getPlaces(), placesBounds, ({ completedCount, totalCount }) => {
+		const planKey = getPlanKey(getActivePlan().name);
+		const { totalCount, failedCount } = await downloadPlanForOffline(planKey, getPlaces(), placesBounds, ({ completedCount, totalCount }) => {
 			showActionsStatus(`Stahuji mapu a fotky… ${completedCount} / ${totalCount}`);
 		});
 		showActionsStatus(failedCount === 0
@@ -231,18 +234,16 @@ function showActionsStatus(message) {
 // ---------- import ----------
 
 async function pasteFromClipboard() {
+	let clipboardText;
 	try {
-		const clipboardText = await navigator.clipboard.readText();
-		elements.importText.value = clipboardText;
-		await importPlanFromText(clipboardText);
-	} catch (error) {
-		if (error instanceof PlanFormatError) {
-			showImportError(error.message);
-			return;
-		}
+		clipboardText = await navigator.clipboard.readText();
+	} catch {
 		showImportError("Schránku se nepodařilo přečíst. Vložte text do pole ručně.");
 		elements.importText.focus();
+		return;
 	}
+	elements.importText.value = clipboardText;
+	await importPlanFromText(clipboardText);
 }
 
 async function importPlanFromChosenFile() {
@@ -262,7 +263,12 @@ async function importPlanFromText(text) {
 	try {
 		const rawPlan = await extractRawPlanFromText(text);
 		const normalizedPlan = normalizePlan(rawPlan);
-		const { key, wasReplaced } = savePlan(rawPlan, normalizedPlan);
+		const { key, wasReplaced, wasSaved } = savePlan(rawPlan, normalizedPlan);
+		if (!wasSaved) {
+			// Opening the plan means reloading the app, and an unsaved plan wouldn't survive that.
+			showImportError("Plán se nepodařilo uložit do prohlížeče. Smažte starší plány nebo povolte stránce ukládání dat.");
+			return;
+		}
 		setLastOpenedPlanKey(key);
 		showToastAfterReload(wasReplaced
 			? `Plán „${normalizedPlan.name}“ je aktualizovaný.`

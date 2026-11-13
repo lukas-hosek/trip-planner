@@ -17,7 +17,7 @@ export function enableFocusOnSelectedPlace(map, detailCardElement) {
 	});
 }
 
-export function focusMapOnPlace(map, place, detailCardElement) {
+function focusMapOnPlace(map, place, detailCardElement) {
 	const targetZoom = Math.max(map.getZoom(), MINIMUM_ZOOM_WHEN_FOCUSING);
 	const offsetInPixels = getOffsetForAreaCoveredByCard(map, detailCardElement);
 

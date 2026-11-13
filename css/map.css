@@ -64,21 +64,30 @@
 
 /* ---------- user location ---------- */
 
+/* Same size and corners as Leaflet's zoom buttons (`.leaflet-bar a`), including the
+   larger touch variant, so the two controls line up. */
 .location-button {
-	width: 34px;
-	height: 34px;
+	width: 26px;
+	height: 26px;
 	display: grid;
 	place-items: center;
 	padding: 0;
 	border: 0;
+	border-radius: 4px;
 	background: var(--color-panel);
 	color: var(--color-ink);
 	cursor: pointer;
 }
 
+.leaflet-touch .location-button {
+	width: 30px;
+	height: 30px;
+	border-radius: 2px;
+}
+
 .location-button svg {
-	width: 20px;
-	height: 20px;
+	width: 18px;
+	height: 18px;
 }
 
 .location-button[aria-pressed="true"] {

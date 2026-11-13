@@ -4,7 +4,7 @@
 */
 
 export const FILTER_ALL_PLACES = "all";
-export const FILTER_PLANNED_PLACES = "planned";
+const FILTER_PLANNED_PLACES = "planned";
 // Categories and tags may share ids ("castle" could be both), so filter ids say which one they mean.
 const CATEGORY_FILTER_PREFIX = "category:";
 const TAG_FILTER_PREFIX = "tag:";
