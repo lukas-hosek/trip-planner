@@ -22,7 +22,7 @@ Plans are made with Claude. Plan a trip in a chat, then ask Claude to export it 
 
 ## Creating plans with Claude
 
-1. Zip the skill folder, so that `trip-map/` is the top folder inside the zip:
+1. Download the skill from [lukas-hosek.github.io/trip-planner/trip-map-skill.zip](https://lukas-hosek.github.io/trip-planner/trip-map-skill.zip) (the help in **Moje plány** links to it too). Or zip the skill folder yourself, so that `trip-map/` is the top folder inside the zip:
 
    ```sh
    python -m zipfile -c trip-map-skill.zip claude-skill/trip-map
@@ -61,7 +61,7 @@ The service worker serves app files network-first, so edits show up on a normal 
 
 ## Deploying
 
-GitHub Pages: in the repository's **Settings → Pages**, choose **Deploy from a branch**, branch `main`, folder `/ (root)`. All paths are relative, so the app works under `/trip-planner/`.
+GitHub Pages: in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**. Every push to `main` runs `.github/workflows/pages.yml`, which zips the skill into `trip-map-skill.zip` and deploys the repository root together with it. All paths are relative, so the app works under `/trip-planner/`.
 
 ## Structure
 
