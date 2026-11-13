@@ -148,7 +148,7 @@ export function addUserLocationControl(map, placesBounds) {
 		if (isNearThePlaces) {
 			showToast(`Poloha zjištěna, přesnost asi ${Math.round(position.accuracyInMeters)} m.`, 3500);
 		} else {
-			showToast("Jste mimo oblast mapy. Ukážu vaši polohu, ale místa jsou kolem Bad Schandau.");
+			showToast("Jste daleko od míst v plánu. Polohu ukážu, ale místa jsou jinde.");
 		}
 	}
 

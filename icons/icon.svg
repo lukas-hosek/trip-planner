@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+	<!-- Source of all app icons; tools/render_icons.py renders the PNG sizes from it. -->
+	<defs>
+		<clipPath id="icon-shape">
+			<rect class="icon-shape" width="512" height="512" rx="112"/>
+		</clipPath>
+	</defs>
+	<g clip-path="url(#icon-shape)">
+		<rect width="512" height="512" fill="#1d2a23"/>
+		<path d="M0 512V446q96-30 192-10t176-4q84-14 144 8v72z" fill="#2b4134"/>
+		<path d="M0 512V452h34l14-58h76l14 58h182l16-82h104l16 82h56v60z" fill="#b0731c"/>
+		<path d="M256 412c-30-40-104-112-104-196a104 104 0 0 1 208 0c0 84-74 156-104 196z" fill="#f8f9f6"/>
+		<circle cx="256" cy="216" r="40" fill="#b0731c"/>
+	</g>
+</svg>

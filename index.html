@@ -3,7 +3,16 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Saské Švýcarsko: 15 míst</title>
+	<title>TripMap</title>
+	<meta name="description" content="Mapa míst z plánů výletů, i offline.">
+
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+	<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+	<meta name="apple-mobile-web-app-title" content="TripMap">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="theme-color" content="#f8f9f6" media="(prefers-color-scheme: light)">
+	<meta name="theme-color" content="#18201c" media="(prefers-color-scheme: dark)">
 
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,16 +27,23 @@
 	<link rel="stylesheet" href="css/sidebar.css">
 	<link rel="stylesheet" href="css/map.css">
 	<link rel="stylesheet" href="css/detail-card.css">
+	<link rel="stylesheet" href="css/plans-panel.css">
 </head>
 <body>
 	<div class="app">
 		<aside class="sidebar">
 			<header class="sidebar-header">
-				<p class="sidebar-intro">Klikni na špendlík nebo na místo v seznamu. Tmavě orámovaná místa jsou ve vašem víkendovém plánu.</p>
-				<div class="filter-chips" id="filter-chips" role="group" aria-label="Filtr kategorií"></div>
+				<button class="plan-switcher" id="plan-switcher" type="button" aria-haspopup="dialog" title="Moje plány">
+					<span class="plan-switcher-name" id="plan-name"></span>
+					<svg class="plan-switcher-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+						<path d="m6 9 6 6 6-6"/>
+					</svg>
+				</button>
+				<p class="sidebar-intro" id="plan-intro"></p>
+				<div class="filter-chips" id="filter-chips" role="group" aria-label="Filtr míst"></div>
 			</header>
 			<ol class="place-list" id="place-list"></ol>
-			<footer class="sidebar-footer">Stav zavírek k 13. 11. 2026. Otevírací doby v zimě si ověřte před cestou.</footer>
+			<footer class="sidebar-footer" id="plan-note" hidden></footer>
 		</aside>
 
 		<main class="map-area">
@@ -49,6 +65,54 @@
 			</section>
 		</main>
 	</div>
+
+	<dialog class="plans-dialog" id="plans-dialog" aria-labelledby="plans-dialog-title">
+		<div class="plans-dialog-view" id="plans-list-view">
+			<header class="plans-dialog-header">
+				<h2 id="plans-dialog-title">Moje plány</h2>
+				<button class="plans-dialog-icon-button" type="button" data-close-dialog aria-label="Zavřít">×</button>
+			</header>
+
+			<ul class="stored-plan-list" id="stored-plan-list"></ul>
+			<button class="plans-dialog-button plans-dialog-button--primary" id="show-import-button" type="button">+ Importovat plán</button>
+
+			<section class="plans-dialog-section" aria-labelledby="current-plan-actions-title">
+				<h3 id="current-plan-actions-title">Otevřený plán</h3>
+				<div class="plans-dialog-button-row">
+					<button class="plans-dialog-button" id="share-plan-button" type="button">Sdílet odkaz</button>
+					<button class="plans-dialog-button" id="export-plan-button" type="button">Stáhnout JSON</button>
+					<button class="plans-dialog-button" id="offline-download-button" type="button">Stáhnout pro offline</button>
+				</div>
+				<p class="plans-dialog-status" id="plan-actions-status" role="status"></p>
+			</section>
+
+			<details class="plans-dialog-help">
+				<summary>Jak vytvořit nový plán?</summary>
+				<p>Plány připravuje Claude. V nastavení Claude si přidejte skill <a href="https://github.com/lukas-hosek/trip-planner/tree/main/claude-skill" target="_blank" rel="noopener">trip-map</a>. Až budete mít výlet naplánovaný, napište třeba „Exportuj plán do mapy“. Claude pošle odkaz, který plán otevře tady.</p>
+				<p>Plán se stejným názvem nahradí ten dřívější, takže upravený plán stačí znovu otevřít.</p>
+				<p>Na iPhonu se odkaz otevře v prohlížeči. Do aplikace na ploše ho přeneste přes <strong>Importovat plán → Vložit ze schránky</strong>.</p>
+			</details>
+		</div>
+
+		<div class="plans-dialog-view" id="plans-import-view" hidden>
+			<header class="plans-dialog-header">
+				<button class="plans-dialog-icon-button" id="import-back-button" type="button" aria-label="Zpět na seznam plánů">←</button>
+				<h2>Importovat plán</h2>
+				<button class="plans-dialog-icon-button" type="button" data-close-dialog aria-label="Zavřít">×</button>
+			</header>
+
+			<label class="plans-dialog-label" for="import-text">Vložte odkaz na plán nebo jeho JSON:</label>
+			<textarea class="plans-dialog-textarea" id="import-text" rows="6" spellcheck="false" autocomplete="off"
+				placeholder="https://lukas-hosek.github.io/trip-planner/#plan=…"></textarea>
+			<div class="plans-dialog-button-row">
+				<button class="plans-dialog-button" id="paste-from-clipboard-button" type="button">Vložit ze schránky</button>
+				<button class="plans-dialog-button" id="choose-file-button" type="button">Vybrat soubor…</button>
+				<input type="file" id="import-file-input" accept=".json,application/json,text/plain" hidden>
+			</div>
+			<p class="plans-dialog-error" id="import-error" role="alert" hidden></p>
+			<button class="plans-dialog-button plans-dialog-button--primary" id="import-button" type="button">Importovat</button>
+		</div>
+	</dialog>
 
 	<!-- Leaflet is loaded as a classic script so the modules can use the global `L`. -->
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"

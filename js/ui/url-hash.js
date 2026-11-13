@@ -3,10 +3,15 @@
 	and the browser's back/forward buttons work with manually edited hashes.
 */
 
-import { findPlaceById } from "../data/places.js";
+import { findPlaceById } from "../data/active-plan.js";
+import { hasPlanInFragment } from "../data/plan-link.js";
 import { appState, selectPlace, subscribe, STATE_EVENTS } from "../state/app-state.js";
 
 export function readPlaceFromUrlHash() {
+	// "#plan=…" carries a whole plan to import; main.js handles it.
+	if (hasPlanInFragment(window.location.hash)) {
+		return null;
+	}
 	const placeId = decodeURIComponent(window.location.hash.slice(1));
 	return placeId ? findPlaceById(placeId) : null;
 }

@@ -4,7 +4,7 @@
 	they only react to state changes, which keeps every module independent.
 */
 
-import { FILTER_ALL_PLACES } from "../data/places.js";
+import { FILTER_ALL_PLACES } from "../data/active-plan.js";
 
 export const STATE_EVENTS = {
 	selectedPlaceChanged: "selectedPlaceChanged",

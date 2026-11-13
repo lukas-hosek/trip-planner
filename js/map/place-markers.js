@@ -1,7 +1,8 @@
 /* Numbered, colour-coded pins for all places; they restyle themselves when the selection or filter changes. */
 
-import { PLACES, getCategoryOf, getPlaceNumber, placeMatchesFilter } from "../data/places.js";
+import { getPlaceNumber, getPlaces, placeMatchesFilter } from "../data/active-plan.js";
 import { appState, selectPlace, subscribe, STATE_EVENTS } from "../state/app-state.js";
+import { planColorStyle } from "../ui/tags.js";
 
 const PIN_SIZE_IN_PIXELS = 28;
 // Leaflet's own z-index offsets are small; 1000 is enough to lift one marker above all others.
@@ -10,7 +11,7 @@ const SELECTED_PIN_Z_INDEX_OFFSET = 1000;
 export function addPlaceMarkers(map) {
 	const markersByPlaceId = new Map();
 
-	for (const place of PLACES) {
+	for (const place of getPlaces()) {
 		const marker = L.marker([place.latitude, place.longitude], {
 			title: place.name,
 			riseOnHover: true,
@@ -22,7 +23,7 @@ export function addPlaceMarkers(map) {
 	}
 
 	function refreshAllPins() {
-		for (const place of PLACES) {
+		for (const place of getPlaces()) {
 			const marker = markersByPlaceId.get(place.id);
 			marker.setIcon(createPinIcon(place));
 			// Keeps the selected pin on top where pins overlap at low zoom.
@@ -36,7 +37,7 @@ export function addPlaceMarkers(map) {
 
 function createPinIcon(place) {
 	const cssClasses = ["place-pin"];
-	if (place.plannedDay) {
+	if (place.isPlanned) {
 		cssClasses.push("place-pin--planned");
 	}
 	if (place === appState.selectedPlace) {
@@ -48,7 +49,7 @@ function createPinIcon(place) {
 
 	return L.divIcon({
 		className: "place-pin-anchor",
-		html: `<div class="${cssClasses.join(" ")}" style="background: ${getCategoryOf(place).color}">${getPlaceNumber(place)}</div>`,
+		html: `<div class="${cssClasses.join(" ")}" style="${planColorStyle(place.category.color)}">${getPlaceNumber(place)}</div>`,
 		iconSize: [PIN_SIZE_IN_PIXELS, PIN_SIZE_IN_PIXELS],
 		iconAnchor: [PIN_SIZE_IN_PIXELS / 2, PIN_SIZE_IN_PIXELS / 2],
 	});

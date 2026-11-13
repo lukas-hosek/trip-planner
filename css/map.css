@@ -1,4 +1,4 @@
-/* Map canvas, place pins, the offline fallback map, the user's location and map overlays. */
+/* Map canvas, place pins, the user's location and map overlays. */
 
 #map {
 	position: absolute;
@@ -43,6 +43,7 @@
 	font-weight: 700;
 	font-size: 14px;
 	color: #fff;
+	background: var(--plan-color-shown);
 	transition: transform .15s ease;
 }
 
@@ -59,52 +60,6 @@
 /* Filtered-out pins stay faintly visible so the user keeps a sense of where everything is. */
 .place-pin--dimmed {
 	opacity: .28;
-}
-
-/* ---------- offline fallback map ---------- */
-
-.offline-river {
-	stroke: var(--color-elbe);
-}
-
-.offline-border {
-	stroke: var(--color-muted);
-}
-
-.offline-town-label {
-	font-size: 12px;
-	font-weight: 500;
-	color: var(--color-muted);
-	white-space: nowrap;
-}
-
-.offline-town-label::before {
-	content: "";
-	display: inline-block;
-	width: 6px;
-	height: 6px;
-	margin-right: 5px;
-	border-radius: 50%;
-	background: var(--color-muted);
-	vertical-align: 1px;
-}
-
-.offline-country-label {
-	font-family: var(--font-display);
-	font-weight: 600;
-	font-size: 13px;
-	letter-spacing: .3em;
-	color: var(--color-muted);
-	opacity: .7;
-	white-space: nowrap;
-}
-
-.offline-river-label {
-	font-size: 13px;
-	font-style: italic;
-	letter-spacing: .1em;
-	color: var(--color-elbe);
-	white-space: nowrap;
 }
 
 /* ---------- user location ---------- */
@@ -185,8 +140,12 @@
 	left: 54px;
 	top: 10px;
 	z-index: 1050;
-	max-width: min(420px, calc(100% - 80px));
-	padding: 8px 12px;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 10px;
+	max-width: min(440px, calc(100% - 110px));
+	padding: 8px 34px 8px 12px;
 	border: 1px solid var(--color-line);
 	border-left: 3px solid var(--color-accent);
 	border-radius: 6px;
@@ -194,6 +153,40 @@
 	box-shadow: var(--shadow-floating);
 	font-size: 13px;
 	line-height: 1.4;
+}
+
+.map-notice p {
+	margin: 0;
+}
+
+.map-notice-action {
+	padding: 3px 10px;
+	border: 1px solid var(--color-ink);
+	border-radius: 6px;
+	background: var(--color-ink);
+	color: var(--color-panel);
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.map-notice-close {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	width: 26px;
+	height: 26px;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--color-muted);
+	font-size: 17px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.map-notice-close:hover {
+	color: var(--color-ink);
 }
 
 .toast {

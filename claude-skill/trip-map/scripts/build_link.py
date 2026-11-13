@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+"""
+Validates a trip plan JSON file and prints the link that opens it in TripMap.
+
+Usage:
+	python build_link.py plan.json [--base-url https://localhost/]
+
+The link is <base URL>#plan=<data>, where <data> is the plan JSON (UTF-8, minified),
+compressed with raw DEFLATE and encoded as base64url without padding.
+The app (js/data/plan-link.js) decodes exactly this; keep both sides in sync.
+
+Exit code 0: the link was printed (warnings may be listed above it).
+Exit code 1: the plan has errors that would stop the app from opening it.
+"""
+
+import argparse
+import base64
+import json
+import math
+import re
+import statistics
+import sys
+import zlib
+
+DEFAULT_BASE_URL = "https://lukas-hosek.github.io/trip-planner/"
+PLAN_FORMAT_NAME = "trip-plan"
+SUPPORTED_VERSION = 1
+# Longer links still work in browsers, but some chat apps and messengers cut them.
+LINK_LENGTH_WARNING_THRESHOLD = 30_000
+# A place this far from the middle of all the others is probably a typo (or swapped lat/lng).
+OUTLIER_DISTANCE_IN_KILOMETERS = 300
+
+HEX_COLOR_PATTERN = re.compile(r"^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+WIKIPEDIA_URL_PATTERN = re.compile(r"^https://[a-z]{2,3}(-[a-z]+)?\.(m\.)?wikipedia\.org/wiki/.+")
+COMMONS_FILE_URL_PATTERN = re.compile(r"^https://commons\.(m\.)?wikimedia\.org/wiki/(File|Image):.+\.\w+$", re.IGNORECASE)
+COMMONS_CATEGORY_URL_PATTERN = re.compile(r"^https://commons\.(m\.)?wikimedia\.org/wiki/Category:.+", re.IGNORECASE)
+HTTP_URL_PATTERN = re.compile(r"^https?://\S+$")
+
+
+def validate_plan(plan):
+	"""Returns (errors, warnings), each a list of human-readable messages."""
+	errors = []
+	warnings = []
+
+	if not isinstance(plan, dict):
+		return ["The plan must be a JSON object."], warnings
+	if plan.get("format") != PLAN_FORMAT_NAME:
+		warnings.append(f'"format" should be "{PLAN_FORMAT_NAME}".')
+	version = plan.get("version", SUPPORTED_VERSION)
+	if not isinstance(version, int) or version > SUPPORTED_VERSION:
+		errors.append(f'"version" must be {SUPPORTED_VERSION}.')
+	if not is_non_empty_string(plan.get("name")):
+		errors.append('The plan has no "name".')
+
+	category_ids = validate_definitions(plan.get("categories"), "category", errors, warnings, color_required=True)
+	tag_ids = validate_definitions(plan.get("tags"), "tag", errors, warnings, color_required=False)
+
+	places = plan.get("places")
+	if not isinstance(places, list) or not places:
+		errors.append('The plan has no "places".')
+		return errors, warnings
+
+	seen_place_ids = set()
+	seen_place_names = set()
+	used_tag_ids = set()
+	coordinates = []
+	places_without_website = []
+	for index, place in enumerate(places, start=1):
+		if not isinstance(place, dict):
+			errors.append(f"Place {index} is not an object.")
+			continue
+		name = place.get("name")
+		label = f'Place {index} ("{name}")' if is_non_empty_string(name) else f"Place {index}"
+		if not is_non_empty_string(name):
+			errors.append(f"{label} has no name.")
+		elif name.strip().lower() in seen_place_names:
+			warnings.append(f"{label}: another place has the same name.")
+		else:
+			seen_place_names.add(name.strip().lower())
+
+		latitude, longitude = place.get("lat"), place.get("lng")
+		if not is_coordinate(latitude, 90) or not is_coordinate(longitude, 180):
+			errors.append(f'{label} needs numeric "lat" (-90..90) and "lng" (-180..180).')
+		else:
+			coordinates.append((label, latitude, longitude))
+
+		place_id = place.get("id")
+		if place_id is not None:
+			if not is_non_empty_string(place_id) or not re.fullmatch(r"[a-z0-9-]+", place_id):
+				warnings.append(f'{label}: "id" should use only lowercase letters, digits and hyphens.')
+			elif place_id in seen_place_ids:
+				warnings.append(f'{label}: "id" "{place_id}" is used twice; the app will rename one.')
+			seen_place_ids.add(place_id)
+
+		category = place.get("category")
+		if not is_non_empty_string(category):
+			warnings.append(f'{label} has no "category"; it will appear under "Ostatní".')
+		elif category not in category_ids:
+			warnings.append(f'{label}: category "{category}" is not defined in "categories"; it will be grey.')
+
+		place_tags = place.get("tags", [])
+		if not isinstance(place_tags, list):
+			warnings.append(f'{label}: "tags" should be a list of tag ids.')
+			place_tags = []
+		for tag_id in place_tags:
+			if tag_id not in tag_ids:
+				warnings.append(f'{label}: tag "{tag_id}" is not defined in "tags"; it will show its id as the label.')
+			used_tag_ids.add(tag_id)
+
+		if not is_non_empty_string(place.get("description")):
+			warnings.append(f'{label} has no "description".')
+		website = place.get("website")
+		if website is None:
+			places_without_website.append(name if is_non_empty_string(name) else f"place {index}")
+		elif not isinstance(website, str) or not HTTP_URL_PATTERN.match(website):
+			warnings.append(f'{label}: "website" must be an http(s) URL; it will be ignored.')
+		for url in as_list(place.get("wikipedia")):
+			if not isinstance(url, str) or not WIKIPEDIA_URL_PATTERN.match(url):
+				warnings.append(f'{label}: "{url}" is not a Wikipedia article URL (https://xx.wikipedia.org/wiki/Title); it will be ignored.')
+		validate_commons(place.get("commons"), label, warnings)
+		if "photo" in place:
+			warnings.append(f'{label}: "photo" is no longer supported and will be ignored; choose a Commons file in "commons.file" instead.')
+		for link in as_list(place.get("links")):
+			if not isinstance(link, dict) or not isinstance(link.get("url"), str) or not HTTP_URL_PATTERN.match(link["url"]):
+				warnings.append(f'{label}: links need {{"label": …, "url": "https://…"}}; an invalid one will be ignored.')
+
+	for tag_id in sorted(tag_ids - used_tag_ids):
+		warnings.append(f'Tag "{tag_id}" is defined but no place uses it.')
+	warnings.extend(find_coordinate_outliers(coordinates))
+	if places_without_website:
+		warnings.append(f"No website for: {', '.join(places_without_website)}. Fine for places that really have none (most natural sights).")
+	return errors, warnings
+
+
+def validate_commons(commons, label, warnings):
+	if commons is None:
+		warnings.append(f'{label} has no "commons" photo; the app will fall back to a Wikipedia lead image, if any.')
+		return
+	if not isinstance(commons, dict):
+		warnings.append(f'{label}: "commons" must be an object {{"file": …, "category": …}}.')
+		return
+	file_url = commons.get("file")
+	if not isinstance(file_url, str) or not COMMONS_FILE_URL_PATTERN.match(file_url):
+		warnings.append(f'{label}: "commons.file" must be a Commons file page URL (https://commons.wikimedia.org/wiki/File:Name.jpg).')
+	category_url = commons.get("category")
+	if category_url is not None and (not isinstance(category_url, str) or not COMMONS_CATEGORY_URL_PATTERN.match(category_url)):
+		warnings.append(f'{label}: "commons.category" must be a Commons category URL (https://commons.wikimedia.org/wiki/Category:Name).')
+	subject = commons.get("subject")
+	if subject is not None and not is_non_empty_string(subject):
+		warnings.append(f'{label}: "commons.subject" must be the name of what the photo shows, or be left out.')
+
+
+def validate_definitions(definitions, kind, errors, warnings, color_required):
+	"""Checks the "categories" or "tags" object and returns the set of defined ids."""
+	plural = "categories" if kind == "category" else "tags"
+	if definitions is None:
+		if kind == "category":
+			warnings.append('The plan has no "categories".')
+		return set()
+	if not isinstance(definitions, dict):
+		errors.append(f'"{plural}" must be an object keyed by id.')
+		return set()
+	for definition_id, definition in definitions.items():
+		if not isinstance(definition, dict) or not is_non_empty_string(definition.get("label")):
+			warnings.append(f'{kind.capitalize()} "{definition_id}" needs a "label".')
+			continue
+		color = definition.get("color")
+		if color is None:
+			if color_required:
+				warnings.append(f'{kind.capitalize()} "{definition_id}" has no "color"; the app will pick one.')
+		elif not isinstance(color, str) or not HEX_COLOR_PATTERN.match(color):
+			warnings.append(f'{kind.capitalize()} "{definition_id}": "color" should be a hex colour like "#b0731c".')
+		itinerary = definition.get("itinerary")
+		if itinerary is not None and not isinstance(itinerary, bool):
+			warnings.append(f'Tag "{definition_id}": "itinerary" must be true or false.')
+	return set(definitions)
+
+
+def find_coordinate_outliers(coordinates):
+	if len(coordinates) < 3:
+		return []
+	median_latitude = statistics.median(latitude for _, latitude, _ in coordinates)
+	median_longitude = statistics.median(longitude for _, _, longitude in coordinates)
+	warnings = []
+	for label, latitude, longitude in coordinates:
+		distance = distance_in_kilometers(latitude, longitude, median_latitude, median_longitude)
+		if distance > OUTLIER_DISTANCE_IN_KILOMETERS:
+			warnings.append(f"{label} is {distance:.0f} km from the other places. Check its coordinates (swapped lat/lng?).")
+	return warnings
+
+
+def distance_in_kilometers(latitude1, longitude1, latitude2, longitude2):
+	earth_radius_in_kilometers = 6371
+	latitude_delta = math.radians(latitude2 - latitude1)
+	longitude_delta = math.radians(longitude2 - longitude1)
+	haversine = (math.sin(latitude_delta / 2) ** 2
+		+ math.cos(math.radians(latitude1)) * math.cos(math.radians(latitude2)) * math.sin(longitude_delta / 2) ** 2)
+	return 2 * earth_radius_in_kilometers * math.asin(math.sqrt(haversine))
+
+
+def encode_plan(plan):
+	plan_json = json.dumps(plan, ensure_ascii=False, separators=(",", ":"))
+	compressor = zlib.compressobj(level=9, wbits=-15)  # negative wbits = raw DEFLATE, no zlib header
+	compressed = compressor.compress(plan_json.encode("utf-8")) + compressor.flush()
+	return base64.urlsafe_b64encode(compressed).decode("ascii").rstrip("=")
+
+
+def is_non_empty_string(value):
+	return isinstance(value, str) and value.strip() != ""
+
+
+def is_coordinate(value, maximum_absolute_value):
+	return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and abs(value) <= maximum_absolute_value
+
+
+def as_list(value):
+	if value is None:
+		return []
+	return value if isinstance(value, list) else [value]
+
+
+def main():
+	parser = argparse.ArgumentParser(description="Validate a trip plan and print the link that opens it in TripMap.")
+	parser.add_argument("plan_file", help="path to the plan JSON file")
+	parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help=f"app URL (default: {DEFAULT_BASE_URL})")
+	arguments = parser.parse_args()
+
+	try:
+		with open(arguments.plan_file, encoding="utf-8") as plan_file:
+			plan = json.load(plan_file)
+	except (OSError, json.JSONDecodeError) as error:
+		print(f"ERROR: cannot read the plan: {error}", file=sys.stderr)
+		return 1
+
+	errors, warnings = validate_plan(plan)
+	for warning in warnings:
+		print(f"WARNING: {warning}")
+	if errors:
+		for error in errors:
+			print(f"ERROR: {error}", file=sys.stderr)
+		print("No link was built. Fix the errors and run again.", file=sys.stderr)
+		return 1
+
+	link = f"{arguments.base_url.split('#')[0]}#plan={encode_plan(plan)}"
+	place_count = len(plan["places"])
+	print(f"OK: \"{plan['name']}\", {place_count} places, link length {len(link)} characters.")
+	if len(link) > LINK_LENGTH_WARNING_THRESHOLD:
+		print("WARNING: the link is very long; some apps may cut it. Make sure the user also gets the JSON file.")
+	print()
+	print(link)
+	return 0
+
+
+if __name__ == "__main__":
+	sys.exit(main())

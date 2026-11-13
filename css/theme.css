@@ -13,12 +13,6 @@
 	--color-elbe: #2e6d8e;
 	--color-map-background: #e6e9e1;
 
-	--color-viewpoint: #b0731c;
-	--color-rock-formation: #9c4a2f;
-	--color-castle: #575c93;
-	--color-leisure: #2b7c7f;
-
-	--color-ok: #2f7a4b;
 	--color-warning: #a8641a;
 	--color-user-location: #1a73e8;
 
@@ -41,17 +35,47 @@
 		--color-elbe: #6fb0d2;
 		--color-map-background: #1b2420;
 
-		/* Category colours are lifted in dark mode so white pin numbers stay readable and pins stand out on dark tiles. */
-		--color-viewpoint: #e0a24a;
-		--color-rock-formation: #e07f5c;
-		--color-castle: #9ca2e6;
-		--color-leisure: #5cc0c2;
-
-		--color-ok: #6cc28b;
 		--color-warning: #e6a35a;
 
 		--shadow-floating: 0 10px 30px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .35);
 
 		color-scheme: dark;
+	}
+}
+
+/*
+	Plan colours: categories and tags bring their own colours in the plan's JSON, set inline as --plan-color.
+	Stylesheets use --plan-color-shown, which falls back to a neutral colour when an item has none.
+	The colours are chosen for light backgrounds; in dark mode they are lifted, so pins stand out
+	on dark tiles and coloured tag text stays readable on the dark panel.
+*/
+.place-pin,
+.place-number,
+.filter-swatch,
+.tag,
+.photo-placeholder {
+	--plan-color-shown: var(--plan-color, var(--color-muted));
+}
+
+/* Itinerary tags (days) without a colour of their own are filled with ink, the "in our plan" colour. */
+.tag--itinerary,
+.filter-swatch--itinerary {
+	--plan-color-shown: var(--plan-color, var(--color-ink));
+}
+
+@media (prefers-color-scheme: dark) {
+	@supports (color: oklch(from red l c h)) {
+		.place-pin,
+		.place-number,
+		.filter-swatch,
+		.tag,
+		.photo-placeholder {
+			--plan-color-shown: oklch(from var(--plan-color, var(--color-muted)) max(l, .72) c h);
+		}
+
+		.tag--itinerary,
+		.filter-swatch--itinerary {
+			--plan-color-shown: oklch(from var(--plan-color, var(--color-ink)) max(l, .72) c h);
+		}
 	}
 }

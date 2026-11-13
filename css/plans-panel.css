@@ -1,0 +1,258 @@
+/* "Moje plány" dialog: stored plans, import, and actions for the open plan. A bottom sheet on phones. */
+
+.plans-dialog {
+	width: min(460px, calc(100vw - 32px));
+	max-height: min(680px, calc(100dvh - 32px));
+	padding: 0;
+	border: 1px solid var(--color-line);
+	border-radius: 12px;
+	background: var(--color-panel);
+	color: var(--color-ink);
+	box-shadow: var(--shadow-floating);
+}
+
+.plans-dialog::backdrop {
+	background: rgba(10, 16, 13, .45);
+}
+
+.plans-dialog-view {
+	display: grid;
+	gap: 14px;
+	padding: 14px 18px 18px;
+}
+
+.plans-dialog-view[hidden] {
+	display: none;
+}
+
+.plans-dialog-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.plans-dialog-header h2 {
+	flex: 1;
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 24px;
+	line-height: 1.1;
+}
+
+.plans-dialog-icon-button {
+	flex: none;
+	width: 32px;
+	height: 32px;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	font-size: 19px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.plans-dialog-icon-button:hover {
+	background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+
+/* ---------- stored plans ---------- */
+
+.stored-plan-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: 1px solid var(--color-line);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.stored-plan {
+	display: flex;
+	align-items: center;
+	border-left: 3px solid transparent;
+}
+
+.stored-plan + .stored-plan {
+	border-top: 1px solid var(--color-line);
+}
+
+.stored-plan[aria-current="true"] {
+	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+	border-left-color: var(--color-accent);
+}
+
+.stored-plan-open {
+	flex: 1;
+	min-width: 0;
+	display: grid;
+	gap: 1px;
+	padding: 9px 10px 9px 11px;
+	border: 0;
+	background: transparent;
+	text-align: left;
+	cursor: pointer;
+}
+
+.stored-plan-open:hover {
+	background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+}
+
+.stored-plan-name {
+	font-weight: 600;
+	line-height: 1.25;
+}
+
+.stored-plan-meta {
+	font-size: 12.5px;
+	color: var(--color-muted);
+}
+
+.stored-plan-delete {
+	flex: none;
+	margin-right: 8px;
+	padding: 4px 8px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: transparent;
+	font-size: 12.5px;
+	color: var(--color-muted);
+	cursor: pointer;
+}
+
+.stored-plan-delete:hover {
+	border-color: var(--color-line);
+	color: var(--color-ink);
+}
+
+.stored-plan-delete--confirming,
+.stored-plan-delete--confirming:hover {
+	border-color: var(--color-warning);
+	color: var(--color-warning);
+	font-weight: 600;
+}
+
+/* ---------- buttons and sections ---------- */
+
+.plans-dialog-button-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.plans-dialog-button {
+	padding: 6px 12px;
+	border: 1px solid var(--color-line);
+	border-radius: 6px;
+	background: transparent;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.plans-dialog-button:hover {
+	border-color: var(--color-muted);
+}
+
+.plans-dialog-button--primary {
+	justify-self: start;
+	background: var(--color-ink);
+	border-color: var(--color-ink);
+	color: var(--color-panel);
+}
+
+.plans-dialog-button--primary:hover {
+	border-color: var(--color-ink);
+	background: color-mix(in srgb, var(--color-ink) 85%, var(--color-panel));
+}
+
+.plans-dialog-button:disabled {
+	opacity: .55;
+	cursor: progress;
+}
+
+.plans-dialog-section {
+	padding-top: 14px;
+	border-top: 1px solid var(--color-line);
+}
+
+.plans-dialog-section h3 {
+	margin: 0 0 8px;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 13px;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--color-muted);
+}
+
+.plans-dialog-status {
+	margin: 8px 0 0;
+	font-size: 13px;
+	color: var(--color-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.plans-dialog-status:empty {
+	display: none;
+}
+
+.plans-dialog-help {
+	font-size: 14px;
+}
+
+.plans-dialog-help summary {
+	font-weight: 600;
+	color: var(--color-elbe);
+	cursor: pointer;
+}
+
+.plans-dialog-help p {
+	margin: 8px 0 0;
+}
+
+/* ---------- import ---------- */
+
+.plans-dialog-label {
+	font-size: 14px;
+	margin-bottom: -6px;
+}
+
+.plans-dialog-textarea {
+	width: 100%;
+	min-height: 110px;
+	padding: 8px 10px;
+	border: 1px solid var(--color-line);
+	border-radius: 8px;
+	background: var(--color-paper);
+	color: var(--color-ink);
+	font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+	font-size: 12.5px;
+	line-height: 1.4;
+	resize: vertical;
+}
+
+.plans-dialog-error {
+	margin: 0;
+	padding: 8px 10px;
+	border-left: 3px solid var(--color-warning);
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+	font-size: 13.5px;
+}
+
+.plans-dialog-error[hidden] {
+	display: none;
+}
+
+/* On phones the dialog is a bottom sheet, like the detail card. */
+@media (max-width: 760px) {
+	.plans-dialog {
+		width: 100%;
+		max-width: 100%;
+		max-height: 85dvh;
+		margin: auto 0 0;
+		border-radius: 14px 14px 0 0;
+		border-bottom: 0;
+	}
+}
