@@ -17,6 +17,25 @@ const UNDEFINED_ITEM_COLOR = "#6f7a73";
 const UNCATEGORIZED_CATEGORY_ID = "other";
 const UNCATEGORIZED_CATEGORY_LABEL = "Ostatní";
 
+/*
+	Limits. A link can come from anyone, so a plan must not be able to grow until the app stops responding.
+	Real plans stay far below them. Too many places, categories or tags refuse the plan; everything else is shortened.
+	claude-skill/trip-map/scripts/build_link.py checks the same values; keep both in sync.
+*/
+const MAXIMUM_PLACE_COUNT = 300;
+const MAXIMUM_CATEGORY_COUNT = 50;
+const MAXIMUM_TAG_COUNT = 100;
+const MAXIMUM_TAGS_PER_PLACE = 20;
+const MAXIMUM_WIKIPEDIA_ARTICLES_PER_PLACE = 10;
+const MAXIMUM_LINKS_PER_PLACE = 10;
+const MAXIMUM_NAME_LENGTH = 150;
+const MAXIMUM_LABEL_LENGTH = 80;
+const MAXIMUM_PLAN_TEXT_LENGTH = 2000;
+const MAXIMUM_PLACE_TEXT_LENGTH = 5000;
+const MAXIMUM_URL_LENGTH = 2000;
+// MediaWiki itself allows no longer titles.
+const MAXIMUM_WIKI_PAGE_TITLE_LENGTH = 255;
+
 export class PlanFormatError extends Error {
 	constructor(message) {
 		super(message);
@@ -35,30 +54,40 @@ export function normalizePlan(rawPlan) {
 		throw new PlanFormatError("Plán musí být JSON objekt.");
 	}
 	if (rawPlan.format !== undefined && rawPlan.format !== PLAN_FORMAT_NAME) {
-		throw new PlanFormatError(`Tohle není plán výletu (format „${cleanText(rawPlan.format)}“).`);
+		throw new PlanFormatError(`Tohle není plán výletu (format „${cleanText(rawPlan.format, MAXIMUM_LABEL_LENGTH)}“).`);
 	}
 	const version = Number(rawPlan.version ?? SUPPORTED_PLAN_VERSION);
 	if (version > SUPPORTED_PLAN_VERSION) {
 		throw new PlanFormatError(`Plán je ve verzi ${version}, kterou tahle aplikace ještě nezná. Obnovte stránku, ať se načte nová verze aplikace.`);
 	}
 
-	const name = cleanText(rawPlan.name);
+	const name = cleanText(rawPlan.name, MAXIMUM_NAME_LENGTH);
 	if (!name) {
 		throw new PlanFormatError("Plán nemá název (pole „name“).");
 	}
 	if (!Array.isArray(rawPlan.places) || rawPlan.places.length === 0) {
 		throw new PlanFormatError("Plán neobsahuje žádná místa (pole „places“).");
 	}
+	if (rawPlan.places.length > MAXIMUM_PLACE_COUNT) {
+		throw new PlanFormatError(`Plán má příliš mnoho míst (${rawPlan.places.length}, nejvýše ${MAXIMUM_PLACE_COUNT}).`);
+	}
 
 	const categories = normalizeCategories(rawPlan.categories);
 	const tags = normalizeTags(rawPlan.tags);
 	const usedPlaceIds = new Set();
 	const places = rawPlan.places.map((rawPlace, index) => normalizePlace(rawPlace, index, { categories, tags, usedPlaceIds }));
+	// Counted after the places, which add the categories and tags they use without the plan defining them.
+	if (categories.size > MAXIMUM_CATEGORY_COUNT) {
+		throw new PlanFormatError(`Plán má příliš mnoho kategorií (${categories.size}, nejvýše ${MAXIMUM_CATEGORY_COUNT}).`);
+	}
+	if (tags.size > MAXIMUM_TAG_COUNT) {
+		throw new PlanFormatError(`Plán má příliš mnoho štítků (${tags.size}, nejvýše ${MAXIMUM_TAG_COUNT}).`);
+	}
 
 	return {
 		name,
-		description: cleanText(rawPlan.description),
-		note: cleanText(rawPlan.note),
+		description: cleanText(rawPlan.description, MAXIMUM_PLAN_TEXT_LENGTH),
+		note: cleanText(rawPlan.note, MAXIMUM_PLAN_TEXT_LENGTH),
 		categories: keepOnlyUsed(categories, places.map(place => place.category)),
 		tags,
 		places,
@@ -76,6 +105,9 @@ export function getPlanKey(planName) {
  */
 function parseWikipediaReference(reference) {
 	const text = cleanText(reference);
+	if (text.length > MAXIMUM_URL_LENGTH) {
+		return null;
+	}
 	const shortFormMatch = text.match(/^([a-z]{2,3}(?:-[a-z]+)?):([^/].*)$/i);
 	if (shortFormMatch && !text.includes("//")) {
 		return buildWikipediaArticle(shortFormMatch[1], shortFormMatch[2]);
@@ -95,7 +127,7 @@ function parseWikipediaReference(reference) {
 
 function buildWikipediaArticle(language, rawTitle) {
 	const title = rawTitle.replace(/_/g, " ").trim();
-	if (!title) {
+	if (!title || title.length > MAXIMUM_WIKI_PAGE_TITLE_LENGTH) {
 		return null;
 	}
 	const normalizedLanguage = language.toLowerCase();
@@ -121,7 +153,7 @@ function parseCommonsReference(rawCommons) {
 	return {
 		fileTitle,
 		categoryUrl: categoryTitle ? buildCommonsPageUrl(categoryTitle) : null,
-		subject: rawReference ? cleanText(rawReference.subject) : "",
+		subject: rawReference ? cleanText(rawReference.subject, MAXIMUM_NAME_LENGTH) : "",
 	};
 }
 
@@ -136,6 +168,9 @@ const COMMONS_NAMESPACE_ALIASES = {
  */
 function parseCommonsPageTitle(reference, namespace) {
 	let pageName = cleanText(reference);
+	if (pageName.length > MAXIMUM_URL_LENGTH) {
+		return null;
+	}
 	const url = parseHttpUrl(pageName);
 	if (url) {
 		pageName = "";
@@ -150,7 +185,7 @@ function parseCommonsPageTitle(reference, namespace) {
 	const separatorIndex = pageName.indexOf(":");
 	const prefix = pageName.slice(0, separatorIndex).trim().toLowerCase();
 	const title = pageName.slice(separatorIndex + 1).replace(/_/g, " ").trim();
-	if (separatorIndex < 0 || !COMMONS_NAMESPACE_ALIASES[namespace].includes(prefix) || !title) {
+	if (separatorIndex < 0 || !COMMONS_NAMESPACE_ALIASES[namespace].includes(prefix) || !title || title.length > MAXIMUM_WIKI_PAGE_TITLE_LENGTH) {
 		return null;
 	}
 	return `${namespace}:${title}`;
@@ -174,7 +209,7 @@ function normalizeCategories(rawCategories) {
 	for (const [index, [id, rawCategory]] of readDefinitions(rawCategories).entries()) {
 		categories.set(id, {
 			id,
-			label: cleanText(rawCategory.label) || id,
+			label: cleanText(rawCategory.label, MAXIMUM_LABEL_LENGTH) || id,
 			color: parseColor(rawCategory.color) ?? FALLBACK_CATEGORY_COLORS[index % FALLBACK_CATEGORY_COLORS.length],
 		});
 	}
@@ -184,11 +219,14 @@ function normalizeCategories(rawCategories) {
 function normalizeTags(rawTags) {
 	const tags = new Map();
 	for (const [id, rawTag] of readDefinitions(rawTags)) {
+		const isItinerary = rawTag.itinerary === true;
 		tags.set(id, {
 			id,
-			label: cleanText(rawTag.label) || id,
+			label: cleanText(rawTag.label, MAXIMUM_LABEL_LENGTH) || id,
 			color: parseColor(rawTag.color),
-			isItinerary: rawTag.itinerary === true,
+			isItinerary,
+			// Only days of the itinerary and tags the plan explicitly marks filterable get a filter chip.
+			isFilterable: isItinerary || rawTag.filterable === true,
 		});
 	}
 	return tags;
@@ -199,11 +237,11 @@ function readDefinitions(rawDefinitions) {
 	if (Array.isArray(rawDefinitions)) {
 		return rawDefinitions
 			.filter(definition => isPlainObject(definition) && cleanText(definition.id))
-			.map(definition => [cleanText(definition.id), definition]);
+			.map(definition => [cleanText(definition.id, MAXIMUM_LABEL_LENGTH), definition]);
 	}
 	if (isPlainObject(rawDefinitions)) {
 		return Object.entries(rawDefinitions)
-			.map(([id, definition]) => [id.trim(), isPlainObject(definition) ? definition : { label: definition }])
+			.map(([id, definition]) => [cleanText(id, MAXIMUM_LABEL_LENGTH), isPlainObject(definition) ? definition : { label: definition }])
 			.filter(([id]) => id);
 	}
 	return [];
@@ -214,7 +252,7 @@ function normalizePlace(rawPlace, index, { categories, tags, usedPlaceIds }) {
 	if (!isPlainObject(rawPlace)) {
 		throw new PlanFormatError(`Místo č. ${placeNumber} není platný objekt.`);
 	}
-	const name = cleanText(rawPlace.name);
+	const name = cleanText(rawPlace.name, MAXIMUM_NAME_LENGTH);
 	if (!name) {
 		throw new PlanFormatError(`Místo č. ${placeNumber} nemá název.`);
 	}
@@ -226,19 +264,19 @@ function normalizePlace(rawPlace, index, { categories, tags, usedPlaceIds }) {
 
 	const placeTags = findOrCreateTags(rawPlace.tags, tags);
 	return {
-		id: makeUniqueId(slugify(cleanText(rawPlace.id)) || slugify(name) || `misto-${placeNumber}`, usedPlaceIds),
+		id: makeUniqueId(slugify(cleanText(rawPlace.id, MAXIMUM_LABEL_LENGTH)) || slugify(name) || `misto-${placeNumber}`, usedPlaceIds),
 		name,
-		category: findOrCreateCategory(cleanText(rawPlace.category), categories),
+		category: findOrCreateCategory(cleanText(rawPlace.category, MAXIMUM_LABEL_LENGTH), categories),
 		tags: placeTags,
 		isPlanned: placeTags.some(tag => tag.isItinerary),
 		latitude,
 		longitude,
-		description: cleanText(rawPlace.description),
-		tip: cleanText(rawPlace.tip),
+		description: cleanText(rawPlace.description, MAXIMUM_PLACE_TEXT_LENGTH),
+		tip: cleanText(rawPlace.tip, MAXIMUM_PLACE_TEXT_LENGTH),
 		website: parseHttpUrl(rawPlace.website)?.href ?? null,
-		wikipediaArticles: toArray(rawPlace.wikipedia).map(parseWikipediaReference).filter(Boolean),
+		wikipediaArticles: toArray(rawPlace.wikipedia).map(parseWikipediaReference).filter(Boolean).slice(0, MAXIMUM_WIKIPEDIA_ARTICLES_PER_PLACE),
 		commons: parseCommonsReference(rawPlace.commons),
-		links: toArray(rawPlace.links).map(normalizeLink).filter(Boolean),
+		links: toArray(rawPlace.links).map(normalizeLink).filter(Boolean).slice(0, MAXIMUM_LINKS_PER_PLACE),
 	};
 }
 
@@ -252,7 +290,8 @@ function findOrCreateCategory(categoryId, categories) {
 }
 
 function findOrCreateTags(rawTagIds, tags) {
-	const tagIds = [...new Set(toArray(rawTagIds).map(cleanText).filter(Boolean))];
+	const tagIds = [...new Set(toArray(rawTagIds).map(tagId => cleanText(tagId, MAXIMUM_LABEL_LENGTH)).filter(Boolean))]
+		.slice(0, MAXIMUM_TAGS_PER_PLACE);
 	return tagIds.map(tagId => {
 		if (!tags.has(tagId)) {
 			tags.set(tagId, { id: tagId, label: tagId, color: null, isItinerary: false });
@@ -266,7 +305,7 @@ function normalizeLink(rawLink) {
 	if (!url) {
 		return null;
 	}
-	const label = isPlainObject(rawLink) ? cleanText(rawLink.label) : "";
+	const label = isPlainObject(rawLink) ? cleanText(rawLink.label, MAXIMUM_LABEL_LENGTH) : "";
 	return { label: label || url.hostname.replace(/^www\./, ""), url: url.href };
 }
 
@@ -301,8 +340,12 @@ function parseColor(value) {
 }
 
 function parseHttpUrl(value) {
+	const text = cleanText(value);
+	if (text.length > MAXIMUM_URL_LENGTH) {
+		return null;
+	}
 	try {
-		const url = new URL(cleanText(value));
+		const url = new URL(text);
 		return url.protocol === "https:" || url.protocol === "http:" ? url : null;
 	} catch {
 		return null;
@@ -327,11 +370,15 @@ function makeUniqueId(baseId, usedIds) {
 	return id;
 }
 
-function cleanText(value) {
+/** Text of a plan field, trimmed; "" for anything that isn't text. Text over the maximum length is cut and ends with "…". */
+function cleanText(value, maximumLength = Infinity) {
+	let text = "";
 	if (typeof value === "string") {
-		return value.trim();
+		text = value.trim();
+	} else if (typeof value === "number") {
+		text = String(value);
 	}
-	return typeof value === "number" ? String(value) : "";
+	return text.length > maximumLength ? `${text.slice(0, maximumLength - 1).trimEnd()}…` : text;
 }
 
 function toArray(value) {

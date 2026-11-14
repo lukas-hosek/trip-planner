@@ -13,7 +13,7 @@ Plans are made with Claude. Plan a trip in a chat, then ask Claude to export it 
   - switch between stored plans, or delete them;
   - import a plan by pasting a link or JSON, or choosing a file;
   - share the open plan as a link, download its JSON, or download it for offline use.
-- **Updating a plan:** a plan with the same name replaces the stored one, so you can just open the new link.
+- **Updating a plan:** a plan with the same name replaces the stored one, so you can just open the new link. If the link changed the plan, the app says so and offers **Vrátit původní** to bring the previous version back.
 - **Installing:** use your browser's "Add to Home screen" / "Install app". On an iPhone, the home-screen app keeps its own storage, separate from Safari. Bring plans into it with **Moje plány → Importovat plán → Vložit ze schránky**.
 - **Offline:**
   - The app, your plans, every map tile you've viewed and every photo you've opened stay available offline.

@@ -1,9 +1,10 @@
 /*
 	A persistent note over the map, for conditions the user should keep in mind (offline map, a plan opened
-	in the browser instead of the installed app). It can carry one action button and can be closed.
+	in the browser instead of the installed app, a plan replaced by a link). It can carry action buttons and can be closed.
 */
 
-export function showMapNotice(message, { actionLabel = null, onAction = null } = {}) {
+/** @param options.actions  buttons shown after the message: [{ label, onAction }] */
+export function showMapNotice(message, { actions = [] } = {}) {
 	const noticeElement = document.getElementById("map-notice");
 	noticeElement.replaceChildren();
 
@@ -11,11 +12,11 @@ export function showMapNotice(message, { actionLabel = null, onAction = null } =
 	messageElement.textContent = message;
 	noticeElement.append(messageElement);
 
-	if (actionLabel && onAction) {
+	for (const { label, onAction } of actions) {
 		const actionButton = document.createElement("button");
 		actionButton.type = "button";
 		actionButton.className = "map-notice-action";
-		actionButton.textContent = actionLabel;
+		actionButton.textContent = label;
 		actionButton.addEventListener("click", onAction);
 		noticeElement.append(actionButton);
 	}

@@ -11,7 +11,7 @@
 import { BASE_LAYER_DEFINITIONS, buildTileUrl, HIGHEST_DOWNLOADED_ZOOM } from "../map/base-map.js";
 import { appState } from "../state/app-state.js";
 
-// sw.js keeps caches with this prefix when it removes outdated ones; keep both in sync.
+// One cache per downloaded plan. sw.js finds the files by searching all caches and never deletes these.
 const DOWNLOADED_PLAN_CACHE_PREFIX = "downloaded-plan:";
 
 const OVERVIEW_ZOOM_LEVELS = [9, 10, 11, 12];
@@ -102,6 +102,10 @@ function listTileUrls(places, placesBounds) {
 	// Zoom level by zoom level, so if the cap is reached, every place still has its coarser close-ups.
 	for (let zoom = LOWEST_DETAIL_ZOOM; zoom <= HIGHEST_DOWNLOADED_ZOOM; zoom++) {
 		for (const place of places) {
+			// Near a pole the box around a place spans the whole globe; once the cap is reached, no more boxes are worked out.
+			if (tileKeys.size >= MAXIMUM_TILE_COUNT) {
+				break;
+			}
 			const latitudeRadius = DETAIL_RADIUS_IN_KILOMETERS / KILOMETERS_PER_DEGREE_OF_LATITUDE;
 			const longitudeRadius = latitudeRadius / Math.cos(place.latitude * Math.PI / 180);
 			const placeTiles = listTilesInBox(

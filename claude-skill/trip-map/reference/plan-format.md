@@ -27,10 +27,11 @@ One JSON object per trip. Unknown fields are ignored. Fields marked *optional* c
 | Field | Type | Meaning |
 |---|---|---|
 | `label` | string | Text of the tag, up to about 30 characters. |
-| `itinerary` | boolean, *optional* | `true` for a day of the itinerary ("Sobota", "Den 2"). Places with an itinerary tag get a dark ring on the map and appear under the "Náš plán" filter. |
+| `itinerary` | boolean, *optional* | `true` for a day of the itinerary ("Sobota", "Den 2"). Places with an itinerary tag get a dark ring on the map and appear under the "Náš plán" filter. Itinerary tags are always filterable. |
+| `filterable` | boolean, *optional* | `true` gives the tag a filter button. Default `false`. Use it only for groupings the user would want to filter by: an area ("Rathen") or a trait several places share ("Vstup zdarma"). Never for status notes ("Hrad zavřený", "Otevřeno celý rok"). Not needed on itinerary tags. |
 | `color` | `"#rrggbb"`, *optional* | Text and outline colour (fill colour for itinerary tags). Without a colour, itinerary tags are dark and other tags grey. |
 
-Filter buttons are shown for all itinerary tags and for every other tag used by at least two places.
+A tag gets a filter button in exactly two cases: (1) it is an itinerary tag (`"itinerary": true`), or (2) it has `"filterable": true`. Every other tag is not filterable; it is shown only on its places. How many places use a tag doesn't matter.
 
 ## Place
 
@@ -55,6 +56,19 @@ Filter buttons are shown for all itinerary tags and for every other tag used by 
 | `file` | URL | The Commons file page of one good photo, copied exactly from Commons: `https://commons.wikimedia.org/wiki/File:…`. A real photo (not a map, drawing or logo), preferably landscape and at least about 1000 px wide. |
 | `category` | URL, *optional* | The place's own Commons category, `https://commons.wikimedia.org/wiki/Category:…`. The "Další fotky" button opens it; without it, the button searches Commons for the place's name. |
 | `subject` | string, *optional* | Only when Commons has no photo of the place itself and `file` shows a broader subject instead (the village, the town, the valley): its name, e.g. `"Bad Schandau"`. The photo credit then reads "Foto: Bad Schandau (Wikimedia Commons)". Leave `category` out in that case. |
+
+## Limits
+
+The app refuses a plan that exceeds any of these, and `build_link.py` reports it as an error:
+
+- 300 places, 50 categories, 100 tags;
+- 1 MB of JSON.
+
+Beyond the following, the app shortens the plan without refusing it, and `build_link.py` warns:
+
+- per place: 20 tags, 10 Wikipedia articles, 10 extra links (the first ones are kept);
+- names of the plan and of places, and `commons.subject`: 150 characters; labels and ids: 80; the plan's `description` and `note`: 2,000; a place's `description` and `tip`: 5,000 (longer texts are cut);
+- URLs: 2,000 characters (a longer one is ignored).
 
 ## Colour palette
 
@@ -102,7 +116,7 @@ Itinerary tags usually have no colour.
     "saturday": { "label": "Sobota", "itinerary": true },
     "sunday": { "label": "Neděle", "itinerary": true },
     "free-entry": { "label": "Vstup zdarma", "color": "#2f7a4b" },
-    "ticket": { "label": "Placený vstup", "color": "#5b6960" }
+    "ticket": { "label": "Placený vstup", "color": "#5b6960", "filterable": true }
   },
   "places": [
     {

@@ -12,6 +12,8 @@ const COMPRESSION_FORMAT = "deflate-raw";
 // A plan is tens of kilobytes. The limit stops a crafted link from unpacking into gigabytes;
 // build_link.py refuses to build a link for a larger plan.
 const MAXIMUM_PLAN_JSON_BYTES = 1_000_000;
+// Pasted text and chosen files may hold a pretty-printed plan or a link with text around it, so they get twice the room.
+export const MAXIMUM_IMPORT_TEXT_LENGTH = 2 * MAXIMUM_PLAN_JSON_BYTES;
 
 export function hasPlanInFragment(fragment) {
 	return PLAN_FRAGMENT_PATTERN.test(fragment);
@@ -47,6 +49,9 @@ export async function encodePlanLink(rawPlan) {
  * plain JSON, or JSON inside a ``` code block.
  */
 export async function extractRawPlanFromText(text) {
+	if (text.length > MAXIMUM_IMPORT_TEXT_LENGTH) {
+		throw new PlanFormatError("Text je příliš dlouhý na to, aby to byl plán.");
+	}
 	const trimmedText = text.trim();
 	if (!trimmedText) {
 		throw new PlanFormatError("Vložte odkaz na plán nebo jeho JSON.");

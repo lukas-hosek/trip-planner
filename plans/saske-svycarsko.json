@@ -35,6 +35,21 @@
 			"label": "Pondělí",
 			"itinerary": true
 		},
+		"hrensko": {
+			"label": "Hřensko",
+			"color": "#5b6960",
+			"filterable": true
+		},
+		"rathen": {
+			"label": "Rathen",
+			"color": "#5b6960",
+			"filterable": true
+		},
+		"bad-schandau": {
+			"label": "Bad Schandau",
+			"color": "#5b6960",
+			"filterable": true
+		},
 		"most-pruchozi-neurathen-zavreny": {
 			"label": "Most průchozí · Neurathen zavřený",
 			"color": "#a8641a"
@@ -77,6 +92,7 @@
 			"lng": 14.07282,
 			"tags": [
 				"sunday",
+				"rathen",
 				"most-pruchozi-neurathen-zavreny"
 			],
 			"description": "Nejslavnější místo celého Saského Švýcarska. Pískovcový most z roku 1851 je dlouhý 76,5 metru a spojuje skalní věže 194 metrů nad Labem. Nahradil dřevěnou lávku z roku 1826, postavenou pro první turisty. Kolem mostu je sedm vyhlídek. Skalní hrad Neurathen pod mostem je teď z bezpečnostních důvodů zavřený, ale přes most se normálně chodí. Za podzimních rán tu bývá moře mlhy nad údolím Labe.",
@@ -99,6 +115,7 @@
 			"lng": 14.07361,
 			"tags": [
 				"sunday",
+				"rathen",
 				"znovu-otevreno-po-letni-bouri"
 			],
 			"description": "Necelý kilometr dlouhá soutěska, kterou se od Bastei sestupuje po stovkách schodů mezi úzkými, mechem porostlými stěnami. Jméno má z třicetileté války: v srpnu 1639 se sem před švédskými vojáky ukryli sedláci z vypálené vesnice Rathewalde. Dole leží jezírko Amselsee, odkud je to po rovině zpátky do Rathenu. Po bouři z 31. července byla soutěska několik týdnů zavřená, od poloviny srpna je znovu průchozí.",
@@ -266,6 +283,7 @@
 			"lng": 14.28152,
 			"tags": [
 				"saturday",
+				"hrensko",
 				"do-brezna-pa-ne-10-16"
 			],
 			"description": "Největší přírodní pískovcová brána v Evropě s rozpětím 26,5 metru a výškou otvoru 16 metrů. Na samotný oblouk se od roku 1982 nesmí, protože ho poškozovala eroze od davů turistů. Lepší výhledy jsou stejně z okolních skalních plošin. Pod bránou stojí zámeček Sokolí hnízdo z roku 1881 s restaurací. Brána si zahrála v Letopisech Narnie. Vstup do areálu je placený a v zimě je otevřeno jen od pátku do neděle.",
@@ -289,6 +307,7 @@
 			"lng": 14.16117,
 			"tags": [
 				"monday",
+				"bad-schandau",
 				"zimni-provoz-overte"
 			],
 			"description": "Secesní ocelový výtah (Personenaufzug) z roku 1904, otevřený o Velikonocích 1905. Věž je vysoká 52 metrů a vyveze vás o 48 metrů výš na plošinu Ostrau nad městem. Z horní stanice vede 28 metrů dlouhá lávka na skálu s výhledem na Bad Schandau, Labe a Schrammsteine. Krátký výlet na pondělní dopoledne, kdy se nikam daleko nechce.",
@@ -312,7 +331,8 @@
 			"lat": 50.91654,
 			"lng": 14.15623,
 			"tags": [
-				"monday"
+				"monday",
+				"bad-schandau"
 			],
 			"description": "Termální lázně se slanou vodou přímo na břehu Labe v Bad Schandau. Mají čtyři vnitřní bazény, saunový svět s osmi saunami včetně panoramatické a hlavně Liquid Sound: v bazénu pod kupolí hraje hudba, kterou slyšíte pod vodou, a na strop se promítají světelné obrazy. Po listopadovém dni venku ideální zakončení. S kartou hosta Gästekarte je vstup o něco levnější.",
 			"tip": "Asi 300 metrů od náměstí směrem k hranici. Parkoviště má závoru.",

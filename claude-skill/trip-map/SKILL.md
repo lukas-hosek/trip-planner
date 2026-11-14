@@ -48,9 +48,14 @@ Read [reference/plan-format.md](reference/plan-format.md) for the full format, t
 
 7. **Choose categories.** Use 3–6 kinds of places that make sense for this trip, for example "Vyhlídky", "Hrady a zámky", "Muzea", "Jídlo a pití", "Koupání". Give each a distinct colour from the palette in the reference.
 
-8. **Choose tags.**
-   - **Itinerary tags**, one per day or part of a trip ("Sobota", "Den 2 · Út"), with `"itinerary": true`, defined in chronological order. Every place on the itinerary gets its day tag; alternatives get none. The app rings planned pins and offers a "Náš plán" filter plus one filter per day.
-   - **Info tags** are short practical labels of up to about 30 characters: opening hours, closures, "Rezervace nutná", "Vstup zdarma". Colour them by meaning (see the palette) and reuse one tag across places where it fits.
+8. **Choose tags.** Every tag is shown on its places. A tag gets a filter button in the app in exactly two cases:
+   1. it is an itinerary tag (`"itinerary": true`), or
+   2. it is explicitly marked `"filterable": true`.
+
+   Every other tag can't be filtered by: leaving out `filterable` means `false`. How many places use a tag makes no difference.
+   - **Itinerary tags**, one per day or part of a trip ("Sobota", "Den 2 · Út"), with `"itinerary": true`, defined in chronological order. Every place on the itinerary gets its day tag; alternatives get none. The app rings planned pins and offers a "Náš plán" filter plus one filter per day. Itinerary tags are always filterable, so don't add `filterable` to them.
+   - **Filterable tags** (`"filterable": true`) are groupings the user would actually want to browse the list by: a town or area that several places share ("Rathen", "Malá Strana"), or a trait they would plan around ("Vstup zdarma", "Vhodné s dětmi"). Only mark a tag filterable when filtering by it is genuinely useful. Put it on all the places it applies to, normally at least two, since a filter that shows a single place is pointless. Don't repeat what the categories already group.
+   - **Info tags** are short practical labels of up to about 30 characters: opening hours, closures, "Rezervace nutná", "Hrad zavřený". They are notes about a place, not something to filter by, so they are not filterable. Colour them by meaning (see the palette) and reuse one tag across places where it fits.
 
 9. **Write the texts** in the language of the conversation. The app's own interface is Czech.
    - `description`: 3–6 sentences of concrete, interesting facts: what it is, its history, what you'll see, why it's worth the visit. No marketing filler.

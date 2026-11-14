@@ -15,6 +15,7 @@ Exit code 1: the plan has errors that would stop the app from opening it.
 
 import argparse
 import base64
+import collections
 import json
 import math
 import re
@@ -29,6 +30,18 @@ SUPPORTED_VERSION = 1
 LINK_LENGTH_WARNING_THRESHOLD = 30_000
 # The app refuses to unpack a link into more than this (MAXIMUM_PLAN_JSON_BYTES in js/data/plan-link.js).
 MAXIMUM_PLAN_JSON_BYTES = 1_000_000
+# The app's limits (js/data/plan-format.js); keep both in sync. Beyond the first three the app refuses the plan.
+MAXIMUM_PLACE_COUNT = 300
+MAXIMUM_CATEGORY_COUNT = 50
+MAXIMUM_TAG_COUNT = 100
+MAXIMUM_TAGS_PER_PLACE = 20
+MAXIMUM_WIKIPEDIA_ARTICLES_PER_PLACE = 10
+MAXIMUM_LINKS_PER_PLACE = 10
+MAXIMUM_NAME_LENGTH = 150
+MAXIMUM_LABEL_LENGTH = 80
+MAXIMUM_PLAN_TEXT_LENGTH = 2_000
+MAXIMUM_PLACE_TEXT_LENGTH = 5_000
+MAXIMUM_URL_LENGTH = 2_000
 # A place this far from the middle of all the others is probably a typo (or swapped lat/lng).
 OUTLIER_DISTANCE_IN_KILOMETERS = 300
 
@@ -53,6 +66,9 @@ def validate_plan(plan):
 		errors.append(f'"version" must be {SUPPORTED_VERSION}.')
 	if not is_non_empty_string(plan.get("name")):
 		errors.append('The plan has no "name".')
+	warn_if_too_long(plan.get("name"), MAXIMUM_NAME_LENGTH, 'The plan\'s "name"', warnings)
+	for field in ("description", "note"):
+		warn_if_too_long(plan.get(field), MAXIMUM_PLAN_TEXT_LENGTH, f'The plan\'s "{field}"', warnings)
 
 	category_ids = validate_definitions(plan.get("categories"), "category", errors, warnings, color_required=True)
 	tag_ids = validate_definitions(plan.get("tags"), "tag", errors, warnings, color_required=False)
@@ -61,10 +77,13 @@ def validate_plan(plan):
 	if not isinstance(places, list) or not places:
 		errors.append('The plan has no "places".')
 		return errors, warnings
+	if len(places) > MAXIMUM_PLACE_COUNT:
+		errors.append(f"The plan has {len(places)} places; the app accepts at most {MAXIMUM_PLACE_COUNT}.")
 
 	seen_place_ids = set()
+	used_category_ids = set()
 	seen_place_names = set()
-	used_tag_ids = set()
+	place_count_by_tag_id = collections.Counter()
 	coordinates = []
 	places_without_website = []
 	for index, place in enumerate(places, start=1):
@@ -98,40 +117,62 @@ def validate_plan(plan):
 		category = place.get("category")
 		if not is_non_empty_string(category):
 			warnings.append(f'{label} has no "category"; it will appear under "Ostatní".')
-		elif category not in category_ids:
-			warnings.append(f'{label}: category "{category}" is not defined in "categories"; it will be grey.')
+		else:
+			used_category_ids.add(category)
+			if category not in category_ids:
+				warnings.append(f'{label}: category "{category}" is not defined in "categories"; it will be grey.')
 
 		place_tags = place.get("tags", [])
 		if not isinstance(place_tags, list):
 			warnings.append(f'{label}: "tags" should be a list of tag ids.')
 			place_tags = []
+		warn_if_too_many(place_tags, MAXIMUM_TAGS_PER_PLACE, f'{label}: "tags"', warnings)
 		for tag_id in place_tags:
 			if not isinstance(tag_id, str):
 				warnings.append(f'{label}: "tags" must contain tag ids (strings), not {json.dumps(tag_id, ensure_ascii=False)}.')
 				continue
 			if tag_id not in tag_ids:
 				warnings.append(f'{label}: tag "{tag_id}" is not defined in "tags"; it will show its id as the label.')
-			used_tag_ids.add(tag_id)
+			place_count_by_tag_id[tag_id] += 1
 
 		if not is_non_empty_string(place.get("description")):
 			warnings.append(f'{label} has no "description".')
+		warn_if_too_long(name, MAXIMUM_NAME_LENGTH, f'Place {index}: "name"', warnings)
+		for field in ("description", "tip"):
+			warn_if_too_long(place.get(field), MAXIMUM_PLACE_TEXT_LENGTH, f'{label}: "{field}"', warnings)
+		warn_if_too_many(as_list(place.get("wikipedia")), MAXIMUM_WIKIPEDIA_ARTICLES_PER_PLACE, f'{label}: "wikipedia"', warnings)
+		warn_if_too_many(as_list(place.get("links")), MAXIMUM_LINKS_PER_PLACE, f'{label}: "links"', warnings)
 		website = place.get("website")
 		if website is None:
 			places_without_website.append(name if is_non_empty_string(name) else f"place {index}")
 		elif not isinstance(website, str) or not HTTP_URL_PATTERN.match(website):
 			warnings.append(f'{label}: "website" must be an http(s) URL; it will be ignored.')
+		elif len(website) > MAXIMUM_URL_LENGTH:
+			warnings.append(f'{label}: "website" is longer than {MAXIMUM_URL_LENGTH} characters; it will be ignored.')
 		for url in as_list(place.get("wikipedia")):
-			if not isinstance(url, str) or not WIKIPEDIA_URL_PATTERN.match(url):
+			if not isinstance(url, str) or not WIKIPEDIA_URL_PATTERN.match(url) or len(url) > MAXIMUM_URL_LENGTH:
 				warnings.append(f'{label}: "{url}" is not a Wikipedia article URL (https://xx.wikipedia.org/wiki/Title); it will be ignored.')
 		validate_commons(place.get("commons"), label, warnings)
 		if "photo" in place:
 			warnings.append(f'{label}: "photo" is no longer supported and will be ignored; choose a Commons file in "commons.file" instead.')
 		for link in as_list(place.get("links")):
-			if not isinstance(link, dict) or not isinstance(link.get("url"), str) or not HTTP_URL_PATTERN.match(link["url"]):
-				warnings.append(f'{label}: links need {{"label": …, "url": "https://…"}}; an invalid one will be ignored.')
+			if not isinstance(link, dict) or not isinstance(link.get("url"), str) or not HTTP_URL_PATTERN.match(link["url"]) or len(link["url"]) > MAXIMUM_URL_LENGTH:
+				warnings.append(f'{label}: links need {{"label": …, "url": "https://…"}} with a URL of at most {MAXIMUM_URL_LENGTH} characters; an invalid one will be ignored.')
+			else:
+				warn_if_too_long(link.get("label"), MAXIMUM_LABEL_LENGTH, f'{label}: a link\'s "label"', warnings)
 
-	for tag_id in sorted(tag_ids - used_tag_ids):
+	# Like the app, count the categories and tags that places use without the plan defining them.
+	category_count = len(category_ids | used_category_ids)
+	if category_count > MAXIMUM_CATEGORY_COUNT:
+		errors.append(f"The plan has {category_count} categories; the app accepts at most {MAXIMUM_CATEGORY_COUNT}.")
+	tag_count = len(tag_ids | set(place_count_by_tag_id))
+	if tag_count > MAXIMUM_TAG_COUNT:
+		errors.append(f"The plan has {tag_count} tags; the app accepts at most {MAXIMUM_TAG_COUNT}.")
+	for tag_id in sorted(tag_ids - set(place_count_by_tag_id)):
 		warnings.append(f'Tag "{tag_id}" is defined but no place uses it.')
+	for tag_id in sorted(find_filterable_info_tag_ids(plan.get("tags"))):
+		if place_count_by_tag_id[tag_id] == 1:
+			warnings.append(f'Tag "{tag_id}" is filterable but only one place uses it; its filter button would show just that place.')
 	warnings.extend(find_coordinate_outliers(coordinates))
 	if places_without_website:
 		warnings.append(f"No website for: {', '.join(places_without_website)}. Fine for places that really have none (most natural sights).")
@@ -146,7 +187,7 @@ def validate_commons(commons, label, warnings):
 		warnings.append(f'{label}: "commons" must be an object {{"file": …, "category": …}}.')
 		return
 	file_url = commons.get("file")
-	if not isinstance(file_url, str) or not COMMONS_FILE_URL_PATTERN.match(file_url):
+	if not isinstance(file_url, str) or not COMMONS_FILE_URL_PATTERN.match(file_url) or len(file_url) > MAXIMUM_URL_LENGTH:
 		warnings.append(f'{label}: "commons.file" must be a Commons file page URL (https://commons.wikimedia.org/wiki/File:Name.jpg).')
 	category_url = commons.get("category")
 	if category_url is not None and (not isinstance(category_url, str) or not COMMONS_CATEGORY_URL_PATTERN.match(category_url)):
@@ -154,6 +195,7 @@ def validate_commons(commons, label, warnings):
 	subject = commons.get("subject")
 	if subject is not None and not is_non_empty_string(subject):
 		warnings.append(f'{label}: "commons.subject" must be the name of what the photo shows, or be left out.')
+	warn_if_too_long(subject, MAXIMUM_NAME_LENGTH, f'{label}: "commons.subject"', warnings)
 
 
 def validate_definitions(definitions, kind, errors, warnings, color_required):
@@ -170,16 +212,29 @@ def validate_definitions(definitions, kind, errors, warnings, color_required):
 		if not isinstance(definition, dict) or not is_non_empty_string(definition.get("label")):
 			warnings.append(f'{kind.capitalize()} "{definition_id}" needs a "label".')
 			continue
+		warn_if_too_long(definition_id, MAXIMUM_LABEL_LENGTH, f'The id of {kind} "{definition["label"]}"', warnings)
+		warn_if_too_long(definition["label"], MAXIMUM_LABEL_LENGTH, f'{kind.capitalize()} "{definition_id}": "label"', warnings)
 		color = definition.get("color")
 		if color is None:
 			if color_required:
 				warnings.append(f'{kind.capitalize()} "{definition_id}" has no "color"; the app will pick one.')
 		elif not isinstance(color, str) or not HEX_COLOR_PATTERN.match(color):
 			warnings.append(f'{kind.capitalize()} "{definition_id}": "color" should be a hex colour like "#b0731c".')
-		itinerary = definition.get("itinerary")
-		if itinerary is not None and not isinstance(itinerary, bool):
-			warnings.append(f'Tag "{definition_id}": "itinerary" must be true or false.')
+		for flag in ("itinerary", "filterable"):
+			value = definition.get(flag)
+			if value is not None and not isinstance(value, bool):
+				warnings.append(f'Tag "{definition_id}": "{flag}" must be true or false.')
 	return set(definitions)
+
+
+def find_filterable_info_tag_ids(tag_definitions):
+	"""Ids of tags marked "filterable": true that are not itinerary tags (those are always filterable)."""
+	if not isinstance(tag_definitions, dict):
+		return set()
+	return {
+		tag_id for tag_id, definition in tag_definitions.items()
+		if isinstance(definition, dict) and definition.get("filterable") is True and definition.get("itinerary") is not True
+	}
 
 
 def find_coordinate_outliers(coordinates):
@@ -213,6 +268,16 @@ def encode_plan(plan_json_bytes):
 	compressor = zlib.compressobj(level=9, wbits=-15)  # negative wbits = raw DEFLATE, no zlib header
 	compressed = compressor.compress(plan_json_bytes) + compressor.flush()
 	return base64.urlsafe_b64encode(compressed).decode("ascii").rstrip("=")
+
+
+def warn_if_too_long(text, maximum_length, what, warnings):
+	if isinstance(text, str) and len(text.strip()) > maximum_length:
+		warnings.append(f"{what} is {len(text.strip())} characters long; the app will cut it to {maximum_length}.")
+
+
+def warn_if_too_many(items, maximum_count, what, warnings):
+	if len(items) > maximum_count:
+		warnings.append(f"{what} has {len(items)} entries; the app uses only the first {maximum_count}.")
 
 
 def is_non_empty_string(value):

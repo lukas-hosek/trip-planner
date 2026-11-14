@@ -16,6 +16,8 @@ const REQUEST_TIMEOUT_IN_MILLISECONDS = 7000;
 const MAXIMUM_TITLES_PER_REQUEST = 50;
 // Redirects can chain; a small limit protects against redirect loops.
 const MAXIMUM_REDIRECT_HOPS = 4;
+// Every language is a request to another Wikipedia host. Real plans use two or three; a crafted one could name thousands.
+const MAXIMUM_WIKIPEDIA_LANGUAGE_COUNT = 10;
 
 /**
  * Publishes photosByPlaceId: placeId -> { imageUrl, sourcePageUrl, source: "commons" | "wikipedia", subject },
@@ -51,7 +53,7 @@ export async function loadPlacePhotos(places) {
 	}
 
 	// One lookup per language, all in parallel; a failing language doesn't spoil the others.
-	const languages = [...titlesByLanguage.keys()];
+	const languages = [...titlesByLanguage.keys()].slice(0, MAXIMUM_WIKIPEDIA_LANGUAGE_COUNT);
 	const lookupResults = await Promise.allSettled(languages.map(language => fetchWikipediaPhotoLookup(language, [...titlesByLanguage.get(language)])));
 	const findWikipediaPhotoByLanguage = new Map();
 	lookupResults.forEach((lookupResult, index) => {
@@ -85,10 +87,12 @@ async function fetchCommonsPhotoLookup(fileTitles) {
 	});
 	return function findCommonsPhoto(fileTitle) {
 		const imageInfo = findPage(fileTitle)?.imageinfo?.[0];
-		if (!imageInfo) {
+		const imageUrl = imageInfo?.thumburl ?? imageInfo?.url;
+		// Both addresses end up in the page, so only ordinary web addresses are taken from the answer.
+		if (!isHttpsUrl(imageUrl) || !isHttpsUrl(imageInfo.descriptionurl)) {
 			return null;
 		}
-		return { imageUrl: imageInfo.thumburl ?? imageInfo.url, sourcePageUrl: imageInfo.descriptionurl, source: "commons" };
+		return { imageUrl, sourcePageUrl: imageInfo.descriptionurl, source: "commons" };
 	};
 }
 
@@ -102,7 +106,7 @@ async function fetchWikipediaPhotoLookup(language, articleTitles) {
 	});
 	return function findWikipediaPhoto(articleTitle) {
 		const page = findPage(articleTitle);
-		if (!page?.thumbnail) {
+		if (!isHttpsUrl(page?.thumbnail?.source)) {
 			return null;
 		}
 		const sourcePageUrl = `https://${wikipediaHost}/wiki/${encodeURIComponent(page.title.replace(/ /g, "_"))}`;
@@ -142,6 +146,14 @@ async function fetchPagesByTitle(apiHost, titles, queryParameters) {
 		}
 		return pageByCanonicalTitle.get(canonicalTitle) ?? null;
 	};
+}
+
+function isHttpsUrl(value) {
+	try {
+		return typeof value === "string" && new URL(value).protocol === "https:";
+	} catch {
+		return false;
+	}
 }
 
 async function fetchQuery(apiHost, parameters) {

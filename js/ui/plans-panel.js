@@ -7,7 +7,7 @@
 
 import { getActivePlan, getPlaces } from "../data/active-plan.js";
 import { getPlanKey, normalizePlan, PlanFormatError, slugify } from "../data/plan-format.js";
-import { encodePlanLink, extractRawPlanFromText } from "../data/plan-link.js";
+import { encodePlanLink, extractRawPlanFromText, MAXIMUM_IMPORT_TEXT_LENGTH } from "../data/plan-link.js";
 import { deleteStoredPlan, getStoredPlan, listStoredPlans, savePlan, setLastOpenedPlanKey } from "../data/plan-store.js";
 import { deletePlanDownload, downloadPlanForOffline } from "../services/offline-download.js";
 import { loadPlacePhotos } from "../services/place-photos.js";
@@ -92,7 +92,7 @@ function renderStoredPlans() {
 			<li class="stored-plan" aria-current="${isCurrent}">
 				<button class="stored-plan-open" type="button" data-open-plan-key="${escapeHtml(storedPlan.key)}">
 					<span class="stored-plan-name">${escapeHtml(storedPlan.name)}</span>
-					<span class="stored-plan-meta">${formatPlaceCount(storedPlan.placeCount)} · uloženo ${savedDate}${isCurrent ? " · otevřený" : ""}</span>
+					<span class="stored-plan-meta">${escapeHtml(formatPlaceCount(storedPlan.placeCount))} · uloženo ${escapeHtml(savedDate)}${isCurrent ? " · otevřený" : ""}</span>
 				</button>
 				<button class="stored-plan-delete" type="button" data-delete-plan-key="${escapeHtml(storedPlan.key)}"
 					aria-label="Smazat plán ${escapeHtml(storedPlan.name)}">Smazat</button>
@@ -250,6 +250,11 @@ async function importPlanFromChosenFile() {
 	const chosenFile = elements.importFileInput.files[0];
 	elements.importFileInput.value = "";
 	if (!chosenFile) {
+		return;
+	}
+	// Checked before reading, so a huge file chosen by mistake is never loaded into memory.
+	if (chosenFile.size > MAXIMUM_IMPORT_TEXT_LENGTH) {
+		showImportError("Soubor je příliš velký na to, aby to byl plán.");
 		return;
 	}
 	const fileText = await chosenFile.text();

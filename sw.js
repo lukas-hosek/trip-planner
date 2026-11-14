@@ -7,7 +7,7 @@
 	  Tiles and photos seen while browsing go to shared caches, which are trimmed when they grow too large.
 	  "Stáhnout pro offline" (js/services/offline-download.js) keeps its files in one cache per plan;
 	  those are only read here, never trimmed, and the app deletes them together with the plan.
-	- Photo lookups (Wikimedia Commons and Wikipedia APIs): network first, cache as fallback.
+	- Photo lookups (Wikimedia Commons and Wikipedia APIs): network first, cache as fallback; trimmed like tiles and photos.
 
 	APP_SHELL_FILES must list every file the app loads. Bump APP_SHELL_VERSION whenever the list changes.
 */
@@ -19,9 +19,6 @@ const LIBRARY_CACHE = "libraries";
 const TILE_CACHE = "map-tiles";
 const PHOTO_CACHE = "photos";
 const PHOTO_LOOKUP_CACHE = "photo-lookups";
-const CURRENT_CACHES = new Set([APP_SHELL_CACHE, LIBRARY_CACHE, TILE_CACHE, PHOTO_CACHE, PHOTO_LOOKUP_CACHE]);
-// Caches written by js/services/offline-download.js, one per downloaded plan; keep the prefix in sync with it.
-const DOWNLOADED_PLAN_CACHE_PREFIX = "downloaded-plan:";
 
 const APP_SHELL_FILES = [
 	"./",
@@ -78,6 +75,8 @@ const NETWORK_TIMEOUT_IN_MILLISECONDS = 2500;
 // About 5000 tiles is 100–150 MB: room for several downloaded trips plus browsing.
 const MAXIMUM_TILE_CACHE_ENTRIES = 5000;
 const MAXIMUM_PHOTO_CACHE_ENTRIES = 500;
+// A plan needs a handful of lookups; without a limit, the answers for every plan ever opened would pile up.
+const MAXIMUM_PHOTO_LOOKUP_CACHE_ENTRIES = 200;
 // Counting a cache's entries on every write would be slow; trimming every so many writes is enough.
 const WRITES_BETWEEN_CACHE_TRIMS = 50;
 
@@ -104,9 +103,10 @@ self.addEventListener("install", installEvent => {
 
 self.addEventListener("activate", activateEvent => {
 	activateEvent.waitUntil((async () => {
-		// Older app versions and caches this version no longer uses (e.g. renamed ones) are removed.
+		// Only the app shells of older versions are removed. Every other cache is left alone: the plans' downloads,
+		// and the caches of other sites on this origin (all GitHub Pages sites of one account share it).
 		const outdatedCaches = (await caches.keys())
-			.filter(name => !CURRENT_CACHES.has(name) && !name.startsWith(DOWNLOADED_PLAN_CACHE_PREFIX));
+			.filter(name => name.startsWith(APP_SHELL_CACHE_PREFIX) && name !== APP_SHELL_CACHE);
 		await Promise.all(outdatedCaches.map(name => caches.delete(name)));
 		await self.clients.claim();
 	})());
@@ -120,11 +120,13 @@ self.addEventListener("fetch", fetchEvent => {
 	const url = new URL(request.url);
 
 	if (url.origin === self.location.origin) {
-		fetchEvent.respondWith(networkFirst(fetchEvent, APP_SHELL_CACHE, { isNavigation: request.mode === "navigate" }));
+		// The app never asks for its own files with a query string. Storing such addresses would let any link
+		// like "?x=1", "?x=2", … add another copy of the page to the cache.
+		fetchEvent.respondWith(networkFirst(fetchEvent, APP_SHELL_CACHE, { isNavigation: request.mode === "navigate", shouldStore: url.search === "" }));
 	} else if (TILE_HOST_PATTERN.test(url.hostname)) {
 		fetchEvent.respondWith(cacheFirst(fetchEvent, TILE_CACHE, MAXIMUM_TILE_CACHE_ENTRIES));
 	} else if (isPhotoLookupRequest(url)) {
-		fetchEvent.respondWith(networkFirst(fetchEvent, PHOTO_LOOKUP_CACHE));
+		fetchEvent.respondWith(networkFirst(fetchEvent, PHOTO_LOOKUP_CACHE, { maximumEntries: MAXIMUM_PHOTO_LOOKUP_CACHE_ENTRIES }));
 	} else if (LIBRARY_HOSTS.has(url.hostname)) {
 		fetchEvent.respondWith(cacheFirst(fetchEvent, LIBRARY_CACHE));
 	} else if (isPhotoRequest(request, url)) {
@@ -147,13 +149,13 @@ function isPhotoRequest(request, url) {
 	return request.destination === "image" || url.hostname.endsWith(".wikimedia.org");
 }
 
-async function networkFirst(fetchEvent, cacheName, { isNavigation = false } = {}) {
+async function networkFirst(fetchEvent, cacheName, { isNavigation = false, shouldStore = true, maximumEntries = Infinity } = {}) {
 	const request = fetchEvent.request;
 	const cache = await caches.open(cacheName);
 	const networkResponsePromise = fetch(request).then(response => {
-		if (response.ok) {
+		if (response.ok && shouldStore) {
 			// Copies the response into the cache even if the cached version was already sent after the timeout.
-			fetchEvent.waitUntil(cache.put(request, response.clone()));
+			fetchEvent.waitUntil(cache.put(request, response.clone()).then(() => trimCacheNowAndThen(cacheName, maximumEntries)));
 		}
 		return response;
 	});

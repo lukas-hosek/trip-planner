@@ -11,6 +11,10 @@ import { getPlanKey } from "./plan-format.js";
 
 const PLANS_STORAGE_KEY = "tripPlanner.plans";
 const LAST_OPENED_PLAN_STORAGE_KEY = "tripPlanner.lastOpenedPlanKey";
+// Set while a plan is being drawn. If it is still set at the next start, that plan hung or crashed the app.
+const PLAN_BEING_OPENED_STORAGE_KEY = "tripPlanner.planBeingOpened";
+// The version of a plan that a link has just replaced, kept so the replacement can be undone.
+const REPLACED_PLAN_STORAGE_KEY = "tripPlanner.replacedPlan";
 
 /**
  * @returns stored plans, most recently saved first: [{ key, name, placeCount, savedAt, rawPlan }]
@@ -32,14 +36,16 @@ export function getStoredPlan(planKey) {
 /**
  * @param rawPlan         the plan as imported
  * @param normalizedPlan  the same plan after normalizePlan(), for the name and the place count
- * @returns {{ key, wasReplaced, wasSaved }}  wasReplaced is true when a plan with the same name was already stored;
- *   wasSaved is false when the browser refused to store the plan
+ * @param options.keepReplacedVersion  keep the stored plan this one replaces, so restoreReplacedPlan() can bring it back;
+ *   for plans from links, which anyone can craft to carry the name of a plan the user already has
+ * @returns {{ key, wasReplaced, wasSaved, canBeRestored }}  wasReplaced is true when a plan with the same name was already stored;
+ *   wasSaved is false when the browser refused to store the plan; canBeRestored is true when a different earlier version was kept
  */
-export function savePlan(rawPlan, normalizedPlan) {
+export function savePlan(rawPlan, normalizedPlan, { keepReplacedVersion = false } = {}) {
 	const key = getPlanKey(normalizedPlan.name);
 	const storedPlans = listStoredPlans();
+	const replacedPlan = storedPlans.find(storedPlan => storedPlan.key === key) ?? null;
 	const otherPlans = storedPlans.filter(storedPlan => storedPlan.key !== key);
-	const wasReplaced = otherPlans.length < storedPlans.length;
 	const storedPlan = {
 		key,
 		name: normalizedPlan.name,
@@ -47,11 +53,45 @@ export function savePlan(rawPlan, normalizedPlan) {
 		savedAt: new Date().toISOString(),
 		rawPlan,
 	};
-	const wasSaved = writeJson(PLANS_STORAGE_KEY, [storedPlan, ...otherPlans]);
+
+	// Opening the same link twice replaces a plan with itself; there is nothing to undo then.
+	let canBeRestored = keepReplacedVersion && replacedPlan !== null
+		&& JSON.stringify(replacedPlan.rawPlan) !== JSON.stringify(rawPlan)
+		&& writeJson(REPLACED_PLAN_STORAGE_KEY, replacedPlan);
+	let wasSaved = writeJson(PLANS_STORAGE_KEY, [storedPlan, ...otherPlans]);
+	if (!wasSaved && canBeRestored) {
+		// No room for both versions: the update matters more than the undo.
+		removeItem(REPLACED_PLAN_STORAGE_KEY);
+		canBeRestored = false;
+		wasSaved = writeJson(PLANS_STORAGE_KEY, [storedPlan, ...otherPlans]);
+	}
 	if (wasSaved) {
 		requestPersistentStorage();
 	}
-	return { key, wasReplaced, wasSaved };
+	return { key, wasReplaced: replacedPlan !== null, wasSaved, canBeRestored };
+}
+
+/**
+ * Puts back the version kept by savePlan(…, { keepReplacedVersion: true }).
+ * @returns the restored plan's name, or null when there was nothing to restore or it could not be stored
+ */
+export function restoreReplacedPlan() {
+	const replacedPlan = readJson(REPLACED_PLAN_STORAGE_KEY);
+	if (!replacedPlan?.key || !replacedPlan.rawPlan) {
+		return null;
+	}
+	const otherPlans = listStoredPlans().filter(storedPlan => storedPlan.key !== replacedPlan.key);
+	// The kept version is removed only after it is safely back among the plans.
+	if (!writeJson(PLANS_STORAGE_KEY, [replacedPlan, ...otherPlans])) {
+		return null;
+	}
+	removeItem(REPLACED_PLAN_STORAGE_KEY);
+	return replacedPlan.name;
+}
+
+/** The undo is offered only right after a link replaced a plan; afterwards the kept version would just take up space. */
+export function discardReplacedPlan() {
+	removeItem(REPLACED_PLAN_STORAGE_KEY);
 }
 
 export function deleteStoredPlan(planKey) {
@@ -59,6 +99,28 @@ export function deleteStoredPlan(planKey) {
 	if (getLastOpenedPlanKey() === planKey) {
 		removeItem(LAST_OPENED_PLAN_STORAGE_KEY);
 	}
+	if (readJson(REPLACED_PLAN_STORAGE_KEY)?.key === planKey) {
+		discardReplacedPlan();
+	}
+}
+
+/** Call before drawing a plan and markPlanOpened() after it; see takePlanThatFailedToOpen(). */
+export function markPlanBeingOpened(planKey) {
+	writeItem(PLAN_BEING_OPENED_STORAGE_KEY, planKey);
+}
+
+export function markPlanOpened() {
+	removeItem(PLAN_BEING_OPENED_STORAGE_KEY);
+}
+
+/**
+ * @returns the key of the plan that was being drawn when the app last stopped (it hung, crashed, or the browser
+ *   gave up on the page), or null. Asking forgets it, so the plan is skipped once and can be tried again.
+ */
+export function takePlanThatFailedToOpen() {
+	const planKey = readItem(PLAN_BEING_OPENED_STORAGE_KEY);
+	removeItem(PLAN_BEING_OPENED_STORAGE_KEY);
+	return planKey;
 }
 
 export function getLastOpenedPlanKey() {

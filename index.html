@@ -2,6 +2,26 @@
 <html lang="cs">
 <head>
 	<meta charset="utf-8">
+	<!--
+		Second line of defence behind escapeHtml: plans come from links anyone can craft, and this stops any script
+		that isn't one of the app's own files or Leaflet, including inline handlers in injected HTML.
+		A new external host (tiles, fonts, an API) must be added here, or the browser blocks it.
+		style-src-attr allows the style="--plan-color: …" attributes that carry plan colours.
+		Photos come from upload. and thumb.wikimedia.org, lookups from commons.wikimedia.org and the Wikipedias.
+	-->
+	<meta http-equiv="Content-Security-Policy" content="
+		default-src 'none';
+		script-src 'self' https://unpkg.com/leaflet@1.9.4/;
+		style-src 'self' https://unpkg.com/leaflet@1.9.4/ https://fonts.googleapis.com;
+		style-src-attr 'unsafe-inline';
+		font-src https://fonts.gstatic.com;
+		img-src 'self' data: https://*.tile.opentopomap.org https://server.arcgisonline.com https://*.wikimedia.org https://unpkg.com/leaflet@1.9.4/;
+		connect-src 'self' https://*.wikimedia.org https://*.wikipedia.org https://*.tile.opentopomap.org;
+		manifest-src 'self';
+		worker-src 'self';
+		base-uri 'none';
+		form-action 'none';
+		object-src 'none'">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>TripMap</title>
 	<meta name="description" content="Mapa míst z plánů výletů, i offline.">

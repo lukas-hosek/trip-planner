@@ -8,8 +8,6 @@ const FILTER_PLANNED_PLACES = "planned";
 // Categories and tags may share ids ("castle" could be both), so filter ids say which one they mean.
 const CATEGORY_FILTER_PREFIX = "category:";
 const TAG_FILTER_PREFIX = "tag:";
-// A tag on a single place would make a filter chip that shows just that place.
-const MINIMUM_PLACES_FOR_TAG_FILTER = 2;
 
 let activePlan = null;
 
@@ -39,7 +37,7 @@ export function hasItinerary() {
 	return activePlan.places.some(place => place.isPlanned);
 }
 
-/** Filter chips in display order: all places, categories, the itinerary, then tags worth filtering by. */
+/** Filter chips in display order: all places, categories, the itinerary, then filterable tags that some place uses. */
 export function getFilterOptions() {
 	const filterOptions = [{ id: FILTER_ALL_PLACES, label: "Vše", kind: "all", color: null }];
 	for (const category of activePlan.categories.values()) {
@@ -49,8 +47,7 @@ export function getFilterOptions() {
 		filterOptions.push({ id: FILTER_PLANNED_PLACES, label: "Náš plán", kind: "planned", color: null });
 	}
 	for (const tag of activePlan.tags.values()) {
-		const placeCount = activePlan.places.filter(place => place.tags.includes(tag)).length;
-		if (placeCount > 0 && (tag.isItinerary || placeCount >= MINIMUM_PLACES_FOR_TAG_FILTER)) {
+		if (tag.isFilterable && activePlan.places.some(place => place.tags.includes(tag))) {
 			filterOptions.push({ id: TAG_FILTER_PREFIX + tag.id, label: tag.label, kind: "tag", color: tag.color, isItinerary: tag.isItinerary });
 		}
 	}
