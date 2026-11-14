@@ -2,7 +2,7 @@
 
 An interactive map for trip plans: numbered, colour-coded pins on a hiking map, a list of places, and a detail card per place with a photo, a description, a practical tip and links to the place's website, Mapy.cz, Google Maps and Wikipedia. You can filter by category and by day, see your GPS position and distances, and use it offline on the trail. The interface is in Czech.
 
-Live at **https://lukas-hosek.github.io/trip-planner/**. The first visit opens a demo plan: 15 sights around Bad Schandau in Saxon Switzerland.
+Live at **https://lukas-hosek.github.io/trip-planner/**. The first visit opens a demo plan: a week in Spain in August 2026, from Bilbao through Logroño and Tudela to the total solar eclipse in Bardenas Reales, then Zaragoza and Barcelona.
 
 Plans are made with Claude. Plan a trip in a chat, then ask Claude to export it to the map. A [Claude skill](claude-skill/trip-map/SKILL.md) turns the plan into a JSON file and a link that opens it here.
 
@@ -40,10 +40,10 @@ The plan format is described in [claude-skill/trip-map/reference/plan-format.md]
 - `categories` and `tags` have colours, and a tag with `itinerary: true` marks a day of the plan.
 - `places` hold coordinates, texts, the place's website, Wikipedia article URLs and a chosen Wikimedia Commons photo. If the photo can't be found, the app falls back to the lead image of the first Wikipedia article that has one.
 
-A link carries the whole plan in its fragment: `#plan=` followed by the minified JSON, compressed with raw DEFLATE and encoded as base64url. The plan never reaches a server, and the 15-place demo makes a link of about 7 KB. To build one yourself:
+A link carries the whole plan in its fragment: `#plan=` followed by the minified JSON, compressed with raw DEFLATE and encoded as base64url. The plan never reaches a server, and the 21-place demo makes a link of about 11 KB. To build one yourself:
 
 ```sh
-python claude-skill/trip-map/scripts/build_link.py plans/saske-svycarsko.json --base-url https://localhost/
+python claude-skill/trip-map/scripts/build_link.py plans/spanelsko-2026.json --base-url https://localhost/
 ```
 
 ## Running it locally

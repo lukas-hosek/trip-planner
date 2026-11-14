@@ -12,7 +12,7 @@
 	APP_SHELL_FILES must list every file the app loads. Bump APP_SHELL_VERSION whenever the list changes.
 */
 
-const APP_SHELL_VERSION = 2;
+const APP_SHELL_VERSION = 3;
 const APP_SHELL_CACHE_PREFIX = "app-shell-v";
 const APP_SHELL_CACHE = `${APP_SHELL_CACHE_PREFIX}${APP_SHELL_VERSION}`;
 const LIBRARY_CACHE = "libraries";
@@ -53,7 +53,7 @@ const APP_SHELL_FILES = [
 	"js/utils/geo-distance.js",
 	"js/utils/html.js",
 	"js/utils/media-queries.js",
-	"plans/saske-svycarsko.json",
+	"plans/spanelsko-2026.json",
 	"icons/icon.svg",
 	"icons/icon-192.png",
 	"icons/icon-512.png",

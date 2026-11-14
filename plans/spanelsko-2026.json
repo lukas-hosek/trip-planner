@@ -1,0 +1,355 @@
+{
+  "format": "trip-plan",
+  "version": 1,
+  "name": "Španělsko 2026",
+  "description": "9.–16. 8. 2026: Bilbao, přes Logroño a Tudelu na úplné zatmění Slunce v Bardenas Reales, pak Zaragoza a Barcelona.",
+  "note": "Sestaveno 14. 11. 2026 z itineráře v projektu (stav k 9. 8. 2026). Polohy ubytování jsou přibližné (do ~200 m), u ostatních míst podle Wikipedie a OpenStreetMap.",
+  "categories": {
+    "transport": { "label": "Doprava", "color": "#4a6fa5" },
+    "stay": { "label": "Ubytování", "color": "#8a4f7d" },
+    "sight": { "label": "Památky a muzea", "color": "#575c93" },
+    "city": { "label": "Města a čtvrti", "color": "#b0731c" },
+    "eclipse": { "label": "Zatmění", "color": "#a83a4a" }
+  },
+  "tags": {
+    "d1": { "label": "Ne 9. 8.", "itinerary": true },
+    "d2": { "label": "Po 10. 8.", "itinerary": true },
+    "d3": { "label": "Út 11. 8.", "itinerary": true },
+    "d4": { "label": "St 12. 8.", "itinerary": true },
+    "d5": { "label": "Čt 13. 8.", "itinerary": true },
+    "d6": { "label": "Pá 14. 8.", "itinerary": true },
+    "d7": { "label": "So 15. 8.", "itinerary": true },
+    "d8": { "label": "Ne 16. 8.", "itinerary": true },
+    "bilbao": { "label": "Bilbao", "filterable": true },
+    "logrono": { "label": "Logroño", "filterable": true },
+    "tudela": { "label": "Tudela", "filterable": true },
+    "zaragoza": { "label": "Zaragoza", "filterable": true },
+    "barcelona": { "label": "Barcelona", "filterable": true },
+    "paid": { "label": "Vstupenky koupené", "color": "#2f7a4b" },
+    "not-bought": { "label": "Vstupenky nekoupené", "color": "#a8641a" },
+    "check-date": { "label": "Ověřit datum vstupenky", "color": "#a8641a" },
+    "unconfirmed": { "label": "Nepotvrzeno (?)", "color": "#a8641a" },
+    "holiday": { "label": "15. 8. státní svátek", "color": "#a8641a" },
+    "approx": { "label": "Poloha přibližná", "color": "#5b6960" },
+    "flight-in": { "label": "Přestup 13:15 → 16:40", "color": "#5b6960" },
+    "flight-out": { "label": "Odlet 16. 8. v 17:30", "color": "#5b6960" },
+    "arrive-18": { "label": "Přílet 17:55", "color": "#5b6960" },
+    "slot-14": { "label": "Vstup ve 14:00", "color": "#5b6960" },
+    "car-pickup": { "label": "Auto od 16:00", "color": "#5b6960" },
+    "train": { "label": "Iryo 18:58 → 20:42", "color": "#5b6960" },
+    "checkin-15": { "label": "Příjezd 15:00–16:00", "color": "#5b6960" },
+    "checkin-21": { "label": "Příjezd 21:00–22:00", "color": "#5b6960" }
+  },
+  "places": [
+    {
+      "id": "bcn-airport",
+      "name": "Letiště Barcelona-El Prat",
+      "category": "transport",
+      "lat": 41.29694,
+      "lng": 2.07833,
+      "tags": ["d1", "d8", "barcelona", "flight-in", "flight-out"],
+      "description": "Hlavní katalánské letiště Josepa Tarradellase, druhé nejrušnější ve Španělsku. Leží asi 12 km jihozápadně od centra Barcelony. Terminál T1 navrhl Ricardo Bofill a otevřel se v roce 2009.\n\nNa cestě tam slouží jen k přestupu (přílet ve 13:15, let do Bilbaa v 16:40), na konci cesty je výchozím bodem letu domů.",
+      "tip": "Při přestupu 9. 8. zůstat na letišti: zavazadla se přeloží a na gate stačí jít s palubní vstupenkou. 16. 8. je odlet v 17:30. Apartmán je nutné opustit do 11:00, na letiště se dostanete Aerobusem po Gran Vía nebo vlakem R2 Nord ze Sants.",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Josep_Tarradellas_Barcelona–El_Prat_Airport"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Airport_Barcelona_seen_from_air.jpg"
+      }
+    },
+    {
+      "id": "bio-airport",
+      "name": "Letiště Bilbao",
+      "category": "transport",
+      "lat": 43.30111,
+      "lng": -2.91056,
+      "tags": ["d1", "bilbao", "arrive-18"],
+      "description": "Hlavní letiště Baskicka v obcích Loiu a Sondika, asi 12 km od centra Bilbaa. Odbavovací budovu ve tvaru ptáka s roztaženými křídly navrhl Santiago Calatrava. Patří k několika málo ziskovým letištím na severu Španělska.",
+      "tip": "Do centra jezdí autobus Bizkaibus A3247 přibližně za 20–25 minut. Ubytování čeká příjezd mezi 18:00 a 19:00, takže není kam spěchat.",
+      "website": "https://www.aena.es/es/bilbao.html",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Bilbao_Airport", "https://es.wikipedia.org/wiki/Aeropuerto_de_Bilbao"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Bilbao_Airport_(48131422848).jpg",
+        "category": "https://commons.wikimedia.org/wiki/Category:Bilbao_Airport"
+      }
+    },
+    {
+      "id": "basque-suite",
+      "name": "Basque Suite (ubytování)",
+      "category": "stay",
+      "lat": 43.2589,
+      "lng": -2.923,
+      "tags": ["d1", "d2", "bilbao", "approx"],
+      "description": "Apartmán v pěší ulici Calle de la Cruz uprostřed bilbaoského Casco Viejo, pár kroků od Plaza de Unamuno a katedrály. Ubytování na dvě noci, 9. a 10. 8.",
+      "tip": "Požadovaný příjezd 9. 8. mezi 18:00 a 19:00. Poloha na mapě je přibližná (podle ulice), před příjezdem ji ověřte. Nejbližší je stanice metra Casco Viejo.",
+      "website": "https://basquesuite-web.pages.dev/en/",
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Bilbao_-_Catedral_de_Santiago_51.JPG",
+        "subject": "Catedral de Santiago, Bilbao"
+      }
+    },
+    {
+      "id": "guggenheim",
+      "name": "Guggenheimovo muzeum Bilbao",
+      "category": "sight",
+      "lat": 43.26861,
+      "lng": -2.93389,
+      "tags": ["d2", "bilbao", "slot-14"],
+      "description": "Muzeum moderního a současného umění na břehu ústí řeky Nervión, otevřené v roce 1997. Budova Franka Gehryho obložená titanovými plechy patří k nejznámějším stavbám konce 20. století a nastartovala proměnu Bilbaa z průmyslového přístavu v kulturní cíl.\n\nPřed vchodem stojí květinový pes Puppy od Jeffa Koonse, u řeky obří pavouk Maman od Louise Bourgeois. Uvnitř je mimo jiné instalace Richarda Serry The Matter of Time.",
+      "tip": "Návštěva je naplánovaná na 14:00. Na prohlídku počítejte se 2–3 hodinami. Z Casco Viejo je to asi 20 minut pěšky podél řeky. 10. 8. hlásí předpověď ráno možnou bouřku, odpoledne se má protrhávat.",
+      "website": "https://www.guggenheim-bilbao.eus/",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Guggenheim_Museum_Bilbao"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Museo_Guggenheim_--_2021_--_Bilbao,_Euskadi,_España.jpg",
+        "category": "https://commons.wikimedia.org/wiki/Category:Guggenheim_Museum_Bilbao"
+      }
+    },
+    {
+      "id": "casco-viejo",
+      "name": "Casco Viejo a katedrála sv. Jakuba",
+      "category": "city",
+      "lat": 43.25694,
+      "lng": -2.92389,
+      "tags": ["d3", "bilbao"],
+      "description": "Středověké jádro Bilbaa, kterému se podle sedmi původních souběžných ulic říká Siete Calles (baskicky Zazpikaleak). Od roku 1972 je chráněné jako historický celek. Po povodni v roce 1983 bylo obnoveno a dnes je plné barů s pintxos.\n\nV jeho středu stojí gotická katedrála sv. Jakuba (Santiago), zastávka na pobřežní větvi Svatojakubské cesty. Hned vedle jsou Plaza Nueva s podloubím a tržnice La Ribera.",
+      "tip": "Dopoledne 11. 8. před převzetím auta. Pintxos jsou nejlepší kolem poledne na Plaza Nueva. Bod na mapě ukazuje katedrálu.",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Casco_Viejo", "https://en.wikipedia.org/wiki/Bilbao_Cathedral", "https://es.wikipedia.org/wiki/Catedral_de_Santiago_(Bilbao)"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Vue_de_la_ville_ancienne_(Casco_Viejo)_de_Bilbao_(3452403823).jpg"
+      }
+    },
+    {
+      "id": "abando",
+      "name": "Nádraží Bilbao-Abando (převzetí auta)",
+      "category": "transport",
+      "lat": 43.26139,
+      "lng": -2.92778,
+      "tags": ["d3", "bilbao", "car-pickup"],
+      "description": "Hlavní bilbaoské nádraží Abando Indalecio Prieto, dříve Estación del Norte. Hala z roku 1948 má obří vitráž s výjevy baskického života. Sídlí tu kanceláře půjčoven aut.",
+      "tip": "Auto se přebírá od 16:00. Večer pak přejezd do Logroña, asi 140 km a přibližně 1 h 45 min po AP-68. V Logroñu má být i večer kolem 33 °C.",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Bilbao-Abando_railway_station"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Abando_inside.jpg"
+      }
+    },
+    {
+      "id": "hotel-logrono",
+      "name": "Hotel Ciudad de Logroño",
+      "category": "stay",
+      "lat": 42.4612,
+      "lng": -2.4418,
+      "tags": ["d3", "logrono", "approx"],
+      "description": "Tříhvězdičkový hotel v ulici Menéndez Pelayo 7, naproti parku Gallarza, asi 700 m od konkatedrály Santa María de la Redonda. Na tapas v Calle Laurel je to asi 10 minut pěšky.",
+      "tip": "Check-in od 14:00 do půlnoci. Parkování v hotelu je placené (zhruba 13 € za den). Poloha na mapě je přibližná, ověřte ji v navigaci.",
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Façade_of_Santa_María_de_la_Redonda_in_Logroño.jpg",
+        "subject": "Logroño, Santa María de la Redonda"
+      }
+    },
+    {
+      "id": "hotel-tudela",
+      "name": "Hotel Santa Ana Tudela",
+      "category": "stay",
+      "lat": 42.063,
+      "lng": -1.6058,
+      "tags": ["d4", "tudela", "checkin-15", "approx"],
+      "description": "Čtyřhvězdičkový hotel v paláci z 18. století v Calle Rúa 27, v historickém centru Tudely. Katedrála je vzdálená asi 120 m, náměstí Plaza de los Fueros asi 300 m.",
+      "tip": "Schválený příjezd je 15:00–16:00, takže se ubytujte ještě před odjezdem na zatmění (původní itinerář uvádí ubytování až potom). Parkování je placené, kolem 15 € za noc. Staré město je pěší zóna a navigace tu bloudí. Poloha na mapě je přibližná.",
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Panorámica_de_la_ciudad_de_Tudela,_Navarra.jpg",
+        "subject": "Tudela"
+      }
+    },
+    {
+      "id": "aguilares",
+      "name": "Bardenas Reales – Aguilares (zatmění)",
+      "category": "eclipse",
+      "lat": 42.17963,
+      "lng": -1.53332,
+      "tags": ["d4", "paid"],
+      "description": "Oficiální pozorovací místo navarrské sítě Eklipse u informačního centra přírodního parku Bardenas Reales (Finca de Aguilares). Bardenas jsou polopoušť a badlands o rozloze asi 42 000 ha s erozí vymodelovanými svědeckými vrchy, mezi nimiž je nejslavnější Castildetierra.\n\nÚplné zatmění Slunce 12. 8. 2026 má tady trvat asi 73 sekund. Kapacita místa je 1 000 lidí a je tu parkoviště, voda, toalety, občerstvení a zdravotní služba.",
+      "tip": "Vjezd z NA-134 (Tudela–Arguedas) na km 15,1, pak 6 km po silnici k informačnímu centru. Areál se otevírá v 11:00. Vstupenky a parkovací místo jsou zakoupené předem. Slunce bude při totalitě velmi nízko nad západním obzorem, takže vadit může i malý pás oblačnosti. Kolem 20:00 má být přes 39 °C, vezměte hodně vody.",
+      "website": "https://eklipsenavarra.com/es/puntos-de-observación/bardenas-reales-aguilares",
+      "links": [{ "label": "Park Bardenas Reales", "url": "https://bardenasreales.es/" }],
+      "wikipedia": ["https://en.wikipedia.org/wiki/Bardenas_Reales"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Bardenas_Reales6.jpg",
+        "subject": "Bardenas Reales, Castildetierra"
+      }
+    },
+    {
+      "id": "hotel-zaragoza",
+      "name": "VTZ Hotel Plaza España",
+      "category": "stay",
+      "lat": 41.6512,
+      "lng": -0.8797,
+      "tags": ["d5", "zaragoza", "approx"],
+      "description": "Hotel přímo na Plaza de España 7, na začátku Paseo de la Independencia v centru Zaragozy. K bazilice del Pilar a k La Seo je to pěšky 10 minut, římské divadlo je asi 400 m daleko.",
+      "tip": "Check-in od 15:00. 13. 8. hlásí předpověď extrémní vedro (41 °C), takže prohlídky naplánujte na ráno a podvečer. Poloha na mapě je přibližná.",
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Basílica_del_Pilar_001.jpg",
+        "subject": "Zaragoza, Basílica del Pilar"
+      }
+    },
+    {
+      "id": "pilar",
+      "name": "Bazilika Nuestra Señora del Pilar",
+      "category": "sight",
+      "lat": 41.65694,
+      "lng": -0.87833,
+      "tags": ["d5", "zaragoza"],
+      "description": "Barokní katedrála-bazilika na břehu Ebra, stavěná od roku 1681. Je jedním z nejvýznamnějších mariánských poutních míst a podle tradice stojí na místě, kde se apoštolu Jakubovi zjevila Panna Marie na sloupu (pilar).\n\nMá jedenáct kopulí s barevnými taškami a čtyři věže. Některé fresky v kopulích namaloval mladý Francisco Goya.",
+      "tip": "Vstup do baziliky je zdarma. Na severozápadní věž vyjíždí výtah (placený) s výhledem na město a Ebro. Nejlepší pohled na celou stavbu je z kamenného mostu Puente de Piedra.",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Basilica_of_Our_Lady_of_the_Pillar"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Basilica_of_Our_Lady_of_the_Pillar_and_the_Ebro_River,_Zaragoza.jpg",
+        "category": "https://commons.wikimedia.org/wiki/Category:Catedral-Basílica_de_Nuestra_Señora_del_Pilar_de_Zaragoza"
+      }
+    },
+    {
+      "id": "la-seo",
+      "name": "Katedrála La Seo",
+      "category": "sight",
+      "lat": 41.65472,
+      "lng": -0.87583,
+      "tags": ["d5", "zaragoza", "not-bought"],
+      "description": "Katedrála Spasitele (La Seo del Salvador) na Plaza de la Seo, první zaragozská katedrála. Stojí na místě římského fóra, vizigótského kostela a hlavní mešity. Mísí se v ní románský, gotický, mudéjarský a barokní sloh.\n\nMudéjarská zeď apsidy s geometrickými vzory z cihel a keramiky je od roku 2001 součástí světového dědictví UNESCO (Mudéjarská architektura Aragonie). Uvnitř je muzeum gobelínů.",
+      "tip": "Vstupenky zatím nekoupené. Z Pilaru je to asi 300 m přes Plaza del Pilar.",
+      "website": "https://www.zaragoza.es/sede/servicio/monumento/0",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Cathedral_of_the_Savior_of_Zaragoza", "https://es.wikipedia.org/wiki/Catedral_del_Salvador_(Zaragoza)"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:La_SEO_(9136991943).jpg"
+      }
+    },
+    {
+      "id": "aljaferia",
+      "name": "Palác Aljafería",
+      "category": "sight",
+      "lat": 41.65639,
+      "lng": -0.89667,
+      "tags": ["d5", "zaragoza", "not-bought"],
+      "description": "Opevněný palác postavený ve 2. polovině 11. století pro taifskou dynastii Banu Hud. Patří k nejvýznamnějším památkám islámské architektury v Evropě mimo Andalusii. Po dobytí Zaragozy v roce 1118 se stal sídlem aragonských králů a později ho přestavěli Katoličtí králové.\n\nNejstarší je Trubadúrova věž, pojmenovaná podle dramatu, z něhož vznikla Verdiho opera Trubadúr. Dnes tu sídlí aragonský parlament.",
+      "tip": "Vstupenky zatím nekoupené. Z centra je to asi 15–20 minut pěšky na západ. Palác je na cestě k nádraží Delicias, takže se dá spojit s pátkem 14. 8. před vrácením auta.",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Aljafería", "https://es.wikipedia.org/wiki/Palacio_de_la_Aljafería"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Palacio_de_La_Aljafería.jpg"
+      }
+    },
+    {
+      "id": "delicias",
+      "name": "Nádraží Zaragoza-Delicias",
+      "category": "transport",
+      "lat": 41.65861,
+      "lng": -0.91111,
+      "tags": ["d6", "zaragoza", "train"],
+      "description": "Intermodální vlakové a autobusové nádraží otevřené v roce 2003, kudy projíždějí vysokorychlostní vlaky Madrid–Barcelona. Obří halu s perforovanou střechou navrhli Carlos Ferrater a José María Valero. Stavba získala Brunelovu cenu za železniční architekturu.",
+      "tip": "Vrácení auta (místo vrácení si ověřte ve smlouvě) a vlak Iryo v 18:58, příjezd do Barcelona-Sants ve 20:42. Na nádraží je od centra asi 15 minut autem.",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Zaragoza–Delicias_railway_station", "https://es.wikipedia.org/wiki/Estación_de_Zaragoza-Delicias"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:AveZaragozaDelicias.jpg"
+      }
+    },
+    {
+      "id": "sants",
+      "name": "Nádraží Barcelona-Sants",
+      "category": "transport",
+      "lat": 41.37889,
+      "lng": 2.14,
+      "tags": ["d6", "barcelona", "train"],
+      "description": "Hlavní barcelonské nádraží otevřené v roce 1975, kam přijíždějí vysokorychlostní vlaky z Madridu, Zaragozy i Francie. Přímo pod ním je stanice metra Sants Estació (linky L3 a L5).",
+      "tip": "Příjezd ve 20:42. Do apartmánu na Gran Via 439 je to asi 15 minut pěšky nebo dvě zastávky metrem L1 od Plaça d'Espanya. Příjezd do apartmánu je schválený na 21:00–22:00.",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Barcelona_Sants_railway_station"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:202201_Concourse_of_Barcelona-Sants.jpg"
+      }
+    },
+    {
+      "id": "tsa-gran-via",
+      "name": "TSA Gran Via (apartmán)",
+      "category": "stay",
+      "lat": 41.37855,
+      "lng": 2.15342,
+      "tags": ["d6", "d7", "barcelona", "checkin-21"],
+      "description": "Apartmány na Gran Via de les Corts Catalanes 439 v Eixample, asi 500 m od Plaça d'Espanya a výstaviště Fira de Barcelona. Ubytování na dvě noci, 14. a 15. 8.",
+      "tip": "Schválený příjezd 21:00–22:00, samoobslužný check-in podle e-mailu (zkontrolujte ho předem). Odhlášení 16. 8. do 11:00.",
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Barcelona_-_Plaça_de_Catalunya_(5).jpg",
+        "subject": "Barcelona, Plaça de Catalunya"
+      }
+    },
+    {
+      "id": "sagrada-familia",
+      "name": "Sagrada Família",
+      "category": "sight",
+      "lat": 41.40369,
+      "lng": 2.17433,
+      "tags": ["d7", "barcelona", "paid", "check-date", "holiday"],
+      "description": "Gaudího chrám Svaté rodiny, stavěný od roku 1882 a stále nedokončený. Gaudí na něm pracoval přes 40 let až do své smrti v roce 1926 a je v něm pohřben. Interiér připomíná kamenný les sloupů, které se větví pod klenbou a prosvětlují je barevné vitráže.\n\nRozestavěnou stavbu vysvětil v roce 2010 papež Benedikt XVI. jako baziliku. Je součástí světového dědictví UNESCO.",
+      "tip": "Vstupenky za 52 € jsou zaplacené, ale datum a čas návštěvy chybí. Ověřte je přímo ve vstupence. Pokud vycházejí na sobotu 15. 8., počítejte se svátečními davy. Z Gran Via je to metrem L1 a L5 asi 25 minut.",
+      "website": "https://sagradafamilia.org/",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Sagrada_Família", "https://ca.wikipedia.org/wiki/Temple_Expiatori_de_la_Sagrada_Família"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Sagrada_Familia_02.jpg"
+      }
+    },
+    {
+      "id": "barri-gotic",
+      "name": "Barri Gòtic a katedrála",
+      "category": "city",
+      "lat": 41.38389,
+      "lng": 2.17639,
+      "tags": ["d7", "barcelona", "holiday"],
+      "description": "Historické jádro staré Barcelony mezi Ramblou a Via Laietana, se zbytky římských hradeb a středověkou židovskou čtvrtí El Call. Velká část „gotického“ vzhledu je ve skutečnosti novogotika z přestaveb před výstavou v roce 1929.\n\nUprostřed stojí gotická katedrála sv. Kříže a sv. Eulálie. Její novogotické průčelí bylo dostavěno až koncem 19. století. V křížové chodbě chovají 13 bílých hus, jednu za každý rok života mučednice Eulálie.",
+      "tip": "15. 8. je ve Španělsku státní svátek, některé obchody budou zavřené a centrum plné lidí. Do katedrály se platí vstup a vyžaduje se zakrytá ramena. Bod na mapě ukazuje katedrálu.",
+      "website": "https://catedralbcn.org/en/",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Gothic_Quarter,_Barcelona", "https://en.wikipedia.org/wiki/Barcelona_Cathedral", "https://ca.wikipedia.org/wiki/Catedral_de_Barcelona"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:047_Catedral_i_torre_romana_de_Ca_l'Ardiaca,_av._Catedral_(Barcelona).jpg",
+        "category": "https://commons.wikimedia.org/wiki/Category:Catedral_de_Barcelona"
+      }
+    },
+    {
+      "id": "san-sebastian",
+      "name": "San Sebastián – pláž La Concha",
+      "category": "city",
+      "lat": 43.3177,
+      "lng": -1.988,
+      "tags": ["unconfirmed"],
+      "description": "Lázeňské město na baskickém pobřeží, asi 100 km východně od Bilbaa, známé gastronomií a největší hustotou michelinských hvězd na obyvatele. Půlkruhová pláž La Concha v zálivu stejného jména, dlouhá asi 1,35 km, patří k nejslavnějším městským plážím Evropy.\n\nNad zálivem se zvedají vrchy Urgull a Igueldo s lanovkou a výhledem na celou zátoku. Ve starém městě (Parte Vieja) jsou desítky barů s pintxos.",
+      "tip": "V itineráři je jako možný výlet v pondělí 10. 8. s otazníkem, takže nepotvrzený. Autobusy z Bilbaa jezdí přibližně hodinu. Pozor na kolizi s Guggenheimem ve 14:00. 10. 8. je v San Sebastiánu chladněji (26 °C) a dopoledne může slabě pršet. Bod na mapě je přibližně uprostřed pláže.",
+      "website": "https://sansebastianturismoa.eus/hacer/playas/playa-de-la-concha/",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Beach_of_La_Concha", "https://es.wikipedia.org/wiki/Playa_de_La_Concha_(San_Sebastián)"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Playa_de_la_Concha,_San_Sebastián_modified.jpg"
+      }
+    },
+    {
+      "id": "calle-laurel",
+      "name": "Calle del Laurel",
+      "category": "city",
+      "lat": 42.46551,
+      "lng": -2.44846,
+      "tags": ["logrono"],
+      "description": "Asi 200 m dlouhá ulička ve starém městě Logroña, kde je bar vedle baru. Patří k nejslavnějším ulicím na tapas ve Španělsku. Vznikla po zbourání městských hradeb v roce 1862, které vedly souběžně podél dnešní Bretón de los Herreros.\n\nKaždý bar má svou specialitu, nejznámější jsou grilované žampiony („champis“) nebo pinchos s chorizem. K tomu se pije víno Rioja.",
+      "tip": "Tip na večer 11. 8. po příjezdu do Logroña. Od hotelu je to asi 10 minut pěšky. Ožívá zhruba od 20:00 a typicky se chodí od baru k baru.",
+      "website": "https://visitalogrono.com/punto-de-inters/calle-laurel/?lang=en",
+      "wikipedia": ["https://es.wikipedia.org/wiki/Calle_del_Laurel_(Logroño)"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Façade_of_Santa_María_de_la_Redonda_in_Logroño.jpg",
+        "subject": "Logroño, Santa María de la Redonda"
+      }
+    },
+    {
+      "id": "tudela-cathedral",
+      "name": "Katedrála v Tudele",
+      "category": "sight",
+      "lat": 42.0636,
+      "lng": -1.6054,
+      "tags": ["tudela"],
+      "description": "Pozdně románská katedrála Panny Marie na Plaza Vieja, postavená od konce 12. století na místě hlavní mešity. Původně byla kolegiátním kostelem, katedrálou se stala až v 18. století. Od roku 1884 je národní kulturní památkou.\n\nHlavní západní portál, Puerta del Juicio (Brána Posledního soudu), zdobí přes sto skupin soch s výjevy nebe a pekla.",
+      "tip": "Je hned u hotelu (asi 120 m), takže se hodí na krátkou prohlídku 12. 8. po ubytování nebo 13. 8. ráno před odjezdem do Zaragozy.",
+      "wikipedia": ["https://en.wikipedia.org/wiki/Tudela_Cathedral"],
+      "commons": {
+        "file": "https://commons.wikimedia.org/wiki/File:Tudela_church.jpg"
+      }
+    }
+  ]
+}

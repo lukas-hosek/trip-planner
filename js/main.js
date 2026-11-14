@@ -33,7 +33,7 @@ import { loadPlacePhotos } from "./services/place-photos.js";
 
 const APP_NAME = "TripMap";
 // Shown on the very first visit and whenever no plan is stored.
-const DEMO_PLAN_URL = "plans/saske-svycarsko.json";
+const DEMO_PLAN_URL = "plans/spanelsko-2026.json";
 const LONG_TOAST_DURATION_IN_MILLISECONDS = 10_000;
 
 startApp().catch(error => {
