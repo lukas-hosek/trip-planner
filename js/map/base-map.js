@@ -37,10 +37,6 @@ export const HIGHEST_DOWNLOADED_ZOOM = 16;
 
 // Below this span (in degrees, about 2 km) the map would zoom in absurdly far on a one-place plan.
 const MINIMUM_BOUNDS_SPAN_IN_DEGREES = 0.02;
-// Zoom 9 shows a whole region; plans spread wider than that may zoom out further, just enough to see all places.
-const DEFAULT_MINIMUM_ZOOM = 9;
-const ZOOM_LEVELS_BELOW_FITTED_VIEW = 2;
-const ABSOLUTE_MINIMUM_ZOOM = 3;
 // A couple of failed tiles can be bad luck; several mean the server (or the network) is unreachable.
 const FAILED_TILES_BEFORE_NOTICE = 3;
 
@@ -62,9 +58,6 @@ export function computePlacesBounds(places) {
 export function createMap(containerElementId, placesBounds) {
 	const map = L.map(containerElementId, { maxZoom: 17 });
 	map.fitBounds(placesBounds, { padding: [30, 30] });
-	map.setMinZoom(Math.max(ABSOLUTE_MINIMUM_ZOOM, Math.min(DEFAULT_MINIMUM_ZOOM, map.getZoom() - ZOOM_LEVELS_BELOW_FITTED_VIEW)));
-	// Stops the user from accidentally panning far away from the places with no way back.
-	map.setMaxBounds(placesBounds.pad(1.2));
 	L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
 	return map;
 }

@@ -15,8 +15,6 @@ const STALE_POSITION_AGE_IN_MILLISECONDS = 60_000;
 // Close enough to see the surrounding paths when jumping to the user for the first time.
 const ZOOM_ON_FIRST_FIX = 14;
 
-const FAR_FROM_PLACES_MESSAGE = "Jste daleko od míst v plánu. Mapa zůstane u nich.";
-
 const GEOLOCATION_ERROR = { permissionDenied: 1, positionUnavailable: 2, timeout: 3 };
 // Leaflet draws the accuracy circle as SVG with inline colours, so it can't read the CSS variable; keep in sync with --color-user-location.
 const USER_LOCATION_COLOR = "#1a73e8";
@@ -68,10 +66,6 @@ export function addUserLocationControl(map) {
 	function handleLocationButtonClick() {
 		const isAlreadyTracking = geolocationWatchId !== null && latestPosition;
 		if (isAlreadyTracking) {
-			if (!isWithinMapLimits(latestPosition)) {
-				showToast(FAR_FROM_PLACES_MESSAGE);
-				return;
-			}
 			isFollowingUser = true;
 			centerMapOnUser({ isFirstFix: false });
 			return;
@@ -150,23 +144,11 @@ export function addUserLocationControl(map) {
 	}
 
 	function announceFirstFix(position) {
-		if (isWithinMapLimits(position)) {
-			showToast(`Poloha zjištěna, přesnost asi ${Math.round(position.accuracyInMeters)} m.`, 3500);
-		} else {
-			showToast(FAR_FROM_PLACES_MESSAGE);
-		}
-	}
-
-	/**
-	 * The map can't be panned beyond its limits around the places (see createMap) and would snap back,
-	 * so it doesn't try to follow a user who is outside them. The position is still drawn.
-	 */
-	function isWithinMapLimits({ latitude, longitude }) {
-		return map.options.maxBounds?.contains([latitude, longitude]) ?? true;
+		showToast(`Poloha zjištěna, přesnost asi ${Math.round(position.accuracyInMeters)} m.`, 3500);
 	}
 
 	function centerMapOnUser({ isFirstFix }) {
-		if (!latestPosition || !isWithinMapLimits(latestPosition)) {
+		if (!latestPosition) {
 			return;
 		}
 		const coordinates = [latestPosition.latitude, latestPosition.longitude];
