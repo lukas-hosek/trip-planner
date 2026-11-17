@@ -1,7 +1,8 @@
 /*
-	"Moje plány" dialog, opened from the menu button next to the plan name: one list of all stored plans,
+	The plans dialog ("My plans"), opened from the menu button next to the plan name: one list of all stored plans,
 	each with its offline status and a ⋯ menu (share a link, export the JSON, save or release offline data, delete).
-	The actions work for any stored plan, not only the open one. Below the list: importing a plan and the help.
+	The actions work for any stored plan, not only the open one. Below the list: importing a plan and the help;
+	in the header, the app settings (settings-panel.js). All of them are views of this one dialog.
 	Opening or importing another plan reloads the app with that plan.
 */
 
@@ -9,18 +10,19 @@ import { getActivePlan, getPlaces } from "../data/active-plan.js";
 import { getPlanKey, normalizePlan, PlanFormatError, slugify } from "../data/plan-format.js";
 import { encodePlanLink, extractRawPlanFromText, MAXIMUM_IMPORT_TEXT_LENGTH } from "../data/plan-link.js";
 import { deleteStoredPlan, getStoredPlan, listStoredPlans, savePlan, setLastOpenedPlanKey } from "../data/plan-store.js";
+import { formatDate, formatNumber, translate } from "../language/translations.js";
 import { computePlacesBounds } from "../map/base-map.js";
 import { deletePlanDownload, downloadPlanForOffline, getPlanDownloadSummary } from "../services/offline-download.js";
 import { findPlacePhotos, loadPlacePhotos } from "../services/place-photos.js";
 import { appState } from "../state/app-state.js";
 import { escapeHtml } from "../utils/html.js";
 import { isPhoneLayout } from "../utils/media-queries.js";
+import { closeOpenMenu, initMenuKeyboard, isInOpenMenuOrTrigger, isMenuOpen, openMenu } from "./menu.js";
+import { renderSettingsView, SETTINGS_VIEW_NAME } from "./settings-panel.js";
 import { showToastAfterReload } from "./toast.js";
 
-// The first tap on "Smazat plán" only asks; the second one, within this time, deletes.
+// The first tap on "Delete plan" only asks; the second one, within this time, deletes.
 const DELETE_CONFIRMATION_TIMEOUT_IN_MILLISECONDS = 4000;
-const MENU_GAP_IN_PIXELS = 4;
-const MENU_VIEWPORT_MARGIN_IN_PIXELS = 8;
 
 let elements = null;
 let openPlanBounds = null;
@@ -28,8 +30,8 @@ let openPlanBounds = null;
 const downloadSummariesByPlanKey = new Map();
 // Downloads in progress: plan key -> percent. Kept here, so closing the dialog doesn't lose track of them.
 const downloadProgressByPlanKey = new Map();
+// The plan whose ⋯ menu is open, or null.
 let menuPlanKey = null;
-let menuTriggerButton = null;
 let resetDeleteConfirmationTimer = null;
 
 /** @param options.placesBounds  bounds of the open plan's places, for its offline download */
@@ -40,6 +42,7 @@ export function initPlansPanel(options) {
 		listView: document.getElementById("plans-list-view"),
 		importView: document.getElementById("plans-import-view"),
 		helpView: document.getElementById("plans-help-view"),
+		settingsView: document.getElementById("plans-settings-view"),
 		storedPlanList: document.getElementById("stored-plan-list"),
 		status: document.getElementById("plans-status"),
 		menu: document.getElementById("plan-actions-menu"),
@@ -49,7 +52,8 @@ export function initPlansPanel(options) {
 		importFileInput: document.getElementById("import-file-input"),
 	};
 
-	document.getElementById("plans-button").addEventListener("click", openPlansDialog);
+	// Not the function itself: a click event has a "view" property of its own (the window).
+	document.getElementById("plans-button").addEventListener("click", () => openPlansDialog());
 	for (const closeButton of elements.dialog.querySelectorAll("[data-close-dialog]")) {
 		closeButton.addEventListener("click", () => elements.dialog.close());
 	}
@@ -57,27 +61,29 @@ export function initPlansPanel(options) {
 		backButton.addEventListener("click", () => showView(elements.listView));
 	}
 	elements.dialog.addEventListener("click", handleDialogClick);
-	// Esc closes an open menu first, and only the next Esc closes the dialog. Cancelling the key stops the dialog's
-	// close request; the cancel event is only a fallback, because browsers don't always let a page cancel it.
+	// Esc closes an open menu (the ⋯ menu or a settings choice) first, and only the next Esc closes the dialog.
+	// Cancelling the key stops the dialog's close request; the cancel event is only a fallback,
+	// because browsers don't always let a page cancel it.
 	elements.dialog.addEventListener("keydown", keyboardEvent => {
-		if (keyboardEvent.key === "Escape" && menuPlanKey !== null) {
+		if (keyboardEvent.key === "Escape" && isMenuOpen()) {
 			keyboardEvent.preventDefault();
-			closeMenu({ returnFocus: true });
+			closeOpenMenu({ returnFocus: true });
 		}
 	});
 	elements.dialog.addEventListener("cancel", cancelEvent => {
-		if (menuPlanKey !== null) {
+		if (isMenuOpen()) {
 			cancelEvent.preventDefault();
-			closeMenu({ returnFocus: true });
+			closeOpenMenu({ returnFocus: true });
 		}
 	});
-	elements.dialog.addEventListener("close", () => closeMenu());
+	elements.dialog.addEventListener("close", () => closeOpenMenu());
 
 	elements.storedPlanList.addEventListener("click", handleStoredPlanClick);
 	elements.menu.addEventListener("click", handleMenuClick);
-	elements.menu.addEventListener("keydown", handleMenuKeydown);
+	initMenuKeyboard(elements.menu);
 	document.getElementById("show-import-button").addEventListener("click", showImportView);
 	document.getElementById("show-help-button").addEventListener("click", () => showView(elements.helpView));
+	document.getElementById("show-settings-button").addEventListener("click", () => showView(elements.settingsView));
 
 	elements.importButton.addEventListener("click", () => importPlanFromText(elements.importText.value));
 	document.getElementById("paste-from-clipboard-button").addEventListener("click", pasteFromClipboard);
@@ -85,19 +91,22 @@ export function initPlansPanel(options) {
 	elements.importFileInput.addEventListener("change", importPlanFromChosenFile);
 }
 
-function openPlansDialog() {
+/** @param options.initialViewName  SETTINGS_VIEW_NAME opens the app settings instead of the list of plans */
+export function openPlansDialog({ initialViewName = null } = {}) {
 	showStatus("");
-	showView(elements.listView);
+	showView(initialViewName === SETTINGS_VIEW_NAME ? elements.settingsView : elements.listView);
 	elements.dialog.showModal();
 	refreshDownloadSummaries();
 }
 
 function showView(viewElement) {
-	closeMenu();
+	closeOpenMenu();
 	if (viewElement === elements.listView) {
 		renderStoredPlans();
+	} else if (viewElement === elements.settingsView) {
+		renderSettingsView();
 	}
-	for (const view of [elements.listView, elements.importView, elements.helpView]) {
+	for (const view of [elements.listView, elements.importView, elements.helpView, elements.settingsView]) {
 		view.hidden = view !== viewElement;
 	}
 }
@@ -110,9 +119,9 @@ function showImportView() {
 }
 
 function handleDialogClick(clickEvent) {
-	if (menuPlanKey !== null && !elements.menu.contains(clickEvent.target) && clickEvent.target.closest("[data-menu-plan-key]") !== menuTriggerButton) {
+	if (isMenuOpen() && !isInOpenMenuOrTrigger(clickEvent.target)) {
 		// A click outside an open menu only closes the menu, even on the backdrop.
-		closeMenu();
+		closeOpenMenu();
 		return;
 	}
 	// A click on the dimmed backdrop lands on the <dialog> element itself.
@@ -127,8 +136,8 @@ function renderStoredPlans() {
 	const openPlanKey = getOpenPlanKey();
 	elements.storedPlanList.innerHTML = listStoredPlans().map(storedPlan => {
 		const isOpen = storedPlan.key === openPlanKey;
-		const savedDate = new Date(storedPlan.savedAt).toLocaleDateString("cs-CZ");
-		const metaText = [isOpen ? "Otevřený" : "", formatPlaceCount(storedPlan.placeCount), savedDate].filter(Boolean).join(" · ");
+		const savedDate = formatDate(storedPlan.savedAt);
+		const metaText = [isOpen ? translate("plans.openPlan") : "", translate("plans.placeCount", { count: storedPlan.placeCount }), savedDate].filter(Boolean).join(" · ");
 		return `
 			<li class="stored-plan selectable-row" aria-current="${isOpen}">
 				<button class="stored-plan-open" type="button" data-open-plan-key="${escapeHtml(storedPlan.key)}">
@@ -139,7 +148,7 @@ function renderStoredPlans() {
 					</span>
 				</button>
 				<button class="icon-button" type="button" data-menu-plan-key="${escapeHtml(storedPlan.key)}"
-					aria-haspopup="menu" aria-expanded="false" aria-controls="plan-actions-menu" aria-label="Akce plánu ${escapeHtml(storedPlan.name)}">
+					aria-haspopup="menu" aria-expanded="false" aria-controls="plan-actions-menu" aria-label="${escapeHtml(translate("plans.actionsLabel", { name: storedPlan.name }))}">
 					<span class="icon icon--more" aria-hidden="true"></span>
 				</button>
 			</li>`;
@@ -160,13 +169,16 @@ function renderPlanStatus(planKey) {
 	const summary = downloadSummariesByPlanKey.get(planKey);
 	statusElement.className = "stored-plan-status";
 	if (progress !== undefined) {
-		statusElement.textContent = `Stahuji ${progress} %`;
+		statusElement.textContent = translate("plans.status.downloading", { percent: progress });
+	} else if (summary?.isOutdated) {
+		statusElement.classList.add("stored-plan-status--incomplete");
+		statusElement.textContent = translate("plans.status.outdated");
 	} else if (summary?.isComplete) {
 		statusElement.classList.add("stored-plan-status--offline");
-		statusElement.innerHTML = `<span class="icon icon--offline" aria-hidden="true"></span>Offline`;
+		statusElement.innerHTML = `<span class="icon icon--offline" aria-hidden="true"></span>${escapeHtml(translate("plans.status.offline"))}`;
 	} else if (summary) {
 		statusElement.classList.add("stored-plan-status--incomplete");
-		statusElement.textContent = "Offline neúplné";
+		statusElement.textContent = translate("plans.status.incomplete");
 	} else {
 		statusElement.textContent = "";
 	}
@@ -177,8 +189,21 @@ async function refreshDownloadSummaries() {
 }
 
 async function refreshDownloadSummary(planKey) {
-	downloadSummariesByPlanKey.set(planKey, await getPlanDownloadSummary(planKey));
+	downloadSummariesByPlanKey.set(planKey, await getPlanDownloadSummary(planKey, readStoredPlaces(planKey)));
 	renderPlanStatus(planKey);
+}
+
+/** The stored plan's places, or null when it can't be read (then its offline status can't be compared with it). */
+function readStoredPlaces(planKey) {
+	const storedPlan = getStoredPlan(planKey);
+	if (!storedPlan) {
+		return null;
+	}
+	try {
+		return normalizePlan(storedPlan.rawPlan).places;
+	} catch {
+		return null;
+	}
 }
 
 function handleStoredPlanClick(clickEvent) {
@@ -190,9 +215,9 @@ function handleStoredPlanClick(clickEvent) {
 	const menuButton = clickEvent.target.closest("[data-menu-plan-key]");
 	if (menuButton) {
 		if (menuPlanKey === menuButton.dataset.menuPlanKey) {
-			closeMenu({ returnFocus: true });
+			closeOpenMenu({ returnFocus: true });
 		} else {
-			openMenu(menuButton);
+			openPlanMenu(menuButton);
 		}
 	}
 }
@@ -208,48 +233,36 @@ function openStoredPlan(planKey) {
 
 // ---------- the ⋯ menu ----------
 
-function openMenu(triggerButton) {
-	closeMenu();
+function openPlanMenu(triggerButton) {
+	// Closed first, so the previous menu's onClose can't clear the plan key set below.
+	closeOpenMenu();
 	menuPlanKey = triggerButton.dataset.menuPlanKey;
-	menuTriggerButton = triggerButton;
-	triggerButton.setAttribute("aria-expanded", "true");
-	elements.menu.setAttribute("aria-label", triggerButton.getAttribute("aria-label"));
 	renderMenu();
-	elements.menu.hidden = false;
-	positionMenu(triggerButton);
-	elements.menu.querySelector("[role=menuitem]")?.focus();
-}
-
-function closeMenu({ returnFocus = false } = {}) {
-	if (menuPlanKey === null) {
-		return;
-	}
-	clearTimeout(resetDeleteConfirmationTimer);
-	elements.menu.hidden = true;
-	menuTriggerButton?.setAttribute("aria-expanded", "false");
-	if (returnFocus && menuTriggerButton?.isConnected) {
-		menuTriggerButton.focus();
-	}
-	menuPlanKey = null;
-	menuTriggerButton = null;
+	openMenu(elements.menu, triggerButton, {
+		label: triggerButton.getAttribute("aria-label"),
+		onClose: () => {
+			clearTimeout(resetDeleteConfirmationTimer);
+			menuPlanKey = null;
+		},
+	});
 }
 
 function renderMenu() {
 	const summary = downloadSummariesByPlanKey.get(menuPlanKey);
 	const isDownloading = downloadProgressByPlanKey.has(menuPlanKey);
 	const items = [
-		renderMenuItem("share", "share", "Sdílet odkaz"),
-		renderMenuItem("export", "export", "Exportovat plán", "JSON"),
+		renderMenuItem("share", "share", translate("plans.menu.share")),
+		renderMenuItem("export", "export", translate("plans.menu.export"), "JSON"),
 	];
-	// A complete download needs no repeat; an incomplete one can be finished.
+	// A complete download needs no repeat; an incomplete or outdated one can be finished.
 	if (!isDownloading && !summary?.isComplete) {
-		items.push(renderMenuItem("download", "download", "Stáhnout offline data"));
+		items.push(renderMenuItem("download", "download", translate("plans.menu.download")));
 	}
 	if (summary && !isDownloading) {
-		items.push(renderMenuItem("release", "release", "Uvolnit offline data", summary.byteCount === null ? "" : formatByteSize(summary.byteCount)));
+		items.push(renderMenuItem("release", "release", translate("plans.menu.release"), summary.byteCount === null ? "" : formatByteSize(summary.byteCount)));
 	}
 	items.push(`<div class="menu-separator" role="separator"></div>`);
-	items.push(renderMenuItem("delete", "delete", "Smazat plán", "", "menu-item--danger"));
+	items.push(renderMenuItem("delete", "delete", translate("plans.menu.delete"), "", "menu-item--danger"));
 	elements.menu.innerHTML = items.join("");
 }
 
@@ -259,41 +272,6 @@ function renderMenuItem(action, iconName, label, note = "", extraClass = "") {
 		<button class="menu-item ${extraClass}" type="button" role="menuitem" data-action="${action}">
 			<span class="icon icon--${iconName}" aria-hidden="true"></span><span class="menu-item-label">${escapeHtml(label)}</span>${noteHtml}
 		</button>`;
-}
-
-/** Below the ⋯ button, starting at its left edge; moved in from the screen edges and above the button when there is no room below. */
-function positionMenu(triggerButton) {
-	const buttonRectangle = triggerButton.getBoundingClientRect();
-	const menuRectangle = elements.menu.getBoundingClientRect();
-	const maximumLeft = window.innerWidth - menuRectangle.width - MENU_VIEWPORT_MARGIN_IN_PIXELS;
-	let top = buttonRectangle.bottom + MENU_GAP_IN_PIXELS;
-	if (top + menuRectangle.height > window.innerHeight - MENU_VIEWPORT_MARGIN_IN_PIXELS) {
-		top = Math.max(MENU_VIEWPORT_MARGIN_IN_PIXELS, buttonRectangle.top - menuRectangle.height - MENU_GAP_IN_PIXELS);
-	}
-	elements.menu.style.left = `${Math.max(MENU_VIEWPORT_MARGIN_IN_PIXELS, Math.min(buttonRectangle.left, maximumLeft))}px`;
-	elements.menu.style.top = `${top}px`;
-}
-
-function handleMenuKeydown(keyboardEvent) {
-	const items = [...elements.menu.querySelectorAll("[role=menuitem]")];
-	const currentIndex = items.indexOf(document.activeElement);
-	let nextIndex = null;
-	if (keyboardEvent.key === "ArrowDown") {
-		nextIndex = (currentIndex + 1) % items.length;
-	} else if (keyboardEvent.key === "ArrowUp") {
-		nextIndex = (currentIndex - 1 + items.length) % items.length;
-	} else if (keyboardEvent.key === "Home") {
-		nextIndex = 0;
-	} else if (keyboardEvent.key === "End") {
-		nextIndex = items.length - 1;
-	} else if (keyboardEvent.key === "Tab") {
-		closeMenu();
-		return;
-	}
-	if (nextIndex !== null) {
-		keyboardEvent.preventDefault();
-		items[nextIndex].focus();
-	}
 }
 
 function handleMenuClick(clickEvent) {
@@ -307,7 +285,7 @@ function handleMenuClick(clickEvent) {
 		handleDeleteClick(menuItem, planKey);
 		return;
 	}
-	closeMenu({ returnFocus: true });
+	closeOpenMenu({ returnFocus: true });
 	if (action === "share") {
 		sharePlan(planKey);
 	} else if (action === "export") {
@@ -324,16 +302,16 @@ function handleMenuClick(clickEvent) {
 async function handleDeleteClick(menuItem, planKey) {
 	if (!menuItem.classList.contains("menu-item--confirming")) {
 		menuItem.classList.add("menu-item--confirming");
-		menuItem.querySelector(".menu-item-label").textContent = "Opravdu smazat?";
+		menuItem.querySelector(".menu-item-label").textContent = translate("plans.menu.confirmDelete");
 		clearTimeout(resetDeleteConfirmationTimer);
 		resetDeleteConfirmationTimer = setTimeout(() => {
 			menuItem.classList.remove("menu-item--confirming");
-			menuItem.querySelector(".menu-item-label").textContent = "Smazat plán";
+			menuItem.querySelector(".menu-item-label").textContent = translate("plans.menu.delete");
 		}, DELETE_CONFIRMATION_TIMEOUT_IN_MILLISECONDS);
 		return;
 	}
 
-	closeMenu();
+	closeOpenMenu();
 	const planName = getStoredPlan(planKey)?.name ?? "";
 	deleteStoredPlan(planKey);
 	// Waits for the plan's offline map to go too, so a reload right after can't cut the deletion short.
@@ -341,18 +319,18 @@ async function handleDeleteClick(menuItem, planKey) {
 	downloadSummariesByPlanKey.delete(planKey);
 	// Deleting the open plan leaves nothing to show; the reload opens another one (or the demo when none is left).
 	if (planKey === getOpenPlanKey()) {
-		showToastAfterReload(`Plán „${planName}“ je smazaný.`);
+		showToastAfterReload(translate("plans.deleted", { name: planName }));
 		reloadApp();
 		return;
 	}
 	renderStoredPlans();
-	showStatus(`Plán „${planName}“ je smazaný.`);
+	showStatus(translate("plans.deleted", { name: planName }));
 }
 
 async function sharePlan(planKey) {
 	const storedPlan = getStoredPlan(planKey);
 	if (!storedPlan) {
-		showStatus("Plán se nepodařilo najít v úložišti.");
+		showStatus(translate("common.planNotFound"));
 		return;
 	}
 	const planLink = await encodePlanLink(storedPlan.rawPlan);
@@ -369,16 +347,16 @@ async function sharePlan(planKey) {
 	}
 	try {
 		await navigator.clipboard.writeText(planLink);
-		showStatus(`Odkaz na plán „${storedPlan.name}“ je zkopírovaný. Kdo ho otevře, uvidí plán ve své aplikaci.`);
+		showStatus(translate("plans.linkCopied", { name: storedPlan.name }));
 	} catch {
-		showStatus("Odkaz se nepodařilo zkopírovat.");
+		showStatus(translate("common.linkCopyFailed"));
 	}
 }
 
 function exportPlanAsJson(planKey) {
 	const storedPlan = getStoredPlan(planKey);
 	if (!storedPlan) {
-		showStatus("Plán se nepodařilo najít v úložišti.");
+		showStatus(translate("common.planNotFound"));
 		return;
 	}
 	const planFile = new Blob([JSON.stringify(storedPlan.rawPlan, null, "\t") + "\n"], { type: "application/json" });
@@ -392,16 +370,16 @@ function exportPlanAsJson(planKey) {
 
 async function downloadForOffline(planKey) {
 	if (!navigator.serviceWorker?.controller) {
-		showStatus("Offline režim ještě neběží. Obnovte stránku a zkuste to znovu.");
+		showStatus(translate("plans.offlineNotReady"));
 		return;
 	}
 	if (!navigator.onLine) {
-		showStatus("Jste offline. Stahovat jde jen s připojením k internetu.");
+		showStatus(translate("plans.downloadNeedsConnection"));
 		return;
 	}
 	const storedPlan = getStoredPlan(planKey);
 	if (!storedPlan) {
-		showStatus("Plán se nepodařilo najít v úložišti.");
+		showStatus(translate("common.planNotFound"));
 		return;
 	}
 
@@ -415,13 +393,13 @@ async function downloadForOffline(planKey) {
 			renderPlanStatus(planKey);
 		});
 		showStatus(failedCount === 0
-			? `Offline data plánu „${storedPlan.name}“ jsou stažená: mapa okolí všech míst a fotky.`
-			: `Offline data plánu „${storedPlan.name}“ se stáhla jen zčásti: ${failedCount} z ${totalCount} souborů chybí. Zkuste to znovu s lepším signálem.`);
+			? translate("plans.downloadComplete", { name: storedPlan.name })
+			: translate("plans.downloadPartial", { name: storedPlan.name, count: failedCount, totalCount }));
 	} catch (error) {
 		console.error("The offline download failed:", error);
 		showStatus(error instanceof PlanFormatError
-			? `Plán „${storedPlan.name}“ se nepodařilo přečíst: ${error.message}`
-			: "Stahování se nepodařilo. Zkuste to znovu.");
+			? translate("plans.planUnreadable", { name: storedPlan.name, reason: error.message })
+			: translate("plans.downloadFailed"));
 	} finally {
 		downloadProgressByPlanKey.delete(planKey);
 		await refreshDownloadSummary(planKey);
@@ -453,7 +431,7 @@ async function releaseOfflineData(planKey) {
 	const planName = getStoredPlan(planKey)?.name ?? "";
 	await deletePlanDownload(planKey);
 	await refreshDownloadSummary(planKey);
-	showStatus(`Offline data plánu „${planName}“ jsou uvolněná.`);
+	showStatus(translate("plans.released", { name: planName }));
 }
 
 function showStatus(message) {
@@ -467,7 +445,7 @@ async function pasteFromClipboard() {
 	try {
 		clipboardText = await navigator.clipboard.readText();
 	} catch {
-		showImportError("Schránku se nepodařilo přečíst. Vložte text do pole ručně.");
+		showImportError(translate("import.clipboardFailed"));
 		elements.importText.focus();
 		return;
 	}
@@ -483,7 +461,7 @@ async function importPlanFromChosenFile() {
 	}
 	// Checked before reading, so a huge file chosen by mistake is never loaded into memory.
 	if (chosenFile.size > MAXIMUM_IMPORT_TEXT_LENGTH) {
-		showImportError("Soubor je příliš velký na to, aby to byl plán.");
+		showImportError(translate("import.fileTooLarge"));
 		return;
 	}
 	const fileText = await chosenFile.text();
@@ -500,19 +478,17 @@ async function importPlanFromText(text) {
 		const { key, wasReplaced, wasSaved } = savePlan(rawPlan, normalizedPlan);
 		if (!wasSaved) {
 			// Opening the plan means reloading the app, and an unsaved plan wouldn't survive that.
-			showImportError("Plán se nepodařilo uložit do prohlížeče. Smažte starší plány nebo povolte stránce ukládání dat.");
+			showImportError(translate("import.notSaved"));
 			return;
 		}
 		setLastOpenedPlanKey(key);
-		showToastAfterReload(wasReplaced
-			? `Plán „${normalizedPlan.name}“ je aktualizovaný.`
-			: `Plán „${normalizedPlan.name}“ je uložený.`);
+		showToastAfterReload(translate(wasReplaced ? "common.planUpdated" : "common.planSaved", { name: normalizedPlan.name }));
 		reloadApp();
 	} catch (error) {
 		if (!(error instanceof PlanFormatError)) {
 			console.error("Plan import failed:", error);
 		}
-		showImportError(error instanceof PlanFormatError ? error.message : "Plán se nepodařilo načíst.");
+		showImportError(error instanceof PlanFormatError ? error.message : translate("import.failed"));
 	} finally {
 		elements.importButton.disabled = false;
 	}
@@ -535,18 +511,10 @@ function reloadApp() {
 	window.location.reload();
 }
 
-/** Czech plural: 1 místo, 2–4 místa, 5 a více míst. */
-function formatPlaceCount(count) {
-	if (count === 1) {
-		return "1 místo";
-	}
-	return count >= 2 && count <= 4 ? `${count} místa` : `${count} míst`;
-}
-
 /** "38 MB", "640 kB": rounded, because the figure only helps decide whether freeing the space is worth it. */
 function formatByteSize(byteCount) {
 	if (byteCount >= 1_000_000) {
-		return `${Math.round(byteCount / 1_000_000).toLocaleString("cs-CZ")} MB`;
+		return formatNumber(Math.round(byteCount / 1_000_000), { style: "unit", unit: "megabyte" });
 	}
-	return `${Math.max(1, Math.round(byteCount / 1000)).toLocaleString("cs-CZ")} kB`;
+	return formatNumber(Math.max(1, Math.round(byteCount / 1000)), { style: "unit", unit: "kilobyte" });
 }

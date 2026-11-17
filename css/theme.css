@@ -21,6 +21,9 @@
 	--color-user-location: #1a73e8;
 	/* Pins sit on map tiles, which stay light in dark mode, so their ring keeps the light-mode ink. */
 	--color-pin-ring-planned: #1d2a23;
+	/* The theme swatches in the settings show each theme's panel, whichever theme is on. */
+	--color-swatch-light-theme: #f8f9f6;
+	--color-swatch-dark-theme: #18201c;
 
 	--shadow-floating: 0 10px 30px rgba(29, 42, 35, .18), 0 2px 6px rgba(29, 42, 35, .10);
 	--shadow-sheet: 0 -6px 20px rgba(29, 42, 35, .16);
@@ -32,29 +35,28 @@
 	color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--color-paper: #121815;
-		--color-panel: #18201c;
-		--color-ink: #e4eae5;
-		--color-muted: #9aa89f;
-		--color-line: #2c3731;
-		--color-hover: #26302b;
-		--color-grabber: #56625b;
-		--color-accent: #e0a24a;
-		--color-elbe: #6fb0d2;
-		--color-map-background: #1b2420;
+/* data-theme always holds the theme in use (js/apply-theme-before-paint.js and js/ui/theme.js set it). */
+:root[data-theme="dark"] {
+	--color-paper: #121815;
+	--color-panel: #18201c;
+	--color-ink: #e4eae5;
+	--color-muted: #9aa89f;
+	--color-line: #2c3731;
+	--color-hover: #26302b;
+	--color-grabber: #56625b;
+	--color-accent: #e0a24a;
+	--color-elbe: #6fb0d2;
+	--color-map-background: #1b2420;
 
-		--color-warning: #e6a35a;
-		--color-danger: #f17b87;
-		--color-success: #6eb885;
+	--color-warning: #e6a35a;
+	--color-danger: #f17b87;
+	--color-success: #6eb885;
 
-		--shadow-floating: 0 10px 30px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .35);
-		--shadow-sheet: 0 -6px 20px rgba(0, 0, 0, .45);
-		--color-backdrop: rgba(0, 0, 0, .55);
+	--shadow-floating: 0 10px 30px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .35);
+	--shadow-sheet: 0 -6px 20px rgba(0, 0, 0, .45);
+	--color-backdrop: rgba(0, 0, 0, .55);
 
-		color-scheme: dark;
-	}
+	color-scheme: dark;
 }
 
 /*
@@ -81,16 +83,14 @@
 }
 
 /* Coloured text and swatches on the dark panel are lifted, so they stay readable. */
-@media (prefers-color-scheme: dark) {
-	@supports (color: oklch(from red l c h)) {
-		.filter-swatch,
-		.tag {
-			--plan-color-shown: oklch(from var(--plan-color, var(--color-muted)) max(l, .72) c h);
-		}
+@supports (color: oklch(from red l c h)) {
+	[data-theme="dark"] .filter-swatch,
+	[data-theme="dark"] .tag {
+		--plan-color-shown: oklch(from var(--plan-color, var(--color-muted)) max(l, .72) c h);
+	}
 
-		.tag--itinerary,
-		.filter-swatch--itinerary {
-			--plan-color-shown: oklch(from var(--plan-color, var(--color-ink)) max(l, .72) c h);
-		}
+	[data-theme="dark"] .tag--itinerary,
+	[data-theme="dark"] .filter-swatch--itinerary {
+		--plan-color-shown: oklch(from var(--plan-color, var(--color-ink)) max(l, .72) c h);
 	}
 }

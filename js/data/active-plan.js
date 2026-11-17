@@ -3,6 +3,8 @@
 	switching to another plan reloads the page, so it never changes while the UI is running.
 */
 
+import { translate } from "../language/translations.js";
+
 export const FILTER_ALL_PLACES = "all";
 const FILTER_PLANNED_PLACES = "planned";
 // Categories and tags may share ids ("castle" could be both), so filter ids say which one they mean.
@@ -34,12 +36,12 @@ export function hasItinerary() {
 
 /** Filter chips in display order: all places, categories, the itinerary, then filterable tags that some place uses. */
 export function getFilterOptions() {
-	const filterOptions = [{ id: FILTER_ALL_PLACES, label: "Vše", kind: "all", color: null }];
+	const filterOptions = [{ id: FILTER_ALL_PLACES, label: translate("plan.filterAll"), kind: "all", color: null }];
 	for (const category of activePlan.categories.values()) {
 		filterOptions.push({ id: CATEGORY_FILTER_PREFIX + category.id, label: category.label, kind: "category", color: category.color });
 	}
 	if (hasItinerary()) {
-		filterOptions.push({ id: FILTER_PLANNED_PLACES, label: "Náš plán", kind: "planned", color: null });
+		filterOptions.push({ id: FILTER_PLANNED_PLACES, label: translate("plan.filterPlanned"), kind: "planned", color: null });
 	}
 	for (const tag of activePlan.tags.values()) {
 		if (tag.isFilterable && activePlan.places.some(place => place.tags.includes(tag))) {

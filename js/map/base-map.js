@@ -4,14 +4,16 @@
 	if tiles fail to load, a notice explains why parts of the map are blank.
 */
 
+import { translate } from "../language/translations.js";
 import { hideMapNotice, showMapNotice } from "../ui/map-notice.js";
+import { isMetric } from "../utils/units.js";
 
 const OPENSTREETMAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
-/** The first layer is the default one, and the only one "Stáhnout offline data" downloads. */
+/** The first layer is the default one, and the only one the offline download saves. nameKey is its label in the language files. */
 export const BASE_LAYER_DEFINITIONS = [
 	{
-		name: "Turistická (OpenTopoMap)",
+		nameKey: "map.layers.hiking",
 		urlTemplate: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
 		options: {
 			subdomains: "abc",
@@ -19,8 +21,17 @@ export const BASE_LAYER_DEFINITIONS = [
 			attribution: `${OPENSTREETMAP_ATTRIBUTION}, SRTM | <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)`,
 		},
 	},
+	// OpenStreetMap's tile policy forbids bulk downloads, so this layer must never become the first one.
 	{
-		name: "Letecká (Esri)",
+		nameKey: "map.layers.basic",
+		urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+		options: {
+			maxZoom: 19,
+			attribution: OPENSTREETMAP_ATTRIBUTION,
+		},
+	},
+	{
+		nameKey: "map.layers.aerial",
 		urlTemplate: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
 		options: {
 			maxZoom: 18,
@@ -30,7 +41,7 @@ export const BASE_LAYER_DEFINITIONS = [
 ];
 
 /**
- * "Stáhnout offline data" saves the default layer up to this zoom. While offline, the layer stretches
+ * The offline download saves the default layer up to this zoom. While offline, the layer stretches
  * these tiles for deeper zooms instead of showing blank ones.
  */
 export const HIGHEST_DOWNLOADED_ZOOM = 16;
@@ -41,9 +52,6 @@ const FIT_PADDING_IN_PIXELS = 30;
 const MINIMUM_BOUNDS_SPAN_IN_DEGREES = 0.02;
 // A couple of failed tiles can be bad luck; several mean the server (or the network) is unreachable.
 const FAILED_TILES_BEFORE_NOTICE = 3;
-
-const OFFLINE_NOTICE = "Jste offline. Mapa se zobrazí jen tam, kde je stažená (Moje plány → ⋯ → Stáhnout offline data).";
-const TILES_UNAVAILABLE_NOTICE = "Mapové podklady se nepodařilo načíst. Zobrazuji jen uložené části mapy.";
 
 /** Bounds around all places, grown to a minimum size so a single place doesn't end up at maximum zoom. */
 export function computePlacesBounds(places) {
@@ -58,9 +66,13 @@ export function computePlacesBounds(places) {
 }
 
 export function createMap(containerElementId, placesBounds) {
-	const map = L.map(containerElementId, { maxZoom: 17 });
+	// Leaflet's own zoom control has English tooltips, so the map gets one with translated ones.
+	// It is added first, so it stays above the location button in the top-left corner.
+	const map = L.map(containerElementId, { maxZoom: 17, zoomControl: false });
+	L.control.zoom({ zoomInTitle: translate("map.zoomIn"), zoomOutTitle: translate("map.zoomOut") }).addTo(map);
 	fitMapToPlaces(map, placesBounds);
-	L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
+	// Changing the units reloads the app, so the scale never has to switch while it is shown.
+	L.control.scale({ metric: isMetric(), imperial: !isMetric(), position: "bottomleft" }).addTo(map);
 	return map;
 }
 
@@ -73,31 +85,33 @@ export function fitMapToPlaces(map, placesBounds, { coveredHeightAtBottom = 0 } 
 }
 
 export function addBaseLayers(map) {
-	const tileLayersByName = {};
-	for (const layerDefinition of BASE_LAYER_DEFINITIONS) {
-		// crossOrigin makes tiles CORS requests, which the service worker can cache at their real size
-		// (opaque responses count as megabytes each against the storage quota).
-		tileLayersByName[layerDefinition.name] = L.tileLayer(layerDefinition.urlTemplate, { ...layerDefinition.options, crossOrigin: true });
-	}
-	const defaultLayer = tileLayersByName[BASE_LAYER_DEFINITIONS[0].name];
+	// crossOrigin makes tiles CORS requests, which the service worker can cache at their real size
+	// (opaque responses count as megabytes each against the storage quota).
+	const tileLayers = BASE_LAYER_DEFINITIONS.map(layerDefinition =>
+		L.tileLayer(layerDefinition.urlTemplate, { ...layerDefinition.options, crossOrigin: true }));
+	const defaultLayer = tileLayers[0];
 	// Leaflet reads maxNativeZoom every time it lays tiles out, so changing the option and redrawing is enough.
 	function stretchDownloadedTilesWhileOffline() {
 		defaultLayer.options.maxNativeZoom = navigator.onLine ? undefined : HIGHEST_DOWNLOADED_ZOOM;
 	}
 	stretchDownloadedTilesWhileOffline();
 	defaultLayer.addTo(map);
-	L.control.layers(tileLayersByName, null, { position: "topright" }).addTo(map);
+	// The control shows the object's keys as the layers' labels.
+	const tileLayersByLabel = Object.fromEntries(BASE_LAYER_DEFINITIONS.map((layerDefinition, index) => [translate(layerDefinition.nameKey), tileLayers[index]]));
+	const layersControl = L.control.layers(tileLayersByLabel, null, { position: "topright" }).addTo(map);
+	// Leaflet gives the button that opens the control a fixed English title.
+	layersControl.getContainer().querySelector(".leaflet-control-layers-toggle")?.setAttribute("title", translate("map.layersTitle"));
 	window.addEventListener("offline", () => {
 		stretchDownloadedTilesWhileOffline();
 		defaultLayer.redraw();
 	});
 
 	let failedTileCount = 0;
-	for (const tileLayer of Object.values(tileLayersByName)) {
+	for (const tileLayer of tileLayers) {
 		tileLayer.on("tileerror", () => {
 			failedTileCount++;
 			if (failedTileCount === FAILED_TILES_BEFORE_NOTICE) {
-				showMapNotice(navigator.onLine ? TILES_UNAVAILABLE_NOTICE : OFFLINE_NOTICE);
+				showMapNotice(translate(navigator.onLine ? "map.tilesUnavailable" : "map.offlineNotice"));
 			}
 		});
 	}
@@ -107,7 +121,7 @@ export function addBaseLayers(map) {
 		failedTileCount = 0;
 		hideMapNotice();
 		stretchDownloadedTilesWhileOffline();
-		Object.values(tileLayersByName).filter(tileLayer => map.hasLayer(tileLayer)).forEach(tileLayer => tileLayer.redraw());
+		tileLayers.filter(tileLayer => map.hasLayer(tileLayer)).forEach(tileLayer => tileLayer.redraw());
 	});
 }
 

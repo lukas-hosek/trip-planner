@@ -1,5 +1,6 @@
 /*
-	Shared building blocks: icons, buttons, menus, list rows, sheets, badges, filter chips and tags.
+	Shared building blocks: icons, buttons, menus, list rows, boxed lists, segmented controls, swatches and flags,
+	sheets, badges, filter chips and tags.
 	Each element is defined once here; feature stylesheets only position and size them.
 */
 
@@ -33,6 +34,8 @@
 .icon--import { mask-image: url("../icons/ui/import.svg"); }
 .icon--offline { mask-image: url("../icons/ui/offline.svg"); }
 .icon--crosshair { mask-image: url("../icons/ui/crosshair.svg"); }
+.icon--settings { mask-image: url("../icons/ui/settings.svg"); }
+.icon--check { mask-image: url("../icons/ui/check.svg"); }
 
 /* High-contrast mode would force the background (the icon's only colour) to the page colour and hide it. */
 @media (forced-colors: active) {
@@ -148,8 +151,33 @@
 	--icon-size: 18px;
 }
 
-.icon-button[aria-expanded="true"] .icon--chevron-down {
+.icon-button[aria-expanded="true"] .icon--chevron-down,
+.button--select[aria-expanded="true"] .icon--chevron-down {
 	transform: rotate(180deg);
+}
+
+/* Opens a menu of choices, like a select: a picture (swatch or flag), the current choice, and a chevron at the end. */
+.button--select {
+	justify-content: flex-start;
+	gap: 8px;
+	padding: 5px 10px 5px 12px;
+	text-align: left;
+}
+
+.button--select:hover,
+.button--select[aria-expanded="true"] {
+	background: var(--color-hover);
+}
+
+.button--select .icon--chevron-down {
+	margin-left: auto;
+}
+
+.button-select-label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* ---------- menus ---------- */
@@ -216,6 +244,28 @@
 	background: var(--color-line);
 }
 
+/* The choices of a .button--select: as wide as the button (js/ui/menu.js sets the width). */
+.menu--select {
+	min-width: 0;
+}
+
+.menu--select .menu-item {
+	gap: 10px;
+}
+
+/* A choice (role=menuitemradio): the checked one is bold and ticked; the slot keeps every label aligned. */
+.menu-item[aria-checked="true"] {
+	font-weight: 600;
+}
+
+.menu-item-check {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 18px;
+	color: var(--color-accent);
+}
+
 /* ---------- list rows ---------- */
 
 /* A row in a list of choices: the place list and the stored plans. */
@@ -230,6 +280,96 @@
 .selectable-row[aria-current="true"] {
 	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 	border-left-color: var(--color-accent);
+}
+
+/* ---------- boxed lists ---------- */
+
+/* A framed list with a line between its rows: the stored plans and the settings. */
+.boxed-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: 1px solid var(--color-line);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.boxed-list > li + li {
+	border-top: 1px solid var(--color-line);
+}
+
+/* ---------- segmented controls ---------- */
+
+/* A few options side by side, one of them pressed (aria-pressed buttons in a labelled group): metric / imperial. */
+.segmented-control {
+	display: inline-flex;
+	border: 1px solid var(--color-line);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.segmented-control button {
+	flex: 1;
+	min-height: 36px;
+	padding: 0 12px;
+	border: 0;
+	background: transparent;
+	color: var(--color-ink);
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.segmented-control button + button {
+	border-left: 1px solid var(--color-line);
+}
+
+.segmented-control button:hover {
+	background: var(--color-hover);
+}
+
+/* Drawn inside the button, because the control clips anything outside its rounded frame. */
+.segmented-control button:focus-visible {
+	outline-offset: -3px;
+}
+
+.segmented-control button[aria-pressed="true"] {
+	background: var(--color-ink);
+	color: var(--color-panel);
+}
+
+/* ---------- theme swatches and flags ---------- */
+
+/* The theme choices: each theme's panel colour in a ring of the text colour; automatic shows both halves. */
+.theme-swatch {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	margin: 2px;
+	border-radius: 50%;
+	box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.theme-swatch--automatic {
+	background: linear-gradient(90deg, var(--color-swatch-light-theme) 50%, var(--color-swatch-dark-theme) 50%);
+}
+
+.theme-swatch--light {
+	background: var(--color-swatch-light-theme);
+}
+
+.theme-swatch--dark {
+	background: var(--color-swatch-dark-theme);
+}
+
+/* A language's flag (languages/<code>.svg). It keeps its own colours, so it is an <img>, not an .icon mask. */
+.flag {
+	flex: none;
+	display: block;
+	width: 24px;
+	height: 16px;
+	border-radius: 2px;
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-ink) 18%, transparent);
 }
 
 /* ---------- bottom sheets (phones) ---------- */
@@ -368,7 +508,7 @@
 	box-shadow: none;
 }
 
-/* "Náš plán": the ring of planned pins. */
+/* The itinerary filter ("Our plan"): the ring of planned pins. */
 .filter-swatch--planned {
 	width: 10px;
 	height: 10px;

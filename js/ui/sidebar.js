@@ -11,6 +11,7 @@ import {
 	hasItinerary,
 	placeMatchesFilter,
 } from "../data/active-plan.js";
+import { translate } from "../language/translations.js";
 import { appState, selectPlace, setActiveFilter, subscribe, STATE_EVENTS } from "../state/app-state.js";
 import { escapeHtml } from "../utils/html.js";
 import { isPhoneLayout, onPhoneLayoutChange, prefersReducedMotion } from "../utils/media-queries.js";
@@ -18,10 +19,8 @@ import { computeSheetStops, createBottomSheet } from "./bottom-sheet.js";
 import { renderPlaceBadge } from "./place-badge.js";
 import { planColorStyle, renderTags } from "./tags.js";
 
-const DEFAULT_INTRO = "Klikni na špendlík nebo na místo v seznamu.";
-const ITINERARY_INTRO = "Očíslovaná místa jsou ve vašem plánu.";
 // What a tap on the list sheet's handle does at each stop (peek, half, full).
-const LIST_SHEET_HANDLE_LABELS = ["Rozbalit seznam", "Zvětšit seznam", "Sbalit seznam"];
+const LIST_SHEET_HANDLE_LABEL_KEYS = ["sidebar.expandList", "sidebar.enlargeList", "sidebar.collapseList"];
 const LIST_SHEET_HALF_STOP_INDEX = 1;
 
 /** @returns the list sheet's element, which the map must keep clear of on phones */
@@ -38,7 +37,7 @@ export function initSidebar() {
 			const { peek, half, full } = computeSheetStops();
 			return [peek, half, full];
 		},
-		getHandleLabel: snapIndex => LIST_SHEET_HANDLE_LABELS[snapIndex],
+		getHandleLabel: snapIndex => translate(LIST_SHEET_HANDLE_LABEL_KEYS[snapIndex]),
 		initialSnapIndex: LIST_SHEET_HALF_STOP_INDEX,
 	});
 	const filterExpander = initFilterExpander(document.getElementById("sidebar-header"), filterChipsElement, document.getElementById("filter-expand-button"));
@@ -78,7 +77,7 @@ function renderPlanHeader() {
 	const plan = getActivePlan();
 	document.getElementById("plan-name").textContent = plan.name;
 	document.getElementById("plan-intro").textContent =
-		plan.description || [DEFAULT_INTRO, hasItinerary() ? ITINERARY_INTRO : ""].join(" ").trim();
+		plan.description || [translate("sidebar.defaultIntro"), hasItinerary() ? translate("sidebar.itineraryIntro") : ""].join(" ").trim();
 
 	const noteElement = document.getElementById("plan-note");
 	noteElement.textContent = plan.note;
@@ -108,7 +107,7 @@ function initFilterExpander(headerElement, filterChipsElement, expandButton) {
 			headerElement.style.marginBottom = `${collapsedHeight - headerElement.offsetHeight}px`;
 		}
 		expandButton.setAttribute("aria-expanded", String(expanded));
-		expandButton.setAttribute("aria-label", expanded ? "Sbalit filtry" : "Zobrazit všechny filtry");
+		expandButton.setAttribute("aria-label", translate(expanded ? "sidebar.collapseFilters" : "sidebar.showAllFilters"));
 		update();
 	}
 
@@ -148,7 +147,7 @@ function renderFilterChips(filterChipsElement) {
 	}).join("");
 }
 
-/** Categories get a round swatch like their pins, tags a square one like their labels; "Vše" gets none. */
+/** Categories get a round swatch like their pins, tags a square one like their labels; "all places" gets none. */
 function renderFilterSwatch(filterOption) {
 	if (filterOption.kind === "category") {
 		return `<span class="filter-swatch filter-swatch--category" style="${planColorStyle(filterOption.color)}"></span>`;

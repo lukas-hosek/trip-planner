@@ -28,7 +28,7 @@ One JSON object per trip. Unknown fields are ignored. Fields marked *optional* c
 | Field | Type | Meaning |
 |---|---|---|
 | `label` | string | Text of the tag, up to about 30 characters. |
-| `itinerary` | boolean, *optional* | `true` for a day of the itinerary ("Sobota", "Den 2"). Places with an itinerary tag are numbered, get a dark ring on the map and appear under the "Náš plán" filter. Itinerary tags are always filterable. |
+| `itinerary` | boolean, *optional* | `true` for a day of the itinerary ("Sobota", "Den 2"). Places with an itinerary tag are numbered, get a dark ring on the map and appear under the "Our plan" filter ("Náš plán" in Czech). Itinerary tags are always filterable. |
 | `filterable` | boolean, *optional* | `true` gives the tag a filter button. Default `false`. Use it only for groupings the user would want to filter by: an area ("Rathen") or a trait several places share ("Vstup zdarma"). Never for status notes ("Hrad zavřený", "Otevřeno celý rok"). Not needed on itinerary tags. |
 | `color` | `"#rrggbb"`, *optional* | Text and outline colour (fill colour for itinerary tags). Without a colour, itinerary tags are dark and other tags grey. |
 
@@ -45,7 +45,7 @@ A tag gets a filter button in exactly two cases: (1) it is an itinerary tag (`"i
 | `lat`, `lng` | numbers | Latitude and longitude in decimal degrees (WGS84), 4–5 decimals. Verified, never guessed. |
 | `tags` | array of strings, *optional* | Ids of the plan's tags, itinerary tag first. |
 | `description` | string | 3–6 sentences about the place. A blank line (`\n\n`) starts a new paragraph. |
-| `tip` | string, *optional* | Practical advice (getting there, parking, duration, tickets). Shown as "Jak na to". |
+| `tip` | string, *optional* | Practical advice (getting there, parking, duration, tickets). Shown under "Practical tips" ("Jak na to" in Czech). |
 | `website` | URL, *optional* | The place's own website, for opening hours and prices: its official site or operator, a village's own site, the site of the inn or hut at a natural sight, or (for a lift, ferry or small museum without a site) its page on the official regional tourism portal. Shown as the first link, "Web". Leave it out when there's none; never use booking, review or aggregator sites. |
 | `wikipedia` | array of URLs, *optional* | Wikipedia articles about the place, each checked to exist. Order: the plan's language first, then English, then the language of the country where the place is. For example, a Czech plan in Germany lists `https://cs.wikipedia.org/wiki/…`, then `https://en.wikipedia.org/wiki/…`, then `https://de.wikipedia.org/wiki/…`, leaving out any that don't exist. The app links to the first article. If the Commons photo can't be found, it shows the lead photo of the first article that has one. |
 | `commons` | object | The place's photo on Wikimedia Commons; see below. Not shown as a link of its own. |

@@ -3,6 +3,8 @@
 	in the browser instead of the installed app, a plan replaced by a link). It can carry action buttons and can be closed.
 */
 
+import { translate } from "../language/translations.js";
+
 /** @param options.actions  buttons shown after the message: [{ label, onAction }] */
 export function showMapNotice(message, { actions = [] } = {}) {
 	const noticeElement = document.getElementById("map-notice");
@@ -24,7 +26,7 @@ export function showMapNotice(message, { actions = [] } = {}) {
 	const closeButton = document.createElement("button");
 	closeButton.type = "button";
 	closeButton.className = "icon-button map-notice-close";
-	closeButton.setAttribute("aria-label", "Zavřít upozornění");
+	closeButton.setAttribute("aria-label", translate("notice.close"));
 	closeButton.innerHTML = `<span class="icon icon--close" aria-hidden="true"></span>`;
 	closeButton.addEventListener("click", hideMapNotice);
 	noticeElement.append(closeButton);

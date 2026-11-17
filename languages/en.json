@@ -1,0 +1,187 @@
+{
+	"common": {
+		"close": "Close",
+		"backToPlans": "Back to the list of plans",
+		"planSaved": "Plan “{name}” has been saved.",
+		"planUpdated": "Plan “{name}” has been updated.",
+		"planNotFound": "The plan could not be found in storage.",
+		"linkCopyFailed": "The link could not be copied."
+	},
+	"app": {
+		"startFailed": "The app could not start: {reason}",
+		"mapLibraryMissing": "The map library could not be loaded. Check your connection and reload the page.",
+		"demoPlanFailed": "The demo plan could not be loaded (HTTP {status})."
+	},
+	"startup": {
+		"planNotSaved": "Plan “{name}” could not be saved in this browser. It stays open only until you close the page.",
+		"linkFailed": "The plan from the link could not be opened.",
+		"linkFailedWithReason": "The plan from the link could not be opened. {reason}",
+		"planSkipped": "Plan “{name}” could not be opened last time, so another plan is open instead. You will find it in My plans.",
+		"planUpdatedByLink": "Plan “{name}” has been updated from the link.",
+		"restoreOriginal": "Restore original",
+		"restoreFailed": "The original version of the plan could not be restored.",
+		"originalRestored": "The original version of plan “{name}” is back.",
+		"iosHint": "The plan is saved in this browser. If you have the TripMap app on your home screen, copy the link and paste it there via My plans → Import plan.",
+		"copyLink": "Copy link",
+		"linkCopied": "The link has been copied. Now open the TripMap app."
+	},
+	"planFormat": {
+		"notObject": "The plan must be a JSON object.",
+		"wrongFormat": "This is not a trip plan (format “{format}”).",
+		"unknownVersion": "The plan is in version {version}, which this app does not know yet. Reload the page to get the new version of the app.",
+		"missingName": "The plan has no name (field “name”).",
+		"noPlaces": "The plan has no places (field “places”).",
+		"tooManyPlaces": "The plan has too many places ({placeCount}, at most {maximum}).",
+		"tooManyCategories": "The plan has too many categories ({categoryCount}, at most {maximum}).",
+		"tooManyTags": "The plan has too many tags ({tagCount}, at most {maximum}).",
+		"placeNotObject": "Place no. {placeNumber} is not a valid object.",
+		"placeMissingName": "Place no. {placeNumber} has no name.",
+		"placeMissingCoordinates": "Place no. {placeNumber} ({name}) has no valid coordinates (“lat” and “lng”)."
+	},
+	"planLink": {
+		"noPlanInLink": "There is no plan in the link.",
+		"damagedLink": "The plan link is damaged or incomplete. Please copy the whole link again.",
+		"textTooLong": "The text is too long to be a plan.",
+		"emptyText": "Paste a link to a plan or its JSON.",
+		"noPlanInText": "The text contains neither a plan link nor a plan's JSON.",
+		"unreadableJson": "The plan's JSON cannot be read: {reason}",
+		"planTooLarge": "The plan in the link is too large."
+	},
+	"plan": {
+		"uncategorized": "Other",
+		"filterAll": "All",
+		"filterPlanned": "Our plan",
+		"itineraryTag": "Planned · {label}"
+	},
+	"sidebar": {
+		"defaultIntro": "Click a pin or a place in the list.",
+		"itineraryIntro": "The numbered places are in your plan.",
+		"filterLabel": "Filter places",
+		"showAllFilters": "Show all filters",
+		"collapseFilters": "Collapse filters",
+		"placeListLabel": "List of places",
+		"expandList": "Expand list",
+		"enlargeList": "Enlarge list",
+		"collapseList": "Collapse list"
+	},
+	"detail": {
+		"label": "Place details",
+		"close": "Close details",
+		"expand": "Expand details",
+		"shrink": "Shrink details",
+		"howTo": "Practical tips",
+		"loadingPhoto": "Loading photo…",
+		"photoFailed": "The photo could not be loaded.",
+		"noPhoto": "There is no photo of this place.",
+		"photosOnCommons": "Photos on Wikimedia Commons",
+		"photoCredit": "Photo: Wikimedia Commons",
+		"photoCreditWithSubject": "Photo: {subject} (Wikimedia Commons)",
+		"photoCreditWikipedia": "Photo: Wikipedia / Wikimedia Commons",
+		"distanceFromUser": "{distance} from you as the crow flies",
+		"links": {
+			"website": "Website",
+			"mapyLabel": "Mapy.com",
+			"mapyUrl": "https://mapy.com/en/turisticka?q={latitude}%2C{longitude}&x={longitude}&y={latitude}&z=15",
+			"wikipedia": "Wikipedia",
+			"morePhotos": "More photos"
+		}
+	},
+	"map": {
+		"label": "Map of places",
+		"zoomIn": "Zoom in",
+		"zoomOut": "Zoom out",
+		"layersTitle": "Map layers",
+		"layers": {
+			"hiking": "Hiking (OpenTopoMap)",
+			"basic": "Standard (OpenStreetMap)",
+			"aerial": "Aerial (Esri)"
+		},
+		"offlineNotice": "You are offline. The map is shown only where it has been downloaded (My plans → ⋯ → Download offline data).",
+		"tilesUnavailable": "The map tiles could not be loaded. Showing only the saved parts of the map."
+	},
+	"location": {
+		"title": "My location",
+		"buttonLabel": "Show my location",
+		"unsupported": "This browser cannot find your location.",
+		"needsHttps": "Location works only on a secure address (https). Open the map from the web, not as a local file.",
+		"found": "Location found, accurate to about {accuracy}.",
+		"permissionDenied": "Access to your location is blocked. Allow it in the browser settings for this page and try again.",
+		"timeout": "Your location has not been found yet. Try outdoors, or wait until the GPS gets a fix.",
+		"unavailable": "Your location could not be found. Check that location services are turned on."
+	},
+	"notice": {
+		"close": "Close notice"
+	},
+	"plans": {
+		"title": "My plans",
+		"openPlan": "Open now",
+		"placeCount": {
+			"one": "{count} place",
+			"other": "{count} places"
+		},
+		"actionsLabel": "Actions for plan {name}",
+		"status": {
+			"downloading": "Downloading {percent}%",
+			"offline": "Offline",
+			"incomplete": "Offline incomplete",
+			"outdated": "Offline outdated"
+		},
+		"menu": {
+			"share": "Share link",
+			"export": "Export plan",
+			"download": "Download offline data",
+			"release": "Remove offline data",
+			"delete": "Delete plan",
+			"confirmDelete": "Really delete?"
+		},
+		"deleted": "Plan “{name}” has been deleted.",
+		"linkCopied": "The link to plan “{name}” has been copied. Anyone who opens it will see the plan in their own app.",
+		"offlineNotReady": "Offline mode is not running yet. Reload the page and try again.",
+		"downloadNeedsConnection": "You are offline. Downloading needs an internet connection.",
+		"downloadComplete": "The offline data for plan “{name}” has been downloaded: the map around all the places, and the photos.",
+		"downloadPartial": {
+			"one": "The offline data for plan “{name}” was only partly downloaded: {count} of {totalCount} files is missing. Try again with a better signal.",
+			"other": "The offline data for plan “{name}” was only partly downloaded: {count} of {totalCount} files are missing. Try again with a better signal."
+		},
+		"planUnreadable": "Plan “{name}” could not be read: {reason}",
+		"downloadFailed": "The download failed. Please try again.",
+		"released": "The offline data for plan “{name}” has been removed.",
+		"importPlan": "Import plan…",
+		"howToCreate": "How do I create a plan?",
+		"settings": "App settings"
+	},
+	"import": {
+		"title": "Import plan",
+		"label": "Paste a link to a plan or its JSON:",
+		"paste": "Paste from clipboard",
+		"chooseFile": "Choose file…",
+		"submit": "Import",
+		"clipboardFailed": "The clipboard could not be read. Paste the text into the field by hand.",
+		"fileTooLarge": "The file is too large to be a plan.",
+		"notSaved": "The plan could not be saved in this browser. Delete older plans, or allow this page to store data.",
+		"failed": "The plan could not be loaded."
+	},
+	"help": {
+		"skillHtml": "Plans are made by Claude. Download the <a href=\"trip-map-skill.zip\" download>trip-map</a> skill and upload it in Claude under <strong>Settings → Capabilities → Skills</strong>. Once your trip is planned, write something like “Export the plan to the map”. Claude sends a link that opens the plan here.",
+		"replacing": "A plan with the same name replaces the earlier one, so to update a plan, just open the new version.",
+		"iphoneHtml": "On an iPhone, the link opens in the browser. To get it into the app on your home screen, use <strong>Import plan → Paste from clipboard</strong>."
+	},
+	"settings": {
+		"title": "App settings",
+		"currentValue": "{setting}: {value}",
+		"theme": "Appearance",
+		"themeMenu": "App appearance",
+		"themes": {
+			"automatic": "Automatic",
+			"light": "Light",
+			"dark": "Dark"
+		},
+		"language": "Language",
+		"languageMenu": "App language",
+		"units": "Units",
+		"unitSystems": {
+			"metric": "Metric",
+			"imperial": "Imperial"
+		}
+	}
+}

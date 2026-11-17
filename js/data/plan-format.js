@@ -4,9 +4,10 @@
 
 	Validation is strict only where the map can't work without the data (a name, places, coordinates).
 	Everything else is forgiving: an AI-written plan with a typo in a tag id should still open.
-	Error messages are in Czech because they are shown to the user.
+	Error messages are shown to the user, so they come from the language files (keys under "planFormat").
 */
 
+import { translate } from "../language/translations.js";
 import { isPlaceIconKey } from "./place-icons.js";
 
 const PLAN_FORMAT_NAME = "trip-plan";
@@ -17,7 +18,6 @@ const FALLBACK_CATEGORY_COLORS = ["#b0731c", "#9c4a2f", "#575c93", "#2b7c7f", "#
 // Categories and tags that a place mentions but the plan doesn't define get this neutral grey.
 const UNDEFINED_ITEM_COLOR = "#6f7a73";
 const UNCATEGORIZED_CATEGORY_ID = "other";
-const UNCATEGORIZED_CATEGORY_LABEL = "Ostatní";
 
 /*
 	Limits. A link can come from anyone, so a plan must not be able to grow until the app stops responding.
@@ -38,9 +38,11 @@ const MAXIMUM_URL_LENGTH = 2000;
 // MediaWiki itself allows no longer titles.
 const MAXIMUM_WIKI_PAGE_TITLE_LENGTH = 255;
 
+/** A plan the app can't open. The message is in the interface language, ready to show to the user. */
 export class PlanFormatError extends Error {
-	constructor(message) {
-		super(message);
+	/** @param messageKey  a key in the language files; @param parameters  its placeholder values */
+	constructor(messageKey, parameters = {}) {
+		super(translate(messageKey, parameters));
 		this.name = "PlanFormatError";
 	}
 }
@@ -55,25 +57,25 @@ export class PlanFormatError extends Error {
  */
 export function normalizePlan(rawPlan) {
 	if (!isPlainObject(rawPlan)) {
-		throw new PlanFormatError("Plán musí být JSON objekt.");
+		throw new PlanFormatError("planFormat.notObject");
 	}
 	if (rawPlan.format !== undefined && rawPlan.format !== PLAN_FORMAT_NAME) {
-		throw new PlanFormatError(`Tohle není plán výletu (format „${cleanText(rawPlan.format, MAXIMUM_LABEL_LENGTH)}“).`);
+		throw new PlanFormatError("planFormat.wrongFormat", { format: cleanText(rawPlan.format, MAXIMUM_LABEL_LENGTH) });
 	}
 	const version = Number(rawPlan.version ?? SUPPORTED_PLAN_VERSION);
 	if (version > SUPPORTED_PLAN_VERSION) {
-		throw new PlanFormatError(`Plán je ve verzi ${version}, kterou tahle aplikace ještě nezná. Obnovte stránku, ať se načte nová verze aplikace.`);
+		throw new PlanFormatError("planFormat.unknownVersion", { version });
 	}
 
 	const name = cleanText(rawPlan.name, MAXIMUM_NAME_LENGTH);
 	if (!name) {
-		throw new PlanFormatError("Plán nemá název (pole „name“).");
+		throw new PlanFormatError("planFormat.missingName");
 	}
 	if (!Array.isArray(rawPlan.places) || rawPlan.places.length === 0) {
-		throw new PlanFormatError("Plán neobsahuje žádná místa (pole „places“).");
+		throw new PlanFormatError("planFormat.noPlaces");
 	}
 	if (rawPlan.places.length > MAXIMUM_PLACE_COUNT) {
-		throw new PlanFormatError(`Plán má příliš mnoho míst (${rawPlan.places.length}, nejvýše ${MAXIMUM_PLACE_COUNT}).`);
+		throw new PlanFormatError("planFormat.tooManyPlaces", { placeCount: rawPlan.places.length, maximum: MAXIMUM_PLACE_COUNT });
 	}
 
 	const categories = normalizeCategories(rawPlan.categories);
@@ -87,10 +89,10 @@ export function normalizePlan(rawPlan) {
 	}
 	// Counted after the places, which add the categories and tags they use without the plan defining them.
 	if (categories.size > MAXIMUM_CATEGORY_COUNT) {
-		throw new PlanFormatError(`Plán má příliš mnoho kategorií (${categories.size}, nejvýše ${MAXIMUM_CATEGORY_COUNT}).`);
+		throw new PlanFormatError("planFormat.tooManyCategories", { categoryCount: categories.size, maximum: MAXIMUM_CATEGORY_COUNT });
 	}
 	if (tags.size > MAXIMUM_TAG_COUNT) {
-		throw new PlanFormatError(`Plán má příliš mnoho štítků (${tags.size}, nejvýše ${MAXIMUM_TAG_COUNT}).`);
+		throw new PlanFormatError("planFormat.tooManyTags", { tagCount: tags.size, maximum: MAXIMUM_TAG_COUNT });
 	}
 
 	return {
@@ -103,7 +105,10 @@ export function normalizePlan(rawPlan) {
 	};
 }
 
-/** Plan names identify plans: importing a plan with a known name replaces the stored one. */
+/**
+ * Plan names identify plans: importing a plan with a known name replaces the stored one.
+ * The lower-casing stays Czech whatever the interface language: the key names stored plans, so it must never change.
+ */
 export function getPlanKey(planName) {
 	return cleanText(planName).replace(/\s+/g, " ").toLocaleLowerCase("cs");
 }
@@ -261,16 +266,16 @@ function readDefinitions(rawDefinitions) {
 function normalizePlace(rawPlace, index, { categories, tags, usedPlaceIds }) {
 	const placeNumber = index + 1;
 	if (!isPlainObject(rawPlace)) {
-		throw new PlanFormatError(`Místo č. ${placeNumber} není platný objekt.`);
+		throw new PlanFormatError("planFormat.placeNotObject", { placeNumber });
 	}
 	const name = cleanText(rawPlace.name, MAXIMUM_NAME_LENGTH);
 	if (!name) {
-		throw new PlanFormatError(`Místo č. ${placeNumber} nemá název.`);
+		throw new PlanFormatError("planFormat.placeMissingName", { placeNumber });
 	}
 	const latitude = parseCoordinate(rawPlace.lat ?? rawPlace.latitude, 90);
 	const longitude = parseCoordinate(rawPlace.lng ?? rawPlace.lon ?? rawPlace.longitude, 180);
 	if (latitude === null || longitude === null) {
-		throw new PlanFormatError(`Místo č. ${placeNumber} (${name}) nemá platné souřadnice („lat“ a „lng“).`);
+		throw new PlanFormatError("planFormat.placeMissingCoordinates", { placeNumber, name });
 	}
 
 	const placeTags = findOrCreateTags(rawPlace.tags, tags);
@@ -298,7 +303,7 @@ function normalizePlace(rawPlace, index, { categories, tags, usedPlaceIds }) {
 function findOrCreateCategory(categoryId, categories) {
 	const id = categoryId || UNCATEGORIZED_CATEGORY_ID;
 	if (!categories.has(id)) {
-		const label = categoryId || UNCATEGORIZED_CATEGORY_LABEL;
+		const label = categoryId || translate("plan.uncategorized");
 		categories.set(id, { id, label, color: UNDEFINED_ITEM_COLOR, iconKey: parseIconKey(id) });
 	}
 	return categories.get(id);

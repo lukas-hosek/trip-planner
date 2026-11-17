@@ -15,7 +15,7 @@ const SAMPLE_CATEGORY_COLORS = ["#575c93", "#2f7a4b", "#8a4f7d", "#4a6fa5", "#b0
 const UI_ICON_NAMES = [
 	"menu", "close", "more", "chevron-down", "back",
 	"share", "export", "download", "release", "delete",
-	"import", "offline", "crosshair",
+	"import", "offline", "crosshair", "settings", "check",
 ];
 
 renderPlaceIcons();

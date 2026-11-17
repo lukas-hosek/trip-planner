@@ -4,9 +4,11 @@
 	Browsers only allow this on https:// (or localhost) and only after the user agrees.
 */
 
+import { translate } from "../language/translations.js";
 import { setUserPosition } from "../state/app-state.js";
 import { showToast } from "../ui/toast.js";
 import { prefersReducedMotion } from "../utils/media-queries.js";
+import { formatLength } from "../utils/units.js";
 
 // Ask for real GPS rather than a coarse network-based position; we are on hiking trails.
 const GEOLOCATION_OPTIONS = { enableHighAccuracy: true, maximumAge: 10_000, timeout: 20_000 };
@@ -43,8 +45,8 @@ export function addUserLocationControl(map) {
 			locationButton = L.DomUtil.create("button", "location-button", controlContainer);
 			locationButton.type = "button";
 			locationButton.id = "location-button";
-			locationButton.title = "Moje poloha";
-			locationButton.setAttribute("aria-label", "Ukázat moji polohu");
+			locationButton.title = translate("location.title");
+			locationButton.setAttribute("aria-label", translate("location.buttonLabel"));
 			locationButton.setAttribute("aria-pressed", "false");
 			locationButton.innerHTML = CROSSHAIR_ICON_HTML;
 			// Without this, a click on the button would also count as a click on the map below.
@@ -66,11 +68,11 @@ export function addUserLocationControl(map) {
 			return;
 		}
 		if (!("geolocation" in navigator)) {
-			showToast("Tenhle prohlížeč neumí zjistit polohu.");
+			showToast(translate("location.unsupported"));
 			return;
 		}
 		if (!window.isSecureContext) {
-			showToast("Poloha funguje jen na zabezpečené adrese (https). Otevřete mapu z webu, ne jako místní soubor.");
+			showToast(translate("location.needsHttps"));
 			return;
 		}
 		startTracking();
@@ -139,7 +141,7 @@ export function addUserLocationControl(map) {
 	}
 
 	function announceFirstFix(position) {
-		showToast(`Poloha zjištěna, přesnost asi ${Math.round(position.accuracyInMeters)} m.`, 3500);
+		showToast(translate("location.found", { accuracy: formatLength(position.accuracyInMeters) }), 3500);
 	}
 
 	function centerMapOnUser({ isFirstFix }) {
@@ -161,15 +163,15 @@ export function addUserLocationControl(map) {
 
 		if (geolocationError.code === GEOLOCATION_ERROR.permissionDenied) {
 			stopTracking();
-			showToast("Přístup k poloze je zakázaný. Povolte ho v nastavení prohlížeče pro tuhle stránku a zkuste to znovu.", 8000);
+			showToast(translate("location.permissionDenied"), 8000);
 			return;
 		}
 
 		// While tracking, short GPS outages (tunnel, deep gorge) are normal; only complain if we never had a fix.
 		if (!latestPosition) {
 			const message = geolocationError.code === GEOLOCATION_ERROR.timeout
-				? "Poloha se zatím nenašla. Zkuste to venku nebo počkejte, až se chytí GPS."
-				: "Polohu se nepodařilo zjistit. Zkontrolujte, že máte zapnuté určování polohy.";
+				? translate("location.timeout")
+				: translate("location.unavailable");
 			showToast(message);
 			return;
 		}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<!--
@@ -15,7 +15,7 @@
 		style-src 'self' https://unpkg.com/leaflet@1.9.4/ https://fonts.googleapis.com;
 		style-src-attr 'unsafe-inline';
 		font-src https://fonts.gstatic.com;
-		img-src 'self' data: https://*.tile.opentopomap.org https://server.arcgisonline.com https://*.wikimedia.org https://unpkg.com/leaflet@1.9.4/;
+		img-src 'self' data: https://*.tile.opentopomap.org https://tile.openstreetmap.org https://server.arcgisonline.com https://*.wikimedia.org https://unpkg.com/leaflet@1.9.4/;
 		connect-src 'self' https://*.wikimedia.org https://*.wikipedia.org https://*.tile.opentopomap.org;
 		manifest-src 'self';
 		worker-src 'self';
@@ -24,15 +24,17 @@
 		object-src 'none'">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>TripMap</title>
-	<meta name="description" content="Mapa míst z plánů výletů, i offline.">
+	<meta name="description" content="A map of the places in your trip plans, offline too.">
 
 	<link rel="manifest" href="manifest.webmanifest">
 	<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 	<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 	<meta name="apple-mobile-web-app-title" content="TripMap">
 	<meta name="mobile-web-app-capable" content="yes">
-	<meta name="theme-color" content="#f8f9f6" media="(prefers-color-scheme: light)">
-	<meta name="theme-color" content="#18201c" media="(prefers-color-scheme: dark)">
+	<meta name="theme-color" content="#f8f9f6" media="(prefers-color-scheme: light)" data-theme-color-for="light">
+	<meta name="theme-color" content="#18201c" media="(prefers-color-scheme: dark)" data-theme-color-for="dark">
+	<!-- Before the stylesheets, so a theme picked in the settings is on from the first frame without waiting for them. -->
+	<script src="js/apply-theme-before-paint.js"></script>
 
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,20 +57,20 @@
 			<header class="sidebar-header" id="sidebar-header">
 				<div class="sidebar-title-row">
 					<h1 class="plan-name" id="plan-name"></h1>
-					<button class="icon-button plans-button" id="plans-button" type="button" aria-haspopup="dialog" aria-label="Moje plány" title="Moje plány">
+					<button class="icon-button plans-button" id="plans-button" type="button" aria-haspopup="dialog" data-translate-aria-label="plans.title" data-translate-title="plans.title">
 						<span class="icon icon--menu" aria-hidden="true"></span>
 					</button>
 				</div>
 				<p class="sidebar-intro" id="plan-intro"></p>
 				<div class="filter-row">
-					<div class="filter-chips" id="filter-chips" role="group" aria-label="Filtr míst"></div>
+					<div class="filter-chips" id="filter-chips" role="group" data-translate-aria-label="sidebar.filterLabel"></div>
 					<button class="icon-button icon-button--chip filter-expand-button" id="filter-expand-button" type="button"
-						aria-expanded="false" aria-controls="filter-chips" aria-label="Zobrazit všechny filtry" hidden>
+						aria-expanded="false" aria-controls="filter-chips" data-translate-aria-label="sidebar.showAllFilters" hidden>
 						<span class="icon icon--chevron-down" aria-hidden="true"></span>
 					</button>
 				</div>
 			</header>
-			<section class="place-sheet bottom-sheet" id="place-sheet" aria-label="Seznam míst">
+			<section class="place-sheet bottom-sheet" id="place-sheet" data-translate-aria-label="sidebar.placeListLabel">
 				<button class="sheet-handle" type="button"><span class="sheet-grabber" aria-hidden="true"></span></button>
 				<ol class="place-list" id="place-list"></ol>
 			</section>
@@ -76,17 +78,17 @@
 		</aside>
 
 		<main class="map-area">
-			<div id="map" aria-label="Mapa míst"></div>
+			<div id="map" data-translate-aria-label="map.label"></div>
 			<div class="map-notice" id="map-notice" hidden></div>
 			<div class="toast" id="toast" role="status" hidden></div>
 
-			<section class="detail-card bottom-sheet" id="detail-card" aria-label="Detail místa" aria-live="polite" hidden>
+			<section class="detail-card bottom-sheet" id="detail-card" data-translate-aria-label="detail.label" aria-live="polite" hidden>
 				<button class="sheet-handle" type="button"><span class="sheet-grabber" aria-hidden="true"></span></button>
 				<div class="detail-card-scroll-area" id="detail-card-scroll-area">
 					<div class="detail-card-photo" id="detail-card-photo"></div>
 					<div class="detail-card-content" id="detail-card-content"></div>
 				</div>
-				<button class="icon-button icon-button--on-photo detail-card-close" id="detail-card-close" type="button" aria-label="Zavřít detail">
+				<button class="icon-button icon-button--on-photo detail-card-close" id="detail-card-close" type="button" data-translate-aria-label="detail.close">
 					<span class="icon icon--close" aria-hidden="true"></span>
 				</button>
 			</section>
@@ -98,20 +100,24 @@
 
 		<div class="plans-dialog-view" id="plans-list-view">
 			<header class="plans-dialog-header">
-				<h2 id="plans-dialog-title">Moje plány</h2>
-				<button class="icon-button" type="button" data-close-dialog aria-label="Zavřít">
+				<h2 id="plans-dialog-title" data-translate="plans.title"></h2>
+				<button class="icon-button" id="show-settings-button" type="button" data-translate-aria-label="plans.settings" data-translate-title="plans.settings">
+					<span class="icon icon--settings" aria-hidden="true"></span>
+				</button>
+				<!-- autofocus: opening the dialog still focuses ×, not the settings button in front of it. -->
+				<button class="icon-button" type="button" data-close-dialog data-translate-aria-label="common.close" autofocus>
 					<span class="icon icon--close" aria-hidden="true"></span>
 				</button>
 			</header>
 
-			<ul class="stored-plan-list" id="stored-plan-list"></ul>
+			<ul class="boxed-list" id="stored-plan-list"></ul>
 			<p class="plans-dialog-status" id="plans-status" role="status"></p>
 
 			<div class="plans-dialog-footer">
 				<button class="button" id="show-import-button" type="button">
-					<span class="icon icon--import" aria-hidden="true"></span>Importovat plán…
+					<span class="icon icon--import" aria-hidden="true"></span><span data-translate="plans.importPlan"></span>
 				</button>
-				<button class="link-button" id="show-help-button" type="button">Jak vytvořit plán?</button>
+				<button class="link-button" id="show-help-button" type="button" data-translate="plans.howToCreate"></button>
 			</div>
 
 			<div class="menu" id="plan-actions-menu" role="menu" hidden></div>
@@ -119,43 +125,76 @@
 
 		<div class="plans-dialog-view" id="plans-import-view" hidden>
 			<header class="plans-dialog-header">
-				<button class="icon-button" type="button" data-show-list-view aria-label="Zpět na seznam plánů">
+				<button class="icon-button" type="button" data-show-list-view data-translate-aria-label="common.backToPlans">
 					<span class="icon icon--back" aria-hidden="true"></span>
 				</button>
-				<h2>Importovat plán</h2>
-				<button class="icon-button" type="button" data-close-dialog aria-label="Zavřít">
+				<h2 data-translate="import.title"></h2>
+				<button class="icon-button" type="button" data-close-dialog data-translate-aria-label="common.close">
 					<span class="icon icon--close" aria-hidden="true"></span>
 				</button>
 			</header>
 
-			<label class="plans-dialog-label" for="import-text">Vložte odkaz na plán nebo jeho JSON:</label>
+			<label class="plans-dialog-label" for="import-text" data-translate="import.label"></label>
 			<textarea class="plans-dialog-textarea" id="import-text" rows="6" spellcheck="false" autocomplete="off"
 				placeholder="https://lukas-hosek.github.io/trip-planner/#plan=…"></textarea>
 			<div class="plans-dialog-button-row">
-				<button class="button" id="paste-from-clipboard-button" type="button">Vložit ze schránky</button>
-				<button class="button" id="choose-file-button" type="button">Vybrat soubor…</button>
+				<button class="button" id="paste-from-clipboard-button" type="button" data-translate="import.paste"></button>
+				<button class="button" id="choose-file-button" type="button" data-translate="import.chooseFile"></button>
 				<input type="file" id="import-file-input" accept=".json,application/json,text/plain" hidden>
 			</div>
 			<p class="plans-dialog-error" id="import-error" role="alert" hidden></p>
-			<button class="button button--primary plans-dialog-primary-button" id="import-button" type="button">Importovat</button>
+			<button class="button button--primary plans-dialog-primary-button" id="import-button" type="button" data-translate="import.submit"></button>
 		</div>
 
 		<div class="plans-dialog-view" id="plans-help-view" hidden>
 			<header class="plans-dialog-header">
-				<button class="icon-button" type="button" data-show-list-view aria-label="Zpět na seznam plánů">
+				<button class="icon-button" type="button" data-show-list-view data-translate-aria-label="common.backToPlans">
 					<span class="icon icon--back" aria-hidden="true"></span>
 				</button>
-				<h2>Jak vytvořit plán?</h2>
-				<button class="icon-button" type="button" data-close-dialog aria-label="Zavřít">
+				<h2 data-translate="plans.howToCreate"></h2>
+				<button class="icon-button" type="button" data-close-dialog data-translate-aria-label="common.close">
 					<span class="icon icon--close" aria-hidden="true"></span>
 				</button>
 			</header>
 
 			<div class="plans-dialog-help">
-				<p>Plány připravuje Claude. Stáhněte si skill <a href="trip-map-skill.zip" download>trip-map</a> a v Claude ho nahrajte v <strong>Nastavení → Funkce → Skills</strong>. Až budete mít výlet naplánovaný, napište třeba „Exportuj plán do mapy“. Claude pošle odkaz, který plán otevře tady.</p>
-				<p>Plán se stejným názvem nahradí ten dřívější, takže upravený plán stačí znovu otevřít.</p>
-				<p>Na iPhonu se odkaz otevře v prohlížeči. Do aplikace na ploše ho přeneste přes <strong>Importovat plán → Vložit ze schránky</strong>.</p>
+				<p data-translate-html="help.skillHtml"></p>
+				<p data-translate="help.replacing"></p>
+				<p data-translate-html="help.iphoneHtml"></p>
 			</div>
+		</div>
+
+		<div class="plans-dialog-view" id="plans-settings-view" hidden>
+			<header class="plans-dialog-header">
+				<button class="icon-button" type="button" data-show-list-view data-translate-aria-label="common.backToPlans">
+					<span class="icon icon--back" aria-hidden="true"></span>
+				</button>
+				<h2 data-translate="settings.title"></h2>
+				<button class="icon-button" type="button" data-close-dialog data-translate-aria-label="common.close">
+					<span class="icon icon--close" aria-hidden="true"></span>
+				</button>
+			</header>
+
+			<!-- The controls' contents are rendered by js/ui/settings-panel.js. -->
+			<ul class="boxed-list">
+				<li class="settings-row">
+					<span class="settings-row-label" data-translate="settings.theme"></span>
+					<button class="button button--select settings-control" id="theme-button" type="button"
+						aria-haspopup="menu" aria-expanded="false" aria-controls="theme-menu"></button>
+				</li>
+				<li class="settings-row">
+					<span class="settings-row-label" data-translate="settings.language"></span>
+					<button class="button button--select settings-control" id="language-button" type="button"
+						aria-haspopup="menu" aria-expanded="false" aria-controls="language-menu"></button>
+				</li>
+				<li class="settings-row">
+					<span class="settings-row-label" id="unit-system-label" data-translate="settings.units"></span>
+					<div class="segmented-control settings-control" id="unit-system-control" role="group" aria-labelledby="unit-system-label"></div>
+				</li>
+			</ul>
+
+			<div class="menu menu--select" id="theme-menu" role="menu" hidden></div>
+			<div class="menu menu--select" id="language-menu" role="menu" hidden></div>
 		</div>
 	</dialog>
 

@@ -125,7 +125,7 @@ def validate_plan(plan):
 
 		category = place.get("category")
 		if not is_non_empty_string(category):
-			warnings.append(f'{label} has no "category"; it will appear under "Ostatní".')
+			warnings.append(f'{label} has no "category"; it will appear under "Other" ("Ostatní" in Czech).')
 		else:
 			used_category_ids.add(category)
 			if category not in category_ids:

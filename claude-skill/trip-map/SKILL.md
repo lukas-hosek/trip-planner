@@ -53,11 +53,11 @@ Read [reference/plan-format.md](reference/plan-format.md) for the full format, t
    2. it is explicitly marked `"filterable": true`.
 
    Every other tag can't be filtered by: leaving out `filterable` means `false`. How many places use a tag makes no difference.
-   - **Itinerary tags**, one per day or part of a trip ("Sobota", "Den 2 · Út"), with `"itinerary": true`, defined in chronological order. Every place on the itinerary gets its day tag; alternatives get none. The app numbers the planned places in order, rings their pins and offers a "Náš plán" filter plus one filter per day. Itinerary tags are always filterable, so don't add `filterable` to them.
+   - **Itinerary tags**, one per day or part of a trip ("Sobota", "Den 2 · Út"), with `"itinerary": true`, defined in chronological order. Every place on the itinerary gets its day tag; alternatives get none. The app numbers the planned places in order, rings their pins and offers an "Our plan" filter ("Náš plán" in Czech, "Unser Plan" in German) plus one filter per day. Itinerary tags are always filterable, so don't add `filterable` to them.
    - **Filterable tags** (`"filterable": true`) are groupings the user would actually want to browse the list by: a town or area that several places share ("Rathen", "Malá Strana"), or a trait they would plan around ("Vstup zdarma", "Vhodné s dětmi"). Only mark a tag filterable when filtering by it is genuinely useful. Put it on all the places it applies to, normally at least two, since a filter that shows a single place is pointless. Don't repeat what the categories already group.
    - **Info tags** are short practical labels of up to about 30 characters: opening hours, closures, "Rezervace nutná", "Hrad zavřený". They are notes about a place, not something to filter by, so they are not filterable. Colour them by meaning (see the palette) and reuse one tag across places where it fits.
 
-9. **Write the texts** in the language of the conversation. The app's own interface is Czech.
+9. **Write the texts** in the language of the conversation. The app's own interface has a language setting of its own (Czech, English or German); the plan's texts are shown as you write them.
    - `description`: 3–6 sentences of concrete, interesting facts: what it is, its history, what you'll see, why it's worth the visit. No marketing filler.
    - `tip`: practical advice, such as how to get there, parking, how long it takes, tickets, and the best time of day.
    - Plan `description`: one or two sentences introducing the trip (dates, idea). Plan `note`: when facts were checked, plus any caveat ("Otevírací doby si ověřte před cestou").
@@ -73,7 +73,7 @@ Read [reference/plan-format.md](reference/plan-format.md) for the full format, t
 11. **Reply to the user** with:
     - The link as a Markdown link, copied exactly as the script printed it: `[Otevřít plán v mapě](https://lukas-hosek.github.io/trip-planner/#plan=…)`.
     - The JSON file as a downloadable attachment (save it to `/mnt/user-data/outputs/` when that directory exists).
-    - One line for iPhone users. A link opens in the browser, not in the app on the home screen, so to get the plan there: copy the link, open the app, then **Moje plány → Importovat plán → Vložit ze schránky**.
+    - One line for iPhone users. A link opens in the browser, not in the app on the home screen, so to get the plan there: copy the link, open the app, then **My plans → Import plan → Paste from clipboard**. Give the labels in the user's language: Czech **Moje plány → Importovat plán → Vložit ze schránky**, German **Meine Pläne → Plan importieren → Aus Zwischenablage einfügen**.
     - A short summary: number of places, days, and anything approximate or unverified, including places whose photo shows a broader subject.
 
 ## Updating a plan
@@ -82,4 +82,4 @@ The app identifies plans by `name`. To update a plan exported earlier, keep exac
 
 ## Without code execution
 
-If you can't run the script, give the plan as a ```json code block. The user can paste it into the app under **Moje plány → Importovat plán**.
+If you can't run the script, give the plan as a ```json code block. The user can paste it into the app under **My plans → Import plan** (Czech **Moje plány → Importovat plán**, German **Meine Pläne → Plan importieren**).

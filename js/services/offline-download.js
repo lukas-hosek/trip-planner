@@ -1,8 +1,9 @@
 /*
-	"Stáhnout offline data": fetches the map tiles around a plan's places and the place photos
+	The plan menu's offline download: fetches the map tiles around a plan's places and the place photos
 	and keeps them in a cache of the plan's own, so the map works without signal on the trail.
 	The service worker answers from that cache but never trims it; it is deleted together with the plan
 	or by "Uvolnit offline data". Any stored plan can be downloaded, not only the open one.
+	An updated plan (same name, so the same cache) keeps its data but shows it as outdated until it is downloaded again.
 
 	Tile servers are run by volunteers and discourage bulk downloads, so this stays modest:
 	an overview of the whole area, close-ups only around the places, a hard cap, and few parallel requests.
@@ -69,16 +70,19 @@ export async function downloadPlanForOffline(planKey, places, placesBounds, phot
 	});
 
 	await removeTilesNoLongerNeeded(planCache, tileUrls);
-	const summary = { byteCount, failedCount, completedAt: new Date().toISOString() };
+	const placesFingerprint = await computePlacesFingerprint(places);
+	const summary = { byteCount, failedCount, placesFingerprint, completedAt: new Date().toISOString() };
 	await planCache.put(DOWNLOAD_SUMMARY_URL, new Response(JSON.stringify(summary), { headers: { "Content-Type": "application/json" } }));
 	return { totalCount: urls.length, failedCount };
 }
 
 /**
- * @returns null when the plan has no offline data; otherwise { isComplete, byteCount, failedCount },
- *   where an interrupted download (or one from an older app version) has isComplete false and byteCount null
+ * @param places  the stored plan's current places (null when the plan can't be read), to tell whether the download still matches them
+ * @returns null when the plan has no offline data; otherwise { isComplete, isOutdated, byteCount, failedCount },
+ *   where an interrupted download (or one from an older app version) has isComplete false and byteCount null,
+ *   and isOutdated means the plan's places changed since the download (or it predates fingerprints), so isComplete is false too
  */
-export async function getPlanDownloadSummary(planKey) {
+export async function getPlanDownloadSummary(planKey, places) {
 	try {
 		// The Cache API only exists on https:// (or localhost).
 		const cacheName = DOWNLOADED_PLAN_CACHE_PREFIX + planKey;
@@ -88,9 +92,16 @@ export async function getPlanDownloadSummary(planKey) {
 		const summaryResponse = await (await caches.open(cacheName)).match(DOWNLOAD_SUMMARY_URL);
 		const summary = summaryResponse ? await summaryResponse.json() : null;
 		if (!summary) {
-			return { isComplete: false, byteCount: null, failedCount: null };
+			return { isComplete: false, isOutdated: false, byteCount: null, failedCount: null };
 		}
-		return { isComplete: summary.failedCount === 0, byteCount: Number(summary.byteCount) || 0, failedCount: summary.failedCount };
+		// An unreadable plan can't be compared; its status then rests on the download alone.
+		const isOutdated = places !== null && summary.placesFingerprint !== await computePlacesFingerprint(places);
+		return {
+			isComplete: summary.failedCount === 0 && !isOutdated,
+			isOutdated,
+			byteCount: Number(summary.byteCount) || 0,
+			failedCount: summary.failedCount,
+		};
 	} catch (error) {
 		console.warn("The plan's offline status could not be read:", error);
 		return null;
@@ -105,6 +116,22 @@ export async function deletePlanDownload(planKey) {
 	} catch (error) {
 		console.warn("The plan's offline download could not be removed:", error);
 	}
+}
+
+/**
+ * Sums up what a download depends on: where the places are (the tiles) and which photos they name.
+ * Other edits (descriptions, tags, colours) leave it unchanged, so they don't make the offline data look outdated.
+ * Order doesn't matter, so reordering the itinerary doesn't either.
+ */
+async function computePlacesFingerprint(places) {
+	const placeEntries = places.map(place => JSON.stringify([
+		place.latitude,
+		place.longitude,
+		place.commons?.fileTitle ?? null,
+		place.wikipediaArticles.map(article => article.url),
+	])).toSorted();
+	const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(placeEntries.join("\n")));
+	return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
 /**

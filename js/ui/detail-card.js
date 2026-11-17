@@ -4,6 +4,7 @@
 */
 
 import { getPlaces, placeMatchesFilter } from "../data/active-plan.js";
+import { translate } from "../language/translations.js";
 import {
 	appState,
 	clearSelectedPlace,
@@ -12,8 +13,9 @@ import {
 	PHOTO_LOADING_STATUS,
 	STATE_EVENTS,
 } from "../state/app-state.js";
-import { distanceInKilometers, formatDistance } from "../utils/geo-distance.js";
+import { distanceInKilometers } from "../utils/geo-distance.js";
 import { escapeHtml } from "../utils/html.js";
+import { formatDistance } from "../utils/units.js";
 import { computeSheetStops, createBottomSheet } from "./bottom-sheet.js";
 import { renderPlaceBadge } from "./place-badge.js";
 import { planColorStyle, renderCategoryTag, renderTags } from "./tags.js";
@@ -25,9 +27,8 @@ const ROCK_SILHOUETTE_SVG = `
 		<path d="M0 250v-40l40-6 30 10 50-12 40 14 60-10 50 12 60-8 70 10v30z" fill="rgba(0,0,0,.18)"/>
 	</svg>`;
 
-const PHOTO_FAILED_MESSAGE = "Fotku se nepodařilo načíst.";
 // What a tap on the sheet's handle does at each stop (half, full).
-const DETAIL_SHEET_HANDLE_LABELS = ["Rozbalit detail", "Zmenšit detail"];
+const DETAIL_SHEET_HANDLE_LABEL_KEYS = ["detail.expand", "detail.shrink"];
 
 let elements = null;
 let detailSheet = null;
@@ -47,7 +48,7 @@ export function initDetailCard() {
 			const { half, full } = computeSheetStops();
 			return [half, full];
 		},
-		getHandleLabel: snapIndex => DETAIL_SHEET_HANDLE_LABELS[snapIndex],
+		getHandleLabel: snapIndex => translate(DETAIL_SHEET_HANDLE_LABEL_KEYS[snapIndex]),
 	});
 
 	elements.closeButton.addEventListener("click", clearSelectedPlace);
@@ -99,7 +100,7 @@ function renderContent(place) {
 			${renderTags(place.tags)}
 		</div>
 		${renderParagraphs(place.description)}
-		${place.tip ? `<p class="detail-card-tip"><span class="detail-card-tip-label">Jak na to</span>${renderLineBreaks(place.tip)}</p>` : ""}
+		${place.tip ? `<p class="detail-card-tip"><span class="detail-card-tip-label">${escapeHtml(translate("detail.howTo"))}</span>${renderLineBreaks(place.tip)}</p>` : ""}
 		<div class="detail-card-links">
 			${buildLinks(place).map(link => `<a class="button button--small" href="${escapeHtml(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`).join("")}
 		</div>
@@ -134,18 +135,16 @@ function renderPhoto(place) {
 		imageElement.addEventListener("error", () => {
 			// A late error from a photo that has been replaced meanwhile must not overwrite the current one.
 			if (imageElement.isConnected) {
-				renderPhotoPlaceholder(place, PHOTO_FAILED_MESSAGE);
+				renderPhotoPlaceholder(place, translate("detail.photoFailed"));
 			}
 		});
 		return;
 	}
 
 	const hasPhotoSource = place.commons?.fileTitle || place.wikipediaArticles.length > 0;
-	let placeholderMessage = "K tomuhle místu fotka není.";
+	let placeholderMessage = translate("detail.noPhoto");
 	if (hasPhotoSource) {
-		placeholderMessage = appState.photoLoadingStatus === PHOTO_LOADING_STATUS.loading
-			? "Načítám fotku…"
-			: PHOTO_FAILED_MESSAGE;
+		placeholderMessage = translate(appState.photoLoadingStatus === PHOTO_LOADING_STATUS.loading ? "detail.loadingPhoto" : "detail.photoFailed");
 	}
 	renderPhotoPlaceholder(place, placeholderMessage);
 }
@@ -154,17 +153,17 @@ function renderPhotoPlaceholder(place, placeholderMessage) {
 	elements.photo.innerHTML = `
 		<div class="photo-placeholder" style="${planColorStyle(place.category.color)}">
 			${ROCK_SILHOUETTE_SVG}
-			<p>${placeholderMessage}</p>
-			<a href="${escapeHtml(buildMorePhotosUrl(place))}" target="_blank" rel="noopener">Fotky na Wikimedia Commons ↗</a>
+			<p>${escapeHtml(placeholderMessage)}</p>
+			<a href="${escapeHtml(buildMorePhotosUrl(place))}" target="_blank" rel="noopener">${escapeHtml(translate("detail.photosOnCommons"))} ↗</a>
 		</div>`;
 }
 
 /** A photo of something broader than the place (the town, the valley) says so, so nobody takes it for the place. */
 function buildPhotoCredit(photo) {
 	if (photo.source === "wikipedia") {
-		return "Foto: Wikipedie / Wikimedia Commons";
+		return translate("detail.photoCreditWikipedia");
 	}
-	return photo.subject ? `Foto: ${photo.subject} (Wikimedia Commons)` : "Foto: Wikimedia Commons";
+	return photo.subject ? translate("detail.photoCreditWithSubject", { subject: photo.subject }) : translate("detail.photoCredit");
 }
 
 function renderDistanceFromUser(place) {
@@ -172,7 +171,7 @@ function renderDistanceFromUser(place) {
 		return "";
 	}
 	const distance = formatDistance(distanceInKilometers(appState.userPosition, place));
-	return ` · <span class="distance-from-user">od vás ${distance} vzdušnou čarou</span>`;
+	return ` · <span class="distance-from-user">${escapeHtml(translate("detail.distanceFromUser", { distance }))}</span>`;
 }
 
 function formatCoordinates({ latitude, longitude }) {
@@ -181,7 +180,7 @@ function formatCoordinates({ latitude, longitude }) {
 	return `${latitudeText}, ${longitudeText}`;
 }
 
-/** The arrow keys page through the places; they respect the active filter, so paging through "Náš plán" stays within the plan. */
+/** The arrow keys page through the places; they respect the active filter, so paging through the itinerary stays within it. */
 function selectNeighbourPlace(direction) {
 	const places = getPlaces();
 	const placesInFilter = places.filter(place => placeMatchesFilter(place, appState.activeFilterId));
@@ -209,21 +208,25 @@ function handleKeyboardShortcuts(keyboardEvent) {
 function buildLinks(place) {
 	const links = [];
 	if (place.website) {
-		links.push({ label: "Web", url: place.website });
+		links.push({ label: translate("detail.links.website"), url: place.website });
 	}
 	links.push(
-		{ label: "Mapy.cz", url: buildMapyCzUrl(place) },
+		{ label: translate("detail.links.mapyLabel"), url: buildMapyUrl(place) },
 		{ label: "Google Maps", url: buildGoogleMapsUrl(place) },
 	);
 	if (place.wikipediaArticles.length > 0) {
-		links.push({ label: "Wikipedie", url: place.wikipediaArticles[0].url });
+		links.push({ label: translate("detail.links.wikipedia"), url: place.wikipediaArticles[0].url });
 	}
-	links.push({ label: "Další fotky", url: buildMorePhotosUrl(place) });
+	links.push({ label: translate("detail.links.morePhotos"), url: buildMorePhotosUrl(place) });
 	return [...links, ...place.links];
 }
 
-function buildMapyCzUrl(place) {
-	return `https://mapy.cz/turisticka?q=${place.latitude}%2C${place.longitude}&x=${place.longitude}&y=${place.latitude}&z=15`;
+/**
+ * Mapy.cz in Czech, Mapy.com in the user's language elsewhere: each language file holds the address as a template.
+ * The coordinates go in as text, so they keep their decimal point instead of being formatted like numbers.
+ */
+function buildMapyUrl(place) {
+	return translate("detail.links.mapyUrl", { latitude: String(place.latitude), longitude: String(place.longitude) });
 }
 
 function buildGoogleMapsUrl(place) {

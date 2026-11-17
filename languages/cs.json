@@ -1,0 +1,187 @@
+{
+	"common": {
+		"close": "Zavřít",
+		"backToPlans": "Zpět na seznam plánů",
+		"planSaved": "Plán „{name}“ je uložený.",
+		"planUpdated": "Plán „{name}“ je aktualizovaný.",
+		"planNotFound": "Plán se nepodařilo najít v úložišti.",
+		"linkCopyFailed": "Odkaz se nepodařilo zkopírovat."
+	},
+	"app": {
+		"startFailed": "Aplikaci se nepodařilo spustit: {reason}",
+		"mapLibraryMissing": "Mapovou knihovnu se nepodařilo načíst. Zkontrolujte připojení a obnovte stránku.",
+		"demoPlanFailed": "Ukázkový plán se nepodařilo načíst (HTTP {status})."
+	},
+	"startup": {
+		"planNotSaved": "Plán „{name}“ se nepodařilo uložit do prohlížeče. Zůstane otevřený jen do zavření stránky.",
+		"linkFailed": "Plán z odkazu se nepodařilo otevřít.",
+		"linkFailedWithReason": "Plán z odkazu se nepodařilo otevřít. {reason}",
+		"planSkipped": "Plán „{name}“ se minule nepodařilo otevřít, proto je otevřený jiný. Najdete ho v Moje plány.",
+		"planUpdatedByLink": "Plán „{name}“ je aktualizovaný podle odkazu.",
+		"restoreOriginal": "Vrátit původní",
+		"restoreFailed": "Původní verzi plánu se nepodařilo vrátit.",
+		"originalRestored": "Původní verze plánu „{name}“ je zpět.",
+		"iosHint": "Plán je uložený v tomhle prohlížeči. Máte-li aplikaci TripMap na ploše, zkopírujte odkaz a vložte ho v ní přes Moje plány → Importovat.",
+		"copyLink": "Kopírovat odkaz",
+		"linkCopied": "Odkaz je zkopírovaný. Teď otevřete aplikaci TripMap."
+	},
+	"planFormat": {
+		"notObject": "Plán musí být JSON objekt.",
+		"wrongFormat": "Tohle není plán výletu (format „{format}“).",
+		"unknownVersion": "Plán je ve verzi {version}, kterou tahle aplikace ještě nezná. Obnovte stránku, ať se načte nová verze aplikace.",
+		"missingName": "Plán nemá název (pole „name“).",
+		"noPlaces": "Plán neobsahuje žádná místa (pole „places“).",
+		"tooManyPlaces": "Plán má příliš mnoho míst ({placeCount}, nejvýše {maximum}).",
+		"tooManyCategories": "Plán má příliš mnoho kategorií ({categoryCount}, nejvýše {maximum}).",
+		"tooManyTags": "Plán má příliš mnoho štítků ({tagCount}, nejvýše {maximum}).",
+		"placeNotObject": "Místo č. {placeNumber} není platný objekt.",
+		"placeMissingName": "Místo č. {placeNumber} nemá název.",
+		"placeMissingCoordinates": "Místo č. {placeNumber} ({name}) nemá platné souřadnice („lat“ a „lng“)."
+	},
+	"planLink": {
+		"noPlanInLink": "V odkazu není žádný plán.",
+		"damagedLink": "Odkaz na plán je poškozený nebo neúplný. Zkopírujte ho prosím celý znovu.",
+		"textTooLong": "Text je příliš dlouhý na to, aby to byl plán.",
+		"emptyText": "Vložte odkaz na plán nebo jeho JSON.",
+		"noPlanInText": "Text neobsahuje odkaz na plán ani JSON plánu.",
+		"unreadableJson": "JSON plánu se nedá přečíst: {reason}",
+		"planTooLarge": "Plán v odkazu je příliš velký."
+	},
+	"plan": {
+		"uncategorized": "Ostatní",
+		"filterAll": "Vše",
+		"filterPlanned": "Náš plán",
+		"itineraryTag": "V plánu · {label}"
+	},
+	"sidebar": {
+		"defaultIntro": "Klikněte na špendlík nebo na místo v seznamu.",
+		"itineraryIntro": "Očíslovaná místa jsou ve vašem plánu.",
+		"filterLabel": "Filtr míst",
+		"showAllFilters": "Zobrazit všechny filtry",
+		"collapseFilters": "Sbalit filtry",
+		"placeListLabel": "Seznam míst",
+		"expandList": "Rozbalit seznam",
+		"enlargeList": "Zvětšit seznam",
+		"collapseList": "Sbalit seznam"
+	},
+	"detail": {
+		"label": "Detail místa",
+		"close": "Zavřít detail",
+		"expand": "Rozbalit detail",
+		"shrink": "Zmenšit detail",
+		"howTo": "Jak na to",
+		"loadingPhoto": "Načítám fotku…",
+		"photoFailed": "Fotku se nepodařilo načíst.",
+		"noPhoto": "K tomuhle místu fotka není.",
+		"photosOnCommons": "Fotky na Wikimedia Commons",
+		"photoCredit": "Foto: Wikimedia Commons",
+		"photoCreditWithSubject": "Foto: {subject} (Wikimedia Commons)",
+		"photoCreditWikipedia": "Foto: Wikipedie / Wikimedia Commons",
+		"distanceFromUser": "od vás {distance} vzdušnou čarou",
+		"links": {
+			"website": "Web",
+			"mapyLabel": "Mapy.cz",
+			"mapyUrl": "https://mapy.cz/turisticka?q={latitude}%2C{longitude}&x={longitude}&y={latitude}&z=15",
+			"wikipedia": "Wikipedie",
+			"morePhotos": "Další fotky"
+		}
+	},
+	"map": {
+		"label": "Mapa míst",
+		"zoomIn": "Přiblížit",
+		"zoomOut": "Oddálit",
+		"layersTitle": "Vrstvy mapy",
+		"layers": {
+			"hiking": "Turistická (OpenTopoMap)",
+			"basic": "Základní (OpenStreetMap)",
+			"aerial": "Letecká (Esri)"
+		},
+		"offlineNotice": "Jste offline. Mapa se zobrazí jen tam, kde je stažená (Moje plány → ⋯ → Stáhnout offline data).",
+		"tilesUnavailable": "Mapové podklady se nepodařilo načíst. Zobrazuji jen uložené části mapy."
+	},
+	"location": {
+		"title": "Moje poloha",
+		"buttonLabel": "Ukázat moji polohu",
+		"unsupported": "Tenhle prohlížeč neumí zjistit polohu.",
+		"needsHttps": "Poloha funguje jen na zabezpečené adrese (https). Otevřete mapu z webu, ne jako místní soubor.",
+		"found": "Poloha zjištěna, přesnost asi {accuracy}.",
+		"permissionDenied": "Přístup k poloze je zakázaný. Povolte ho v nastavení prohlížeče pro tuhle stránku a zkuste to znovu.",
+		"timeout": "Poloha se zatím nenašla. Zkuste to venku nebo počkejte, až se chytí GPS.",
+		"unavailable": "Polohu se nepodařilo zjistit. Zkontrolujte, že máte zapnuté určování polohy."
+	},
+	"notice": {
+		"close": "Zavřít upozornění"
+	},
+	"plans": {
+		"title": "Moje plány",
+		"openPlan": "Otevřený",
+		"placeCount": {
+			"one": "{count} místo",
+			"few": "{count} místa",
+			"other": "{count} míst"
+		},
+		"actionsLabel": "Akce plánu {name}",
+		"status": {
+			"downloading": "Stahuji {percent} %",
+			"offline": "Offline",
+			"incomplete": "Offline neúplné",
+			"outdated": "Offline zastaralé"
+		},
+		"menu": {
+			"share": "Sdílet odkaz",
+			"export": "Exportovat plán",
+			"download": "Stáhnout offline data",
+			"release": "Uvolnit offline data",
+			"delete": "Smazat plán",
+			"confirmDelete": "Opravdu smazat?"
+		},
+		"deleted": "Plán „{name}“ je smazaný.",
+		"linkCopied": "Odkaz na plán „{name}“ je zkopírovaný. Kdo ho otevře, uvidí plán ve své aplikaci.",
+		"offlineNotReady": "Offline režim ještě neběží. Obnovte stránku a zkuste to znovu.",
+		"downloadNeedsConnection": "Jste offline. Stahovat jde jen s připojením k internetu.",
+		"downloadComplete": "Offline data plánu „{name}“ jsou stažená: mapa okolí všech míst a fotky.",
+		"downloadPartial": {
+			"other": "Offline data plánu „{name}“ se stáhla jen zčásti: {count} z {totalCount} souborů chybí. Zkuste to znovu s lepším signálem."
+		},
+		"planUnreadable": "Plán „{name}“ se nepodařilo přečíst: {reason}",
+		"downloadFailed": "Stahování se nepodařilo. Zkuste to znovu.",
+		"released": "Offline data plánu „{name}“ jsou uvolněná.",
+		"importPlan": "Importovat plán…",
+		"howToCreate": "Jak vytvořit plán?",
+		"settings": "Nastavení aplikace"
+	},
+	"import": {
+		"title": "Importovat plán",
+		"label": "Vložte odkaz na plán nebo jeho JSON:",
+		"paste": "Vložit ze schránky",
+		"chooseFile": "Vybrat soubor…",
+		"submit": "Importovat",
+		"clipboardFailed": "Schránku se nepodařilo přečíst. Vložte text do pole ručně.",
+		"fileTooLarge": "Soubor je příliš velký na to, aby to byl plán.",
+		"notSaved": "Plán se nepodařilo uložit do prohlížeče. Smažte starší plány nebo povolte stránce ukládání dat.",
+		"failed": "Plán se nepodařilo načíst."
+	},
+	"help": {
+		"skillHtml": "Plány připravuje Claude. Stáhněte si skill <a href=\"trip-map-skill.zip\" download>trip-map</a> a v Claude ho nahrajte v <strong>Nastavení → Funkce → Skills</strong>. Až budete mít výlet naplánovaný, napište třeba „Exportuj plán do mapy“. Claude pošle odkaz, který plán otevře tady.",
+		"replacing": "Plán se stejným názvem nahradí ten dřívější, takže upravený plán stačí znovu otevřít.",
+		"iphoneHtml": "Na iPhonu se odkaz otevře v prohlížeči. Do aplikace na ploše ho přeneste přes <strong>Importovat plán → Vložit ze schránky</strong>."
+	},
+	"settings": {
+		"title": "Nastavení aplikace",
+		"currentValue": "{setting}: {value}",
+		"theme": "Vzhled",
+		"themeMenu": "Vzhled aplikace",
+		"themes": {
+			"automatic": "Automaticky",
+			"light": "Světlý",
+			"dark": "Tmavý"
+		},
+		"language": "Jazyk",
+		"languageMenu": "Jazyk aplikace",
+		"units": "Jednotky",
+		"unitSystems": {
+			"metric": "Metrické",
+			"imperial": "Imperiální"
+		}
+	}
+}

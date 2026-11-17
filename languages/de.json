@@ -1,0 +1,187 @@
+{
+	"common": {
+		"close": "Schließen",
+		"backToPlans": "Zurück zur Liste der Pläne",
+		"planSaved": "Der Plan „{name}“ ist gespeichert.",
+		"planUpdated": "Der Plan „{name}“ ist aktualisiert.",
+		"planNotFound": "Der Plan wurde im Speicher nicht gefunden.",
+		"linkCopyFailed": "Der Link konnte nicht kopiert werden."
+	},
+	"app": {
+		"startFailed": "Die App konnte nicht starten: {reason}",
+		"mapLibraryMissing": "Die Kartenbibliothek konnte nicht geladen werden. Prüfen Sie die Verbindung und laden Sie die Seite neu.",
+		"demoPlanFailed": "Der Beispielplan konnte nicht geladen werden (HTTP {status})."
+	},
+	"startup": {
+		"planNotSaved": "Der Plan „{name}“ konnte nicht im Browser gespeichert werden. Er bleibt nur geöffnet, bis Sie die Seite schließen.",
+		"linkFailed": "Der Plan aus dem Link konnte nicht geöffnet werden.",
+		"linkFailedWithReason": "Der Plan aus dem Link konnte nicht geöffnet werden. {reason}",
+		"planSkipped": "Der Plan „{name}“ ließ sich beim letzten Mal nicht öffnen, deshalb ist ein anderer geöffnet. Sie finden ihn unter Meine Pläne.",
+		"planUpdatedByLink": "Der Plan „{name}“ wurde anhand des Links aktualisiert.",
+		"restoreOriginal": "Original wiederherstellen",
+		"restoreFailed": "Die ursprüngliche Version des Plans konnte nicht wiederhergestellt werden.",
+		"originalRestored": "Die ursprüngliche Version des Plans „{name}“ ist wieder da.",
+		"iosHint": "Der Plan ist in diesem Browser gespeichert. Wenn Sie die App TripMap auf dem Home-Bildschirm haben, kopieren Sie den Link und fügen Sie ihn dort über Meine Pläne → Plan importieren ein.",
+		"copyLink": "Link kopieren",
+		"linkCopied": "Der Link ist kopiert. Öffnen Sie jetzt die App TripMap."
+	},
+	"planFormat": {
+		"notObject": "Der Plan muss ein JSON-Objekt sein.",
+		"wrongFormat": "Das ist kein Reiseplan (format „{format}“).",
+		"unknownVersion": "Der Plan hat die Version {version}, die diese App noch nicht kennt. Laden Sie die Seite neu, damit die neue Version der App geladen wird.",
+		"missingName": "Der Plan hat keinen Namen (Feld „name“).",
+		"noPlaces": "Der Plan enthält keine Orte (Feld „places“).",
+		"tooManyPlaces": "Der Plan hat zu viele Orte ({placeCount}, höchstens {maximum}).",
+		"tooManyCategories": "Der Plan hat zu viele Kategorien ({categoryCount}, höchstens {maximum}).",
+		"tooManyTags": "Der Plan hat zu viele Schlagwörter ({tagCount}, höchstens {maximum}).",
+		"placeNotObject": "Ort Nr. {placeNumber} ist kein gültiges Objekt.",
+		"placeMissingName": "Ort Nr. {placeNumber} hat keinen Namen.",
+		"placeMissingCoordinates": "Ort Nr. {placeNumber} ({name}) hat keine gültigen Koordinaten („lat“ und „lng“)."
+	},
+	"planLink": {
+		"noPlanInLink": "Der Link enthält keinen Plan.",
+		"damagedLink": "Der Link zum Plan ist beschädigt oder unvollständig. Bitte kopieren Sie ihn noch einmal vollständig.",
+		"textTooLong": "Der Text ist zu lang für einen Plan.",
+		"emptyText": "Fügen Sie einen Link zum Plan oder sein JSON ein.",
+		"noPlanInText": "Der Text enthält weder einen Link zu einem Plan noch das JSON eines Plans.",
+		"unreadableJson": "Das JSON des Plans lässt sich nicht lesen: {reason}",
+		"planTooLarge": "Der Plan im Link ist zu groß."
+	},
+	"plan": {
+		"uncategorized": "Sonstiges",
+		"filterAll": "Alle",
+		"filterPlanned": "Unser Plan",
+		"itineraryTag": "Im Plan · {label}"
+	},
+	"sidebar": {
+		"defaultIntro": "Klicken Sie auf eine Stecknadel oder auf einen Ort in der Liste.",
+		"itineraryIntro": "Die nummerierten Orte sind in Ihrem Plan.",
+		"filterLabel": "Orte filtern",
+		"showAllFilters": "Alle Filter anzeigen",
+		"collapseFilters": "Filter einklappen",
+		"placeListLabel": "Liste der Orte",
+		"expandList": "Liste ausklappen",
+		"enlargeList": "Liste vergrößern",
+		"collapseList": "Liste einklappen"
+	},
+	"detail": {
+		"label": "Details zum Ort",
+		"close": "Details schließen",
+		"expand": "Details ausklappen",
+		"shrink": "Details verkleinern",
+		"howTo": "Praktische Tipps",
+		"loadingPhoto": "Foto wird geladen…",
+		"photoFailed": "Das Foto konnte nicht geladen werden.",
+		"noPhoto": "Zu diesem Ort gibt es kein Foto.",
+		"photosOnCommons": "Fotos auf Wikimedia Commons",
+		"photoCredit": "Foto: Wikimedia Commons",
+		"photoCreditWithSubject": "Foto: {subject} (Wikimedia Commons)",
+		"photoCreditWikipedia": "Foto: Wikipedia / Wikimedia Commons",
+		"distanceFromUser": "{distance} Luftlinie von Ihnen",
+		"links": {
+			"website": "Website",
+			"mapyLabel": "Mapy.com",
+			"mapyUrl": "https://mapy.com/de/turisticka?q={latitude}%2C{longitude}&x={longitude}&y={latitude}&z=15",
+			"wikipedia": "Wikipedia",
+			"morePhotos": "Weitere Fotos"
+		}
+	},
+	"map": {
+		"label": "Karte der Orte",
+		"zoomIn": "Vergrößern",
+		"zoomOut": "Verkleinern",
+		"layersTitle": "Kartenebenen",
+		"layers": {
+			"hiking": "Wanderkarte (OpenTopoMap)",
+			"basic": "Standard (OpenStreetMap)",
+			"aerial": "Luftbild (Esri)"
+		},
+		"offlineNotice": "Sie sind offline. Die Karte wird nur dort angezeigt, wo sie heruntergeladen ist (Meine Pläne → ⋯ → Offline-Daten herunterladen).",
+		"tilesUnavailable": "Die Kartenkacheln konnten nicht geladen werden. Angezeigt werden nur die gespeicherten Teile der Karte."
+	},
+	"location": {
+		"title": "Mein Standort",
+		"buttonLabel": "Meinen Standort anzeigen",
+		"unsupported": "Dieser Browser kann den Standort nicht bestimmen.",
+		"needsHttps": "Der Standort funktioniert nur über eine sichere Adresse (https). Öffnen Sie die Karte aus dem Web, nicht als lokale Datei.",
+		"found": "Standort gefunden, Genauigkeit etwa {accuracy}.",
+		"permissionDenied": "Der Zugriff auf den Standort ist gesperrt. Erlauben Sie ihn in den Browsereinstellungen für diese Seite und versuchen Sie es erneut.",
+		"timeout": "Der Standort wurde noch nicht gefunden. Versuchen Sie es im Freien oder warten Sie, bis das GPS ein Signal hat.",
+		"unavailable": "Der Standort konnte nicht bestimmt werden. Prüfen Sie, ob die Ortungsdienste eingeschaltet sind."
+	},
+	"notice": {
+		"close": "Hinweis schließen"
+	},
+	"plans": {
+		"title": "Meine Pläne",
+		"openPlan": "Geöffnet",
+		"placeCount": {
+			"one": "{count} Ort",
+			"other": "{count} Orte"
+		},
+		"actionsLabel": "Aktionen für den Plan {name}",
+		"status": {
+			"downloading": "Lädt {percent} %",
+			"offline": "Offline",
+			"incomplete": "Offline unvollständig",
+			"outdated": "Offline veraltet"
+		},
+		"menu": {
+			"share": "Link teilen",
+			"export": "Plan exportieren",
+			"download": "Offline-Daten herunterladen",
+			"release": "Offline-Daten entfernen",
+			"delete": "Plan löschen",
+			"confirmDelete": "Wirklich löschen?"
+		},
+		"deleted": "Der Plan „{name}“ ist gelöscht.",
+		"linkCopied": "Der Link zum Plan „{name}“ ist kopiert. Wer ihn öffnet, sieht den Plan in seiner eigenen App.",
+		"offlineNotReady": "Der Offline-Modus läuft noch nicht. Laden Sie die Seite neu und versuchen Sie es erneut.",
+		"downloadNeedsConnection": "Sie sind offline. Herunterladen geht nur mit Internetverbindung.",
+		"downloadComplete": "Die Offline-Daten des Plans „{name}“ sind heruntergeladen: die Karte rund um alle Orte und die Fotos.",
+		"downloadPartial": {
+			"one": "Die Offline-Daten des Plans „{name}“ wurden nur teilweise heruntergeladen: {count} von {totalCount} Dateien fehlt. Versuchen Sie es mit besserem Empfang noch einmal.",
+			"other": "Die Offline-Daten des Plans „{name}“ wurden nur teilweise heruntergeladen: {count} von {totalCount} Dateien fehlen. Versuchen Sie es mit besserem Empfang noch einmal."
+		},
+		"planUnreadable": "Der Plan „{name}“ konnte nicht gelesen werden: {reason}",
+		"downloadFailed": "Das Herunterladen ist fehlgeschlagen. Versuchen Sie es erneut.",
+		"released": "Die Offline-Daten des Plans „{name}“ sind entfernt.",
+		"importPlan": "Plan importieren…",
+		"howToCreate": "Wie erstelle ich einen Plan?",
+		"settings": "App-Einstellungen"
+	},
+	"import": {
+		"title": "Plan importieren",
+		"label": "Fügen Sie einen Link zum Plan oder sein JSON ein:",
+		"paste": "Aus Zwischenablage einfügen",
+		"chooseFile": "Datei auswählen…",
+		"submit": "Importieren",
+		"clipboardFailed": "Die Zwischenablage konnte nicht gelesen werden. Fügen Sie den Text von Hand in das Feld ein.",
+		"fileTooLarge": "Die Datei ist zu groß für einen Plan.",
+		"notSaved": "Der Plan konnte nicht im Browser gespeichert werden. Löschen Sie ältere Pläne oder erlauben Sie der Seite, Daten zu speichern.",
+		"failed": "Der Plan konnte nicht geladen werden."
+	},
+	"help": {
+		"skillHtml": "Pläne erstellt Claude. Laden Sie den Skill <a href=\"trip-map-skill.zip\" download>trip-map</a> herunter und laden Sie ihn in Claude unter <strong>Einstellungen → Funktionen → Skills</strong> hoch. Wenn Ihre Reise geplant ist, schreiben Sie zum Beispiel „Exportiere den Plan in die Karte“. Claude schickt einen Link, der den Plan hier öffnet.",
+		"replacing": "Ein Plan mit demselben Namen ersetzt den früheren. Einen geänderten Plan müssen Sie also nur erneut öffnen.",
+		"iphoneHtml": "Auf dem iPhone öffnet sich der Link im Browser. In die App auf dem Home-Bildschirm übertragen Sie ihn über <strong>Plan importieren → Aus Zwischenablage einfügen</strong>."
+	},
+	"settings": {
+		"title": "App-Einstellungen",
+		"currentValue": "{setting}: {value}",
+		"theme": "Darstellung",
+		"themeMenu": "Darstellung der App",
+		"themes": {
+			"automatic": "Automatisch",
+			"light": "Hell",
+			"dark": "Dunkel"
+		},
+		"language": "Sprache",
+		"languageMenu": "Sprache der App",
+		"units": "Einheiten",
+		"unitSystems": {
+			"metric": "Metrisch",
+			"imperial": "Imperial"
+		}
+	}
+}

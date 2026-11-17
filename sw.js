@@ -5,14 +5,15 @@
 	  and local edits show up on reload; the cache answers when offline or when the network is too slow.
 	- Map tiles, photos, Leaflet and fonts: cache first; they don't change.
 	  Tiles and photos seen while browsing go to shared caches, which are trimmed when they grow too large.
-	  "Stáhnout offline data" (js/services/offline-download.js) keeps its files in one cache per plan;
+	  The offline download in the plan menu (js/services/offline-download.js) keeps its files in one cache per plan;
 	  those are only read here, never trimmed, and the app deletes them together with the plan.
 	- Photo lookups (Wikimedia Commons and Wikipedia APIs): network first, cache as fallback; trimmed like tiles and photos.
 
-	APP_SHELL_FILES must list every file the app loads. Bump APP_SHELL_VERSION whenever the list changes.
+	APP_SHELL_FILES must list every file the app loads. Bump APP_SHELL_VERSION whenever the list changes
+	(that includes a new language in LANGUAGE_CODES).
 */
 
-const APP_SHELL_VERSION = 4;
+const APP_SHELL_VERSION = 5;
 const APP_SHELL_CACHE_PREFIX = "app-shell-v";
 const APP_SHELL_CACHE = `${APP_SHELL_CACHE_PREFIX}${APP_SHELL_VERSION}`;
 const LIBRARY_CACHE = "libraries";
@@ -33,10 +34,16 @@ const PLACE_ICON_KEYS = [
 	"city", "astronomy", "observatory", "info", "star",
 ];
 
+/*
+	Every language is precached (its texts and its flag), so switching the language works offline too.
+	Keep in sync with languages/index.json; tools/check_translations.py checks that the two match.
+*/
+const LANGUAGE_CODES = ["cs", "en", "de"];
+
 const UI_ICON_NAMES = [
 	"menu", "close", "more", "chevron-down", "back",
 	"share", "export", "download", "release", "delete",
-	"import", "offline", "crosshair",
+	"import", "offline", "crosshair", "settings", "check",
 ];
 
 const APP_SHELL_FILES = [
@@ -51,11 +58,14 @@ const APP_SHELL_FILES = [
 	"css/detail-card.css",
 	"css/plans-panel.css",
 	"js/main.js",
+	"js/apply-theme-before-paint.js",
 	"js/data/active-plan.js",
+	"js/data/app-settings.js",
 	"js/data/place-icons.js",
 	"js/data/plan-format.js",
 	"js/data/plan-link.js",
 	"js/data/plan-store.js",
+	"js/language/translations.js",
 	"js/map/base-map.js",
 	"js/map/map-focus.js",
 	"js/map/place-markers.js",
@@ -66,16 +76,23 @@ const APP_SHELL_FILES = [
 	"js/ui/bottom-sheet.js",
 	"js/ui/detail-card.js",
 	"js/ui/map-notice.js",
+	"js/ui/menu.js",
 	"js/ui/place-badge.js",
 	"js/ui/plans-panel.js",
+	"js/ui/settings-panel.js",
 	"js/ui/sidebar.js",
 	"js/ui/tags.js",
+	"js/ui/theme.js",
 	"js/ui/toast.js",
 	"js/ui/url-hash.js",
 	"js/utils/geo-distance.js",
 	"js/utils/html.js",
+	"js/utils/local-storage.js",
 	"js/utils/media-queries.js",
-	"plans/spanelsko-2026.json",
+	"js/utils/units.js",
+	"languages/index.json",
+	...LANGUAGE_CODES.flatMap(code => [`languages/${code}.json`, `languages/${code}.svg`]),
+	"plans/spain-2026.json",
 	"icons/icon.svg",
 	"icons/icon-192.png",
 	"icons/icon-512.png",
@@ -104,7 +121,7 @@ const MAXIMUM_PHOTO_LOOKUP_CACHE_ENTRIES = 200;
 // Counting a cache's entries on every write would be slow; trimming every so many writes is enough.
 const WRITES_BETWEEN_CACHE_TRIMS = 50;
 
-const TILE_HOST_PATTERN = /(^|\.)tile\.opentopomap\.org$|^server\.arcgisonline\.com$/;
+const TILE_HOST_PATTERN = /(^|\.)tile\.opentopomap\.org$|^tile\.openstreetmap\.org$|^server\.arcgisonline\.com$/;
 const LIBRARY_HOSTS = new Set(["unpkg.com", "fonts.googleapis.com", "fonts.gstatic.com"]);
 
 const writeCountsByCacheName = new Map();
@@ -166,7 +183,7 @@ function isPhotoLookupRequest(url) {
 }
 
 /**
- * Images shown in the detail card, plus photos fetched by "Stáhnout offline data"
+ * Images shown in the detail card, plus photos fetched by the offline download
  * (served from upload. or thumb.wikimedia.org; a plain fetch() of those has no "image" destination).
  */
 function isPhotoRequest(request, url) {

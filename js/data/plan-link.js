@@ -23,7 +23,7 @@ export function hasPlanInFragment(fragment) {
 export async function decodePlanFragment(fragment) {
 	const encodedPlan = fragment.match(PLAN_FRAGMENT_PATTERN)?.[1];
 	if (!encodedPlan) {
-		throw new PlanFormatError("V odkazu není žádný plán.");
+		throw new PlanFormatError("planLink.noPlanInLink");
 	}
 	let planJson;
 	try {
@@ -32,7 +32,7 @@ export async function decodePlanFragment(fragment) {
 		if (error instanceof PlanFormatError) {
 			throw error;
 		}
-		throw new PlanFormatError("Odkaz na plán je poškozený nebo neúplný. Zkopírujte ho prosím celý znovu.");
+		throw new PlanFormatError("planLink.damagedLink");
 	}
 	return parsePlanJson(planJson);
 }
@@ -50,11 +50,11 @@ export async function encodePlanLink(rawPlan) {
  */
 export async function extractRawPlanFromText(text) {
 	if (text.length > MAXIMUM_IMPORT_TEXT_LENGTH) {
-		throw new PlanFormatError("Text je příliš dlouhý na to, aby to byl plán.");
+		throw new PlanFormatError("planLink.textTooLong");
 	}
 	const trimmedText = text.trim();
 	if (!trimmedText) {
-		throw new PlanFormatError("Vložte odkaz na plán nebo jeho JSON.");
+		throw new PlanFormatError("planLink.emptyText");
 	}
 	if (hasPlanInFragment(trimmedText)) {
 		return decodePlanFragment(trimmedText);
@@ -62,7 +62,7 @@ export async function extractRawPlanFromText(text) {
 	const codeBlockContent = trimmedText.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1];
 	const jsonCandidate = codeBlockContent ?? trimmedText.slice(trimmedText.indexOf("{"), trimmedText.lastIndexOf("}") + 1);
 	if (!jsonCandidate) {
-		throw new PlanFormatError("Text neobsahuje odkaz na plán ani JSON plánu.");
+		throw new PlanFormatError("planLink.noPlanInText");
 	}
 	return parsePlanJson(jsonCandidate);
 }
@@ -71,7 +71,7 @@ function parsePlanJson(planJson) {
 	try {
 		return JSON.parse(planJson);
 	} catch (error) {
-		throw new PlanFormatError(`JSON plánu se nedá přečíst: ${error.message}`);
+		throw new PlanFormatError("planLink.unreadableJson", { reason: error.message });
 	}
 }
 
@@ -93,7 +93,7 @@ async function decompressToText(bytes) {
 		byteCount += value.length;
 		if (byteCount > MAXIMUM_PLAN_JSON_BYTES) {
 			await reader.cancel();
-			throw new PlanFormatError("Plán v odkazu je příliš velký.");
+			throw new PlanFormatError("planLink.planTooLarge");
 		}
 		chunks.push(value);
 	}

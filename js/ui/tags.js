@@ -3,6 +3,7 @@
 	Colours come from the plan and are passed as --plan-color; the stylesheets adapt them to dark mode.
 */
 
+import { translate } from "../language/translations.js";
 import { escapeHtml } from "../utils/html.js";
 
 export function renderCategoryTag(category) {
@@ -10,12 +11,12 @@ export function renderCategoryTag(category) {
 }
 
 /**
- * Itinerary tags (days) are filled and, in the detail card, read "V plánu · Sobota";
+ * Itinerary tags (days) are filled and, in the detail card, read "Planned · Saturday" (plan.itineraryTag);
  * the list is narrow, so it shows just the day.
  */
 function renderTag(tag, { short = false } = {}) {
 	if (tag.isItinerary) {
-		const text = short ? tag.label : `V plánu · ${tag.label}`;
+		const text = short ? tag.label : translate("plan.itineraryTag", { label: tag.label });
 		return `<span class="tag tag--itinerary" style="${planColorStyle(tag.color)}">${escapeHtml(text)}</span>`;
 	}
 	return `<span class="tag" style="${planColorStyle(tag.color)}">${escapeHtml(tag.label)}</span>`;

@@ -8,6 +8,7 @@
 */
 
 import { getPlanKey } from "./plan-format.js";
+import { readItem, readJson, removeItem, writeItem, writeJson } from "../utils/local-storage.js";
 
 const PLANS_STORAGE_KEY = "tripPlanner.plans";
 const LAST_OPENED_PLAN_STORAGE_KEY = "tripPlanner.lastOpenedPlanKey";
@@ -134,43 +135,4 @@ export function setLastOpenedPlanKey(planKey) {
 /** Asks the browser not to evict stored plans under storage pressure; it may silently decline. */
 function requestPersistentStorage() {
 	navigator.storage?.persist?.().catch(() => {});
-}
-
-function readJson(storageKey) {
-	try {
-		return JSON.parse(readItem(storageKey) ?? "null");
-	} catch {
-		return null;
-	}
-}
-
-function writeJson(storageKey, value) {
-	return writeItem(storageKey, JSON.stringify(value));
-}
-
-function readItem(storageKey) {
-	try {
-		return localStorage.getItem(storageKey);
-	} catch {
-		return null;
-	}
-}
-
-/** @returns whether the value was stored */
-function writeItem(storageKey, value) {
-	try {
-		localStorage.setItem(storageKey, value);
-		return true;
-	} catch (error) {
-		console.warn(`"${storageKey}" could not be saved to localStorage:`, error);
-		return false;
-	}
-}
-
-function removeItem(storageKey) {
-	try {
-		localStorage.removeItem(storageKey);
-	} catch {
-		// Storage that can't be reached has nothing to remove.
-	}
 }
