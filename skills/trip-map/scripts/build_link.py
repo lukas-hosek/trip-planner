@@ -3,7 +3,7 @@
 Validates a trip plan JSON file and prints the link that opens it in TripMap.
 
 Usage:
-	python build_link.py plan.json [--base-url https://localhost/] [--card card.html]
+	python build_link.py plan.json [--base-url https://localhost:8443/] [--card card.html]
 
 With --card, it writes a share card instead of printing the link: an HTML page with buttons
 that open the plan, copy the link and download the JSON, in the browser's language (cs, en or de).

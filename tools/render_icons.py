@@ -1,17 +1,25 @@
 """
-Renders the app's PNG icons from icons/icon.svg with headless Microsoft Edge (Windows).
-Run from the repository root after changing the SVG:  python tools/render_icons.py
+Renders the app's PNG icons from icons/icon.svg with a headless Chromium-based browser
+(Microsoft Edge on Windows; Chromium or Google Chrome on Linux).
+Run from the repository root after changing the SVG:  python3 tools/render_icons.py  (on Windows: python tools/render_icons.py)
 
 - icon-192.png, icon-512.png: the SVG as drawn (rounded corners, transparent outside them).
 - icon-maskable-512.png, apple-touch-icon.png: square and full-bleed; Android and iOS cut their own shape.
 """
 
 import pathlib
+import shutil
 import struct
 import subprocess
 import tempfile
 
-EDGE_PATH = pathlib.Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
+BROWSER_CANDIDATES = [
+	r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+	"chromium",
+	"chromium-browser",
+	"google-chrome",
+	"microsoft-edge",
+]
 REPOSITORY_ROOT = pathlib.Path(__file__).resolve().parent.parent
 ICONS_DIRECTORY = REPOSITORY_ROOT / "icons"
 
@@ -31,19 +39,27 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 </style></head><body>{svg}</body></html>"""
 
 
-def render_icon(svg_source, file_name, size, keep_rounded_corners, work_directory):
+def find_browser():
+	for candidate in BROWSER_CANDIDATES:
+		browser_path = shutil.which(candidate) or (candidate if pathlib.Path(candidate).is_file() else None)
+		if browser_path:
+			return browser_path
+	raise RuntimeError("No Chromium-based browser found; install Edge, Chromium or Google Chrome")
+
+
+def render_icon(browser_path, svg_source, file_name, size, keep_rounded_corners, work_directory):
 	extra_css = "" if keep_rounded_corners else ".icon-shape { rx: 0; }"
 	page_path = work_directory / f"{file_name}.html"
 	page_path.write_text(PAGE_TEMPLATE.format(size=size, svg=svg_source, extra_css=extra_css), encoding="utf-8")
 	output_path = ICONS_DIRECTORY / file_name
 	subprocess.run([
-		str(EDGE_PATH),
+		browser_path,
 		"--headless=new",
 		"--disable-gpu",
 		"--hide-scrollbars",
 		"--force-device-scale-factor=1",
 		"--default-background-color=00000000",
-		f"--user-data-dir={work_directory / 'edge-profile'}",
+		f"--user-data-dir={work_directory / 'browser-profile'}",
 		f"--window-size={size},{size}",
 		f"--screenshot={output_path}",
 		page_path.as_uri(),
@@ -60,10 +76,11 @@ def read_png_size(png_path):
 
 
 def main():
+	browser_path = find_browser()
 	svg_source = (ICONS_DIRECTORY / "icon.svg").read_text(encoding="utf-8")
 	with tempfile.TemporaryDirectory() as work_directory:
 		for file_name, size, keep_rounded_corners in ICON_VARIANTS:
-			render_icon(svg_source, file_name, size, keep_rounded_corners, pathlib.Path(work_directory))
+			render_icon(browser_path, svg_source, file_name, size, keep_rounded_corners, pathlib.Path(work_directory))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,19 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			// Runs the dev server in the foreground: the debug toolbar's Stop ends it.
+			// Once it is up, the page opens in VS Code's integrated browser.
+			"name": "Dev server (https://localhost:8443)",
+			"type": "node-terminal",
+			"request": "launch",
+			"command": "\"${workspaceFolder}/.vscode/run_server.sh\" --blocking",
+			"cwd": "${workspaceFolder}",
+			"serverReadyAction": {
+				"action": "openIntegratedBrowser",
+				"pattern": "Dev server running: (https://localhost:[0-9]+/)",
+				"uriFormat": "%s"
+			}
+		}
+	]
+}

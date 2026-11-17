@@ -1,5 +1,5 @@
 """
-Checks TripMap's interface translations (languages/). Run from anywhere:  python tools/check_translations.py
+Checks TripMap's interface translations (languages/). Run from anywhere:  python3 tools/check_translations.py  (on Windows: python tools/check_translations.py)
 
 Errors (exit code 1):
 - a language listed in languages/index.json has no .json or .svg file, or sw.js doesn't precache it (LANGUAGE_CODES);

@@ -187,12 +187,12 @@ A new language adds a column.
    - add the code to `LANGUAGE_CODES`, so the language works offline
    - bump `APP_SHELL_VERSION`
 5. A column in the glossary above.
-6. Run `python tools/check_translations.py`.
+6. Run `tools/check_translations.py` (see "Checking" below).
 7. Walk through the app in the new language (below).
 
 ## Checking
 
-`python tools/check_translations.py` reports:
+Run the check from anywhere: `python3 tools/check_translations.py` on Linux, `python tools/check_translations.py` on Windows. It reports:
 
 - **Errors** (exit code 1):
   - a listed language without its `.json` or `.svg`
@@ -208,7 +208,7 @@ A new language adds a column.
 
 The script finds the keys the app uses in `index.html`'s `data-translate*` attributes and in `js/`. In `js/` it counts any quoted dotted string whose first segment is a group (`"plans.menu.share"`), and treats a template such as `` `settings.themes.${choice}` `` as using every key under that prefix.
 
-The script can't judge tone, meaning, or whether a label fits. So walk through the app in the language with the dev server running (`powershell -NoProfile -ExecutionPolicy Bypass -File .vscode/run_server.ps1`, then `https://localhost/`):
+The script can't judge tone, meaning, or whether a label fits. So walk through the app in the language with the dev server (`.vscode/run_server.ps1` on Windows, `.vscode/run_server.sh` on Linux; see CLAUDE.md) running, at the URL it prints:
 
 - the list and the filters (on a phone width too, where the filter row wraps)
 - the detail card with and without a photo

@@ -1,5 +1,7 @@
 # Editor / tooling
-.vscode/
+# .vscode/ is versioned (dev server scripts, launch and tasks), except the dev server's per-machine files:
+# the localhost certificate and its private key, the PID file and the log. .vscode/setup_dev.sh re-creates the certificate.
+.vscode/server/
 .idea/
 *.code-workspace
 *.swp

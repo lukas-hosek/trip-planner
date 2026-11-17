@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			// Same zip as the GitHub Pages workflow: it holds skills/trip-map/, the layout ChatGPT expects.
+			"label": "Pack trip-map skill",
+			"type": "shell",
+			"command": "mkdir -p dist && rm -f dist/trip-map-skill.zip && python3 -m zipfile -c dist/trip-map-skill.zip skills && echo 'Packed dist/trip-map-skill.zip'",
+			"options": { "cwd": "${workspaceFolder}" },
+			"group": { "kind": "build", "isDefault": true },
+			"problemMatcher": []
+		}
+	]
+}

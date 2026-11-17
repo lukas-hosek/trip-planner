@@ -100,8 +100,8 @@ Then check it visually.
 
 ## Visual check
 
-1. Start the dev server if it isn't running: `powershell -NoProfile -ExecutionPolicy Bypass -File .vscode/run_server.ps1`.
-2. Open `https://localhost/tools/icon-preview.html`. It shows every place icon in a pin, in a badge and at 24 px, and every interface icon at 18 and 24 px on a light and a dark panel.
+1. Start the dev server (`.vscode/run_server.ps1` on Windows, `.vscode/run_server.sh` on Linux; see CLAUDE.md) if it isn't running.
+2. Open `tools/icon-preview.html` at the URL the script prints (`https://localhost:8443/tools/icon-preview.html`). It shows every place icon in a pin, in a badge and at 24 px, and every interface icon at 18 and 24 px on a light and a dark panel.
 3. Compare the new icon with its neighbours:
    - Same weight? The strokes look as heavy as the others in the pin.
    - Same size? Its extent matches icons of a similar shape.
