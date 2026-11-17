@@ -1,6 +1,304 @@
-/* Small building blocks shared by the sidebar and the detail card. */
+/*
+	Shared building blocks: icons, buttons, menus, list rows, sheets, badges, filter chips and tags.
+	Each element is defined once here; feature stylesheets only position and size them.
+*/
 
-.place-number {
+/* ---------- icons ---------- */
+
+/*
+	Every icon is a standalone SVG file (icons/ui/, icons/places/), so it can be edited in any SVG tool.
+	It is drawn as a mask over the text colour, so the file's own colours don't matter and one file serves every colour.
+*/
+.icon {
+	display: inline-block;
+	flex: none;
+	width: var(--icon-size, 20px);
+	height: var(--icon-size, 20px);
+	background-color: currentColor;
+	mask-position: center;
+	mask-size: contain;
+	mask-repeat: no-repeat;
+}
+
+.icon--menu { mask-image: url("../icons/ui/menu.svg"); }
+.icon--close { mask-image: url("../icons/ui/close.svg"); }
+.icon--more { mask-image: url("../icons/ui/more.svg"); }
+.icon--chevron-down { mask-image: url("../icons/ui/chevron-down.svg"); }
+.icon--back { mask-image: url("../icons/ui/back.svg"); }
+.icon--share { mask-image: url("../icons/ui/share.svg"); }
+.icon--export { mask-image: url("../icons/ui/export.svg"); }
+.icon--download { mask-image: url("../icons/ui/download.svg"); }
+.icon--release { mask-image: url("../icons/ui/release.svg"); }
+.icon--delete { mask-image: url("../icons/ui/delete.svg"); }
+.icon--import { mask-image: url("../icons/ui/import.svg"); }
+.icon--offline { mask-image: url("../icons/ui/offline.svg"); }
+.icon--crosshair { mask-image: url("../icons/ui/crosshair.svg"); }
+
+/* High-contrast mode would force the background (the icon's only colour) to the page colour and hide it. */
+@media (forced-colors: active) {
+	.icon {
+		forced-color-adjust: none;
+		background-color: CanvasText;
+	}
+}
+
+/* ---------- buttons ---------- */
+
+/* Works on <button> and <a>. */
+.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	min-height: 38px;
+	padding: 5px 12px;
+	border: 1px solid var(--color-line);
+	border-radius: 6px;
+	background: transparent;
+	color: var(--color-ink);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+	cursor: pointer;
+	--icon-size: 18px;
+}
+
+.button:hover {
+	border-color: var(--color-muted);
+}
+
+.button:disabled {
+	opacity: .55;
+	cursor: progress;
+}
+
+.button--primary {
+	background: var(--color-ink);
+	border-color: var(--color-ink);
+	color: var(--color-panel);
+}
+
+.button--primary:hover {
+	border-color: var(--color-ink);
+	background: color-mix(in srgb, var(--color-ink) 85%, var(--color-panel));
+}
+
+.button--small {
+	min-height: 0;
+	padding: 4px 10px;
+	font-size: 13.5px;
+}
+
+/* A button that reads as a link, for secondary actions next to real buttons. */
+.link-button {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--color-elbe);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	cursor: pointer;
+}
+
+/* 44 px: a comfortable touch target. */
+.icon-button {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--color-ink);
+	cursor: pointer;
+	--icon-size: 20px;
+}
+
+.icon-button:hover,
+.icon-button[aria-expanded="true"] {
+	background: var(--color-hover);
+}
+
+/* Over a photo: a dark disc keeps the icon visible on any picture. */
+.icon-button--on-photo {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: rgba(20, 26, 22, .62);
+	color: #fff;
+	--icon-size: 18px;
+}
+
+.icon-button--on-photo:hover {
+	background: rgba(20, 26, 22, .8);
+}
+
+/* Sits at the end of a row of filter chips and looks like one of them. */
+.icon-button--chip {
+	width: 34px;
+	height: 28px;
+	border: 1px solid var(--color-line);
+	border-radius: 999px;
+	background: var(--color-panel);
+	--icon-size: 18px;
+}
+
+.icon-button[aria-expanded="true"] .icon--chevron-down {
+	transform: rotate(180deg);
+}
+
+/* ---------- menus ---------- */
+
+.menu {
+	position: fixed;
+	z-index: 10;
+	min-width: 240px;
+	padding: 6px 0;
+	border: 1px solid var(--color-line);
+	border-radius: 10px;
+	background: var(--color-panel);
+	color: var(--color-ink);
+	box-shadow: var(--shadow-floating);
+}
+
+.menu[hidden] {
+	display: none;
+}
+
+.menu-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	min-height: 44px;
+	padding: 0 16px;
+	border: 0;
+	background: transparent;
+	font-size: 15px;
+	line-height: 1.2;
+	text-align: left;
+	cursor: pointer;
+	--icon-size: 18px;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+	background: var(--color-hover);
+}
+
+.menu-item:focus-visible {
+	outline-offset: -2px;
+}
+
+.menu-item-note {
+	margin-left: auto;
+	padding-left: 12px;
+	font-size: 12.5px;
+	color: var(--color-muted);
+}
+
+.menu-item--danger {
+	color: var(--color-danger);
+}
+
+.menu-item--confirming {
+	font-weight: 600;
+}
+
+.menu-separator {
+	height: 1px;
+	margin: 6px 0;
+	background: var(--color-line);
+}
+
+/* ---------- list rows ---------- */
+
+/* A row in a list of choices: the place list and the stored plans. */
+.selectable-row {
+	border-left: 3px solid transparent;
+}
+
+.selectable-row:hover {
+	background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+}
+
+.selectable-row[aria-current="true"] {
+	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+	border-left-color: var(--color-accent);
+}
+
+/* ---------- bottom sheets (phones) ---------- */
+
+.sheet-grabber {
+	display: block;
+	width: 56px;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--color-grabber);
+}
+
+/* The handle is a button: a tap moves the sheet to its next height, for keyboards and screen readers. */
+.sheet-handle {
+	flex: none;
+	display: none;
+	place-items: center;
+	width: 100%;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: grab;
+	touch-action: none;
+}
+
+/* js/ui/bottom-sheet.js sets --sheet-height; between stops the sheet follows the finger. */
+@media (max-width: 760px) {
+	.bottom-sheet {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 1100;
+		display: flex;
+		flex-direction: column;
+		height: var(--sheet-height, 50%);
+		overflow: hidden;
+		border: 1px solid var(--color-line);
+		border-bottom: 0;
+		border-radius: 14px 14px 0 0;
+		background: var(--color-panel);
+		box-shadow: var(--shadow-sheet);
+		transition: height .25s ease;
+	}
+
+	.bottom-sheet[hidden] {
+		display: none;
+	}
+
+	.bottom-sheet--dragging {
+		transition: none;
+	}
+
+	.bottom-sheet .sheet-handle {
+		display: grid;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bottom-sheet {
+		transition: none;
+	}
+}
+
+/* ---------- place badge ---------- */
+
+/* The circle in the list and in the detail heading: the itinerary number, else the place's icon, else a dot. */
+.place-badge {
 	width: 26px;
 	height: 26px;
 	border-radius: 50%;
@@ -13,7 +311,17 @@
 	font-variant-numeric: tabular-nums;
 	color: #fff;
 	background: var(--plan-color-shown);
+	--icon-size: 15px;
 }
+
+.place-badge-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+/* ---------- filter chips ---------- */
 
 .filter-chip {
 	flex: none;
@@ -60,7 +368,7 @@
 	box-shadow: none;
 }
 
-/* "Náš plán" mirrors the dark ring around planned pins. */
+/* "Náš plán": the ring of planned pins. */
 .filter-swatch--planned {
 	width: 10px;
 	height: 10px;
@@ -68,7 +376,9 @@
 	box-shadow: inset 0 0 0 2px var(--color-ink);
 }
 
-/* Tags: the plan's colour carries the meaning (open, closed, check first…), the outline keeps them light. */
+/* ---------- tags ---------- */
+
+/* The plan's colour carries the meaning (open, closed, check first…), the outline keeps them light. */
 .tag {
 	display: inline-flex;
 	align-items: center;

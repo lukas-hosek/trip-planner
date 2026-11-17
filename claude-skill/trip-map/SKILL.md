@@ -5,7 +5,7 @@ description: Exports a finished trip plan to TripMap, the user's interactive tri
 
 # TripMap export
 
-The user plans trips with you, then opens them in TripMap, their trip map app: numbered, colour-coded pins on a hiking map, a list of places, a detail card per place (photo, description, practical tip, the place's website and other links), filters by category and by day, GPS location and offline use.
+The user plans trips with you, then opens them in TripMap, their trip map app: colour-coded pins on a hiking map (numbered along the itinerary, with an icon for the other places), a list of places, a detail card per place (photo, description, practical tip, the place's website and other links), filters by category and by day, GPS location and offline use.
 
 The app reads one JSON document per trip, the **plan**. You deliver it in two forms:
 
@@ -18,7 +18,7 @@ Read [reference/plan-format.md](reference/plan-format.md) for the full format, t
 
 1. **Make sure the plan is settled.** Export what the conversation has agreed on. If the itinerary is clearly still open (days not decided, places still being compared), say what's missing and ask whether to export anyway.
 
-2. **List the places.** Include every place the itinerary visits, in visiting order: day 1 first, then day 2, and so on. After them come the alternatives the user wanted to keep ("if there's time", "rainy day option"). The array order becomes the pin numbers. A typical plan has 5–30 places. Accommodation can be included if the user wants it.
+2. **List the places.** Include every place the itinerary visits, in visiting order: day 1 first, then day 2, and so on. After them come the alternatives the user wanted to keep ("if there's time", "rainy day option"). The array order numbers the itinerary places on the map; alternatives show an icon instead. A typical plan has 5–30 places. Accommodation can be included if the user wants it.
 
 3. **Get coordinates right.** They are the core of the map. Look each place up (web search, Wikipedia, the official site, OpenStreetMap) and use the coordinates of the place itself, to 4–5 decimals. For a long hike, use the main sight or the trailhead and say which in the `tip`. Never guess. If you can't verify a place, use the best available position and say in its `tip` that the position is approximate. Swapped latitude and longitude is a classic mistake: in Europe, latitude (`lat`) is the larger number.
 
@@ -46,14 +46,14 @@ Read [reference/plan-format.md](reference/plan-format.md) for the full format, t
 
    If the site has a version in the plan's language, link that one. Open every website to check that it loads and is about the right place.
 
-7. **Choose categories.** Use 3–6 kinds of places that make sense for this trip, for example "Vyhlídky", "Hrady a zámky", "Muzea", "Jídlo a pití", "Koupání". Give each a distinct colour from the palette in the reference.
+7. **Choose categories.** Use 3–6 kinds of places that make sense for this trip, for example "Vyhlídky", "Hrady a zámky", "Muzea", "Jídlo a pití", "Koupání". Give each a distinct colour from the palette in the reference and the best-fitting `icon` from the reference's icon list. Only the itinerary is numbered on the map; every other place shows its icon, so the icon should say at a glance what kind of place it is. Give a place its own `icon` only when it differs clearly from its category's (an airport among "Doprava", a church among "Památky").
 
 8. **Choose tags.** Every tag is shown on its places. A tag gets a filter button in the app in exactly two cases:
    1. it is an itinerary tag (`"itinerary": true`), or
    2. it is explicitly marked `"filterable": true`.
 
    Every other tag can't be filtered by: leaving out `filterable` means `false`. How many places use a tag makes no difference.
-   - **Itinerary tags**, one per day or part of a trip ("Sobota", "Den 2 · Út"), with `"itinerary": true`, defined in chronological order. Every place on the itinerary gets its day tag; alternatives get none. The app rings planned pins and offers a "Náš plán" filter plus one filter per day. Itinerary tags are always filterable, so don't add `filterable` to them.
+   - **Itinerary tags**, one per day or part of a trip ("Sobota", "Den 2 · Út"), with `"itinerary": true`, defined in chronological order. Every place on the itinerary gets its day tag; alternatives get none. The app numbers the planned places in order, rings their pins and offers a "Náš plán" filter plus one filter per day. Itinerary tags are always filterable, so don't add `filterable` to them.
    - **Filterable tags** (`"filterable": true`) are groupings the user would actually want to browse the list by: a town or area that several places share ("Rathen", "Malá Strana"), or a trait they would plan around ("Vstup zdarma", "Vhodné s dětmi"). Only mark a tag filterable when filtering by it is genuinely useful. Put it on all the places it applies to, normally at least two, since a filter that shows a single place is pointless. Don't repeat what the categories already group.
    - **Info tags** are short practical labels of up to about 30 characters: opening hours, closures, "Rezervace nutná", "Hrad zavřený". They are notes about a place, not something to filter by, so they are not filterable. Colour them by meaning (see the palette) and reuse one tag across places where it fits.
 

@@ -26,35 +26,80 @@
 
 /* ---------- place pins ---------- */
 
+/* On phones the scale and attribution move up with the bottom sheet (js/ui/bottom-sheet.js sets the height). */
+.leaflet-bottom {
+	bottom: var(--sheet-covered-height, 0px);
+}
+
 .place-pin-anchor {
 	background: none;
 	border: 0;
 }
 
+/* A teardrop whose tip marks the place; built in js/map/place-markers.js. */
 .place-pin {
-	width: 28px;
-	height: 28px;
-	border-radius: 50%;
-	display: grid;
-	place-items: center;
-	border: 2px solid #fff;
-	box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
-	font-family: var(--font-display);
-	font-weight: 700;
-	font-size: 14px;
-	color: #fff;
-	background: var(--plan-color-shown);
+	position: relative;
+	width: 32px;
+	height: 42px;
+	transform-origin: 16px 41px;
+	filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35));
 	transition: transform .15s ease;
 }
 
-.place-pin--planned {
-	border-color: var(--color-ink);
-	box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0, 0, 0, .35);
+.place-pin-drop {
+	display: block;
+	overflow: visible;
+}
+
+.place-pin-body {
+	fill: var(--plan-color-shown);
+	stroke: #fff;
+	stroke-width: 2;
+	stroke-linejoin: round;
+}
+
+.place-pin-halo {
+	fill: none;
+	stroke: none;
+	stroke-linejoin: round;
+}
+
+.place-pin-number {
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 15px;
+	fill: #fff;
+}
+
+.place-pin-dot {
+	fill: #fff;
+}
+
+.place-pin-icon {
+	position: absolute;
+	left: 8px;
+	top: 7.5px;
+	color: #fff;
+	--icon-size: 16px;
+}
+
+/* Planned places: a dark ring with a white edge, so they read on any tile. */
+.place-pin--planned .place-pin-body {
+	stroke: var(--color-pin-ring-planned);
+}
+
+.place-pin--planned .place-pin-halo {
+	stroke: #fff;
+	stroke-width: 6;
 }
 
 .place-pin--selected {
-	transform: scale(1.32);
-	box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 45%, transparent), 0 2px 8px rgba(0, 0, 0, .4);
+	transform: scale(1.3);
+}
+
+.place-pin--selected .place-pin-halo {
+	stroke: color-mix(in srgb, var(--color-accent) 55%, transparent);
+	stroke-width: 11;
 }
 
 /* Filtered-out pins stay faintly visible so the user keeps a sense of where everything is. */
@@ -85,16 +130,15 @@
 	border-radius: 2px;
 }
 
-.location-button svg {
-	width: 18px;
-	height: 18px;
+.location-button {
+	--icon-size: 18px;
 }
 
 .location-button[aria-pressed="true"] {
 	color: var(--color-user-location);
 }
 
-.location-button--searching svg {
+.location-button--searching .icon {
 	animation: spin 1.2s linear infinite;
 }
 
@@ -168,34 +212,14 @@
 	margin: 0;
 }
 
-.map-notice-action {
-	padding: 3px 10px;
-	border: 1px solid var(--color-ink);
-	border-radius: 6px;
-	background: var(--color-ink);
-	color: var(--color-panel);
-	font-size: 13px;
-	font-weight: 600;
-	cursor: pointer;
-}
-
 .map-notice-close {
 	position: absolute;
-	top: 4px;
-	right: 4px;
-	width: 26px;
-	height: 26px;
-	border: 0;
-	border-radius: 50%;
-	background: transparent;
+	top: 1px;
+	right: 1px;
+	width: 32px;
+	height: 32px;
 	color: var(--color-muted);
-	font-size: 17px;
-	line-height: 1;
-	cursor: pointer;
-}
-
-.map-notice-close:hover {
-	color: var(--color-ink);
+	--icon-size: 16px;
 }
 
 .toast {
@@ -238,7 +262,7 @@
 	}
 
 	.user-location-pulse,
-	.location-button--searching svg {
+	.location-button--searching .icon {
 		animation: none;
 	}
 }

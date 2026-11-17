@@ -1,0 +1,101 @@
+/* Developer page: the icon set as the app draws it. Not part of the app or its service worker cache. */
+
+html,
+body {
+	height: auto;
+}
+
+.preview {
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 32px 24px 48px;
+}
+
+.preview h1 {
+	margin: 0 0 6px;
+	font-family: var(--font-display);
+	font-size: 32px;
+}
+
+.preview h2 {
+	margin: 28px 0 12px;
+	font-family: var(--font-display);
+	font-size: 20px;
+}
+
+.preview-intro {
+	max-width: 70ch;
+	margin: 0;
+	color: var(--color-muted);
+}
+
+.preview-icon-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	gap: 12px;
+}
+
+.preview-icon {
+	display: grid;
+	justify-items: center;
+	gap: 6px;
+	margin: 0;
+	padding: 12px 6px 10px;
+	border: 1px solid var(--color-line);
+	border-radius: 8px;
+	background: var(--color-panel);
+	text-align: center;
+}
+
+.preview-icon-samples {
+	display: flex;
+	align-items: flex-end;
+	gap: 12px;
+	height: 48px;
+	padding-top: 4px;
+	--icon-size: 24px;
+}
+
+.preview-icon-key {
+	font: 12px ui-monospace, "Cascadia Mono", Consolas, monospace;
+	color: var(--color-muted);
+}
+
+.preview-ui-panels {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 12px;
+}
+
+/* Fixed colours, so both themes can be compared side by side whatever the system setting. */
+.preview-ui-panel {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+	gap: 14px 8px;
+	padding: 16px;
+	border-radius: 8px;
+}
+
+.preview-ui-panel--light {
+	background: #f8f9f6;
+	color: #1d2a23;
+}
+
+.preview-ui-panel--dark {
+	background: #18201c;
+	color: #e4eae5;
+}
+
+.preview-ui-icon {
+	display: grid;
+	justify-items: center;
+	gap: 6px;
+	font: 12px ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+.preview-ui-icon-sizes {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 28px;
+}

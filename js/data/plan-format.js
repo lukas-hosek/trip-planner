@@ -7,6 +7,8 @@
 	Error messages are in Czech because they are shown to the user.
 */
 
+import { isPlaceIconKey } from "./place-icons.js";
+
 const PLAN_FORMAT_NAME = "trip-plan";
 const SUPPORTED_PLAN_VERSION = 1;
 
@@ -45,7 +47,9 @@ export class PlanFormatError extends Error {
 
 /**
  * @returns {{ name, description, note, categories: Map, tags: Map, places: Array }}
- *   Places have: id, name, category, tags, isPlanned, latitude, longitude, description, tip, website,
+ *   Categories have: id, label, color, iconKey (a key from place-icons.js, or null).
+ *   Places have: id, name, category, tags, isPlanned, itineraryNumber (1, 2, … among the planned places, else null),
+ *   iconKey (or null), latitude, longitude, description, tip, website,
  *   wikipediaArticles [{ language, title, url }], commons ({ fileTitle, categoryUrl, subject } or null),
  *   links [{ label, url }].
  */
@@ -76,6 +80,11 @@ export function normalizePlan(rawPlan) {
 	const tags = normalizeTags(rawPlan.tags);
 	const usedPlaceIds = new Set();
 	const places = rawPlan.places.map((rawPlace, index) => normalizePlace(rawPlace, index, { categories, tags, usedPlaceIds }));
+	// Only the itinerary is numbered, in its own order, so the numbers read 1, 2, 3… along the trip.
+	let itineraryNumber = 0;
+	for (const place of places) {
+		place.itineraryNumber = place.isPlanned ? ++itineraryNumber : null;
+	}
 	// Counted after the places, which add the categories and tags they use without the plan defining them.
 	if (categories.size > MAXIMUM_CATEGORY_COUNT) {
 		throw new PlanFormatError(`Plán má příliš mnoho kategorií (${categories.size}, nejvýše ${MAXIMUM_CATEGORY_COUNT}).`);
@@ -211,6 +220,8 @@ function normalizeCategories(rawCategories) {
 			id,
 			label: cleanText(rawCategory.label, MAXIMUM_LABEL_LENGTH) || id,
 			color: parseColor(rawCategory.color) ?? FALLBACK_CATEGORY_COLORS[index % FALLBACK_CATEGORY_COLORS.length],
+			// A category named like an icon ("castle") gets that icon without asking for it.
+			iconKey: parseIconKey(rawCategory.icon) ?? parseIconKey(id),
 		});
 	}
 	return categories;
@@ -263,12 +274,16 @@ function normalizePlace(rawPlace, index, { categories, tags, usedPlaceIds }) {
 	}
 
 	const placeTags = findOrCreateTags(rawPlace.tags, tags);
+	const category = findOrCreateCategory(cleanText(rawPlace.category, MAXIMUM_LABEL_LENGTH), categories);
 	return {
 		id: makeUniqueId(slugify(cleanText(rawPlace.id, MAXIMUM_LABEL_LENGTH)) || slugify(name) || `misto-${placeNumber}`, usedPlaceIds),
 		name,
-		category: findOrCreateCategory(cleanText(rawPlace.category, MAXIMUM_LABEL_LENGTH), categories),
+		category,
 		tags: placeTags,
 		isPlanned: placeTags.some(tag => tag.isItinerary),
+		itineraryNumber: null,
+		// A place's own icon overrides its category's (an airport among "Doprava").
+		iconKey: parseIconKey(rawPlace.icon) ?? category.iconKey,
 		latitude,
 		longitude,
 		description: cleanText(rawPlace.description, MAXIMUM_PLACE_TEXT_LENGTH),
@@ -284,7 +299,7 @@ function findOrCreateCategory(categoryId, categories) {
 	const id = categoryId || UNCATEGORIZED_CATEGORY_ID;
 	if (!categories.has(id)) {
 		const label = categoryId || UNCATEGORIZED_CATEGORY_LABEL;
-		categories.set(id, { id, label, color: UNDEFINED_ITEM_COLOR });
+		categories.set(id, { id, label, color: UNDEFINED_ITEM_COLOR, iconKey: parseIconKey(id) });
 	}
 	return categories.get(id);
 }
@@ -321,6 +336,12 @@ function parseCoordinate(value, maximumAbsoluteValue) {
 		return null;
 	}
 	return number;
+}
+
+/** A key of one of the app's icons, or null: an unknown key simply gets the plain dot, not an error. */
+function parseIconKey(value) {
+	const key = cleanText(value, MAXIMUM_LABEL_LENGTH).toLowerCase();
+	return isPlaceIconKey(key) ? key : null;
 }
 
 /**

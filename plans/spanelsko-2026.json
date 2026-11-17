@@ -5,11 +5,11 @@
   "description": "9.–16. 8. 2026: Bilbao, přes Logroño a Tudelu na úplné zatmění Slunce v Bardenas Reales, pak Zaragoza a Barcelona.",
   "note": "Sestaveno 14. 11. 2026 z itineráře v projektu (stav k 9. 8. 2026). Polohy ubytování jsou přibližné (do ~200 m), u ostatních míst podle Wikipedie a OpenStreetMap.",
   "categories": {
-    "transport": { "label": "Doprava", "color": "#4a6fa5" },
-    "stay": { "label": "Ubytování", "color": "#8a4f7d" },
-    "sight": { "label": "Památky a muzea", "color": "#575c93" },
-    "city": { "label": "Města a čtvrti", "color": "#b0731c" },
-    "eclipse": { "label": "Zatmění", "color": "#a83a4a" }
+    "transport": { "label": "Doprava", "color": "#4a6fa5", "icon": "train" },
+    "stay": { "label": "Ubytování", "color": "#8a4f7d", "icon": "lodging" },
+    "sight": { "label": "Památky a muzea", "color": "#575c93", "icon": "landmark" },
+    "city": { "label": "Města a čtvrti", "color": "#b0731c", "icon": "city" },
+    "eclipse": { "label": "Zatmění", "color": "#a83a4a", "icon": "astronomy" }
   },
   "tags": {
     "d1": { "label": "Ne 9. 8.", "itinerary": true },
@@ -45,6 +45,7 @@
       "id": "bcn-airport",
       "name": "Letiště Barcelona-El Prat",
       "category": "transport",
+      "icon": "airport",
       "lat": 41.29694,
       "lng": 2.07833,
       "tags": ["d1", "d8", "barcelona", "flight-in", "flight-out"],
@@ -59,6 +60,7 @@
       "id": "bio-airport",
       "name": "Letiště Bilbao",
       "category": "transport",
+      "icon": "airport",
       "lat": 43.30111,
       "lng": -2.91056,
       "tags": ["d1", "bilbao", "arrive-18"],

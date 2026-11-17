@@ -15,7 +15,7 @@ export function showMapNotice(message, { actions = [] } = {}) {
 	for (const { label, onAction } of actions) {
 		const actionButton = document.createElement("button");
 		actionButton.type = "button";
-		actionButton.className = "map-notice-action";
+		actionButton.className = "button button--primary button--small";
 		actionButton.textContent = label;
 		actionButton.addEventListener("click", onAction);
 		noticeElement.append(actionButton);
@@ -23,9 +23,9 @@ export function showMapNotice(message, { actions = [] } = {}) {
 
 	const closeButton = document.createElement("button");
 	closeButton.type = "button";
-	closeButton.className = "map-notice-close";
+	closeButton.className = "icon-button map-notice-close";
 	closeButton.setAttribute("aria-label", "Zavřít upozornění");
-	closeButton.textContent = "×";
+	closeButton.innerHTML = `<span class="icon icon--close" aria-hidden="true"></span>`;
 	closeButton.addEventListener("click", hideMapNotice);
 	noticeElement.append(closeButton);
 

@@ -45,7 +45,7 @@ function publish(eventName, payload) {
 }
 
 /**
- * @param moveMap  true when the user picked the place (pin, list, pager) and expects the map to follow;
+ * @param moveMap  true when the user picked the place (pin, list, arrow keys) and expects the map to follow;
  *                 false when the selection is set programmatically, e.g. on start-up.
  */
 export function selectPlace(place, { moveMap = false } = {}) {

@@ -8,7 +8,7 @@ import { hideMapNotice, showMapNotice } from "../ui/map-notice.js";
 
 const OPENSTREETMAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
-/** The first layer is the default one, and the only one "Stáhnout pro offline" downloads. */
+/** The first layer is the default one, and the only one "Stáhnout offline data" downloads. */
 export const BASE_LAYER_DEFINITIONS = [
 	{
 		name: "Turistická (OpenTopoMap)",
@@ -30,17 +30,19 @@ export const BASE_LAYER_DEFINITIONS = [
 ];
 
 /**
- * "Stáhnout pro offline" saves the default layer up to this zoom. While offline, the layer stretches
+ * "Stáhnout offline data" saves the default layer up to this zoom. While offline, the layer stretches
  * these tiles for deeper zooms instead of showing blank ones.
  */
 export const HIGHEST_DOWNLOADED_ZOOM = 16;
 
+// Space kept free around the places when the map shows all of them.
+const FIT_PADDING_IN_PIXELS = 30;
 // Below this span (in degrees, about 2 km) the map would zoom in absurdly far on a one-place plan.
 const MINIMUM_BOUNDS_SPAN_IN_DEGREES = 0.02;
 // A couple of failed tiles can be bad luck; several mean the server (or the network) is unreachable.
 const FAILED_TILES_BEFORE_NOTICE = 3;
 
-const OFFLINE_NOTICE = "Jste offline. Mapa se zobrazí jen tam, kde je uložená (Moje plány → Stáhnout pro offline).";
+const OFFLINE_NOTICE = "Jste offline. Mapa se zobrazí jen tam, kde je stažená (Moje plány → ⋯ → Stáhnout offline data).";
 const TILES_UNAVAILABLE_NOTICE = "Mapové podklady se nepodařilo načíst. Zobrazuji jen uložené části mapy.";
 
 /** Bounds around all places, grown to a minimum size so a single place doesn't end up at maximum zoom. */
@@ -57,9 +59,17 @@ export function computePlacesBounds(places) {
 
 export function createMap(containerElementId, placesBounds) {
 	const map = L.map(containerElementId, { maxZoom: 17 });
-	map.fitBounds(placesBounds, { padding: [30, 30] });
+	fitMapToPlaces(map, placesBounds);
 	L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
 	return map;
+}
+
+/** Shows all places, kept clear of whatever covers the bottom of the map (the list sheet on phones). */
+export function fitMapToPlaces(map, placesBounds, { coveredHeightAtBottom = 0 } = {}) {
+	map.fitBounds(placesBounds, {
+		paddingTopLeft: [FIT_PADDING_IN_PIXELS, FIT_PADDING_IN_PIXELS],
+		paddingBottomRight: [FIT_PADDING_IN_PIXELS, FIT_PADDING_IN_PIXELS + coveredHeightAtBottom],
+	});
 }
 
 export function addBaseLayers(map) {

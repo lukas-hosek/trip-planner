@@ -1,10 +1,15 @@
 # Editor / tooling
 .vscode/
-.claude/
 .idea/
 *.code-workspace
 *.swp
 *~
+
+# Claude Code: CLAUDE.md and skills are versioned; personal settings are not.
+.claude/settings.local.json
+
+# Local working documents (design handoffs, notes)
+.localdoc/
 
 # OS
 .DS_Store

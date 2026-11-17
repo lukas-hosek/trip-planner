@@ -53,13 +53,13 @@ a {
 }
 
 /*
-	On phones the sidebar is dissolved into the page grid (display: contents),
-	so the header can sit above the map and the list below it.
+	On phones the sidebar is dissolved into the page grid (display: contents): the header sits above the map,
+	and the map fills the rest of the screen. The list and the detail card are bottom sheets over the map.
 */
 @media (max-width: 760px) {
 	.app {
 		grid-template-columns: 1fr;
-		grid-template-rows: auto 46% 1fr;
+		grid-template-rows: auto 1fr;
 	}
 
 	.sidebar {

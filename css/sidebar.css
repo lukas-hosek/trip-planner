@@ -1,33 +1,25 @@
-/* Sidebar: plan name and intro, filters and the numbered list of places. */
+/* Sidebar: plan name with the "Moje plány" button, intro, filters and the list of places. */
 
 .sidebar-header {
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: 10px;
 	padding: 18px 18px 12px;
 	border-bottom: 1px solid var(--color-line);
+	background: var(--color-panel);
 }
 
-/* The plan name doubles as the button that opens "Moje plány". */
-.plan-switcher {
+/* The button stays on the first line of a long, wrapped plan name. */
+.sidebar-title-row {
 	display: flex;
-	align-items: center;
-	gap: 4px;
-	width: fit-content;
-	max-width: calc(100% + 16px);
-	margin: -2px -8px 0;
-	padding: 2px 6px 2px 8px;
-	border: 0;
-	border-radius: 8px;
-	background: transparent;
-	text-align: left;
-	cursor: pointer;
+	align-items: flex-start;
+	gap: 8px;
 }
 
-.plan-switcher:hover {
-	background: color-mix(in srgb, var(--color-ink) 6%, transparent);
-}
-
-.plan-switcher-name {
+.plan-name {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
 	font-family: var(--font-display);
 	font-weight: 700;
 	font-size: 26px;
@@ -35,12 +27,9 @@
 	text-wrap: balance;
 }
 
-.plan-switcher-icon {
-	flex: none;
-	width: 20px;
-	height: 20px;
-	margin-top: 3px;
-	color: var(--color-muted);
+.plans-button {
+	margin: -8px -11px 0 0;
+	--icon-size: 24px;
 }
 
 .sidebar-intro {
@@ -49,10 +38,34 @@
 	color: var(--color-muted);
 }
 
+.filter-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+}
+
 .filter-chips {
+	flex: 1;
+	min-width: 0;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
+}
+
+.filter-expand-button {
+	margin: -1px -6px 0 0;
+}
+
+.filter-expand-button[hidden] {
+	display: none;
+}
+
+/* On desktop the list simply fills the sidebar; on phones it is a bottom sheet (see components.css). */
+.place-sheet {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
 }
 
 .place-list {
@@ -72,19 +85,9 @@
 	align-items: start;
 	padding: 9px 16px 9px 13px;
 	border: 0;
-	border-left: 3px solid transparent;
 	background: transparent;
 	text-align: left;
 	cursor: pointer;
-}
-
-.place-list-item:hover {
-	background: color-mix(in srgb, var(--color-ink) 5%, transparent);
-}
-
-.place-list-item[aria-current="true"] {
-	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-	border-left-color: var(--color-accent);
 }
 
 .place-list-item-name {
@@ -114,22 +117,32 @@
 }
 
 @media (max-width: 760px) {
+	/* Above the map and the sheets, so the expanded filters can lie over them. */
 	.sidebar-header {
 		grid-row: 1;
+		position: relative;
+		z-index: 1150;
 		gap: 8px;
 		padding: 12px 16px 10px;
-		background: var(--color-panel);
 	}
 
-	.plan-switcher-name {
+	.plan-name {
 		font-size: 21px;
+	}
+
+	.plans-button {
+		margin: -10px -11px -10px 0;
+	}
+
+	.sidebar-title-row {
+		align-items: center;
 	}
 
 	/* One swipeable row instead of several wrapped ones: screen height is precious on a phone. */
 	.filter-chips {
 		flex-wrap: nowrap;
-		margin: 0 -16px;
-		padding: 0 16px 2px;
+		margin-left: -16px;
+		padding: 0 0 2px 16px;
 		overflow-x: auto;
 		scrollbar-width: none;
 	}
@@ -138,15 +151,44 @@
 		display: none;
 	}
 
+	/* Without the expand button the row runs to the screen edge. */
+	.filter-row:has(.filter-expand-button[hidden]) .filter-chips {
+		margin-right: -16px;
+		padding-right: 16px;
+	}
+
+	/* Fading out hints that the row continues behind the expand button. */
+	.filter-chips--overflowing {
+		mask-image: linear-gradient(90deg, #000 80%, transparent);
+	}
+
+	/* Expanded, the chips wrap and the header grows over the map; sidebar.js keeps its grid row at the collapsed height. */
+	.sidebar-header--filters-expanded {
+		box-shadow: 0 10px 24px rgba(0, 0, 0, .22);
+	}
+
+	.sidebar-header--filters-expanded .filter-chips {
+		flex-wrap: wrap;
+		gap: 7px 6px;
+		overflow: visible;
+	}
+
 	/* Screen height is precious on a phone; the intro and footer are nice-to-have. */
 	.sidebar-intro,
 	.sidebar-footer {
 		display: none;
 	}
 
+	.place-sheet .sheet-handle {
+		border-bottom: 1px solid var(--color-line);
+	}
+
 	.place-list {
-		grid-row: 3;
-		background: var(--color-panel);
-		border-top: 1px solid var(--color-line);
+		padding-bottom: 6px;
+	}
+
+	/* The detail sheet takes the list's place; the list keeps its height for when the detail closes. */
+	.app:has(.detail-card:not([hidden])) .place-sheet {
+		display: none;
 	}
 }

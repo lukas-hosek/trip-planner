@@ -44,6 +44,15 @@ MAXIMUM_PLACE_TEXT_LENGTH = 5_000
 MAXIMUM_URL_LENGTH = 2_000
 # A place this far from the middle of all the others is probably a typo (or swapped lat/lng).
 OUTLIER_DISTANCE_IN_KILOMETERS = 300
+# The icons built into the app (PLACE_ICON_KEYS in js/data/place-icons.js); keep both in sync.
+PLACE_ICON_KEYS = frozenset({
+	"lodging", "camping", "restaurant", "cafe", "bar", "market",
+	"airport", "train", "bus", "ferry", "car", "bike",
+	"landmark", "museum", "castle", "church", "temple", "ruins", "event", "conference",
+	"mountain", "trail", "viewpoint", "water", "beach", "park", "ski",
+	"zoo", "amusement", "pool",
+	"city", "astronomy", "observatory", "info", "star",
+})
 
 HEX_COLOR_PATTERN = re.compile(r"^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
 WIKIPEDIA_URL_PATTERN = re.compile(r"^https://[a-z]{2,3}(-[a-z]+)?\.(m\.)?wikipedia\.org/wiki/.+")
@@ -121,6 +130,7 @@ def validate_plan(plan):
 			used_category_ids.add(category)
 			if category not in category_ids:
 				warnings.append(f'{label}: category "{category}" is not defined in "categories"; it will be grey.')
+		validate_icon(place.get("icon"), label, warnings)
 
 		place_tags = place.get("tags", [])
 		if not isinstance(place_tags, list):
@@ -198,6 +208,14 @@ def validate_commons(commons, label, warnings):
 	warn_if_too_long(subject, MAXIMUM_NAME_LENGTH, f'{label}: "commons.subject"', warnings)
 
 
+def validate_icon(icon, label, warnings):
+	"""An unknown icon key doesn't break the plan; the app just shows a plain dot instead."""
+	if icon is None:
+		return
+	if not isinstance(icon, str) or icon.strip().lower() not in PLACE_ICON_KEYS:
+		warnings.append(f'{label}: "icon" {json.dumps(icon, ensure_ascii=False)} is not one of the app icon keys (see reference/plan-format.md); it will show a plain dot.')
+
+
 def validate_definitions(definitions, kind, errors, warnings, color_required):
 	"""Checks the "categories" or "tags" object and returns the set of defined ids."""
 	plural = "categories" if kind == "category" else "tags"
@@ -220,6 +238,8 @@ def validate_definitions(definitions, kind, errors, warnings, color_required):
 				warnings.append(f'{kind.capitalize()} "{definition_id}" has no "color"; the app will pick one.')
 		elif not isinstance(color, str) or not HEX_COLOR_PATTERN.match(color):
 			warnings.append(f'{kind.capitalize()} "{definition_id}": "color" should be a hex colour like "#b0731c".')
+		if kind == "category":
+			validate_icon(definition.get("icon"), f'Category "{definition_id}"', warnings)
 		for flag in ("itinerary", "filterable"):
 			value = definition.get(flag)
 			if value is not None and not isinstance(value, bool):

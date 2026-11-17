@@ -52,17 +52,26 @@
 <body>
 	<div class="app">
 		<aside class="sidebar">
-			<header class="sidebar-header">
-				<button class="plan-switcher" id="plan-switcher" type="button" aria-haspopup="dialog" title="Moje plány">
-					<span class="plan-switcher-name" id="plan-name"></span>
-					<svg class="plan-switcher-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-						<path d="m6 9 6 6 6-6"/>
-					</svg>
-				</button>
+			<header class="sidebar-header" id="sidebar-header">
+				<div class="sidebar-title-row">
+					<h1 class="plan-name" id="plan-name"></h1>
+					<button class="icon-button plans-button" id="plans-button" type="button" aria-haspopup="dialog" aria-label="Moje plány" title="Moje plány">
+						<span class="icon icon--menu" aria-hidden="true"></span>
+					</button>
+				</div>
 				<p class="sidebar-intro" id="plan-intro"></p>
-				<div class="filter-chips" id="filter-chips" role="group" aria-label="Filtr míst"></div>
+				<div class="filter-row">
+					<div class="filter-chips" id="filter-chips" role="group" aria-label="Filtr míst"></div>
+					<button class="icon-button icon-button--chip filter-expand-button" id="filter-expand-button" type="button"
+						aria-expanded="false" aria-controls="filter-chips" aria-label="Zobrazit všechny filtry" hidden>
+						<span class="icon icon--chevron-down" aria-hidden="true"></span>
+					</button>
+				</div>
 			</header>
-			<ol class="place-list" id="place-list"></ol>
+			<section class="place-sheet bottom-sheet" id="place-sheet" aria-label="Seznam míst">
+				<button class="sheet-handle" type="button"><span class="sheet-grabber" aria-hidden="true"></span></button>
+				<ol class="place-list" id="place-list"></ol>
+			</section>
 			<footer class="sidebar-footer" id="plan-note" hidden></footer>
 		</aside>
 
@@ -71,66 +80,82 @@
 			<div class="map-notice" id="map-notice" hidden></div>
 			<div class="toast" id="toast" role="status" hidden></div>
 
-			<section class="detail-card" id="detail-card" aria-live="polite" hidden>
+			<section class="detail-card bottom-sheet" id="detail-card" aria-label="Detail místa" aria-live="polite" hidden>
+				<button class="sheet-handle" type="button"><span class="sheet-grabber" aria-hidden="true"></span></button>
 				<div class="detail-card-scroll-area" id="detail-card-scroll-area">
 					<div class="detail-card-photo" id="detail-card-photo"></div>
-					<button class="detail-card-close" id="detail-card-close" type="button" aria-label="Zavřít detail">×</button>
 					<div class="detail-card-content" id="detail-card-content"></div>
 				</div>
-				<nav class="detail-card-pager" aria-label="Procházení míst">
-					<button id="detail-card-previous" type="button">← Předchozí</button>
-					<span id="detail-card-position"></span>
-					<button id="detail-card-next" type="button">Další →</button>
-				</nav>
+				<button class="icon-button icon-button--on-photo detail-card-close" id="detail-card-close" type="button" aria-label="Zavřít detail">
+					<span class="icon icon--close" aria-hidden="true"></span>
+				</button>
 			</section>
 		</main>
 	</div>
 
 	<dialog class="plans-dialog" id="plans-dialog" aria-labelledby="plans-dialog-title">
+		<span class="sheet-grabber plans-dialog-grabber" aria-hidden="true"></span>
+
 		<div class="plans-dialog-view" id="plans-list-view">
 			<header class="plans-dialog-header">
 				<h2 id="plans-dialog-title">Moje plány</h2>
-				<button class="plans-dialog-icon-button" type="button" data-close-dialog aria-label="Zavřít">×</button>
+				<button class="icon-button" type="button" data-close-dialog aria-label="Zavřít">
+					<span class="icon icon--close" aria-hidden="true"></span>
+				</button>
 			</header>
 
 			<ul class="stored-plan-list" id="stored-plan-list"></ul>
-			<button class="plans-dialog-button plans-dialog-button--primary" id="show-import-button" type="button">+ Importovat plán</button>
+			<p class="plans-dialog-status" id="plans-status" role="status"></p>
 
-			<section class="plans-dialog-section" aria-labelledby="current-plan-actions-title">
-				<h3 id="current-plan-actions-title">Otevřený plán</h3>
-				<div class="plans-dialog-button-row">
-					<button class="plans-dialog-button" id="share-plan-button" type="button">Sdílet odkaz</button>
-					<button class="plans-dialog-button" id="export-plan-button" type="button">Stáhnout JSON</button>
-					<button class="plans-dialog-button" id="offline-download-button" type="button">Stáhnout pro offline</button>
-				</div>
-				<p class="plans-dialog-status" id="plan-actions-status" role="status"></p>
-			</section>
+			<div class="plans-dialog-footer">
+				<button class="button" id="show-import-button" type="button">
+					<span class="icon icon--import" aria-hidden="true"></span>Importovat plán…
+				</button>
+				<button class="link-button" id="show-help-button" type="button">Jak vytvořit plán?</button>
+			</div>
 
-			<details class="plans-dialog-help">
-				<summary>Jak vytvořit nový plán?</summary>
-				<p>Plány připravuje Claude. Stáhněte si skill <a href="trip-map-skill.zip" download>trip-map</a> a v Claude ho nahrajte v <strong>Nastavení → Funkce → Skills</strong>. Až budete mít výlet naplánovaný, napište třeba „Exportuj plán do mapy“. Claude pošle odkaz, který plán otevře tady.</p>
-				<p>Plán se stejným názvem nahradí ten dřívější, takže upravený plán stačí znovu otevřít.</p>
-				<p>Na iPhonu se odkaz otevře v prohlížeči. Do aplikace na ploše ho přeneste přes <strong>Importovat plán → Vložit ze schránky</strong>.</p>
-			</details>
+			<div class="menu" id="plan-actions-menu" role="menu" hidden></div>
 		</div>
 
 		<div class="plans-dialog-view" id="plans-import-view" hidden>
 			<header class="plans-dialog-header">
-				<button class="plans-dialog-icon-button" id="import-back-button" type="button" aria-label="Zpět na seznam plánů">←</button>
+				<button class="icon-button" type="button" data-show-list-view aria-label="Zpět na seznam plánů">
+					<span class="icon icon--back" aria-hidden="true"></span>
+				</button>
 				<h2>Importovat plán</h2>
-				<button class="plans-dialog-icon-button" type="button" data-close-dialog aria-label="Zavřít">×</button>
+				<button class="icon-button" type="button" data-close-dialog aria-label="Zavřít">
+					<span class="icon icon--close" aria-hidden="true"></span>
+				</button>
 			</header>
 
 			<label class="plans-dialog-label" for="import-text">Vložte odkaz na plán nebo jeho JSON:</label>
 			<textarea class="plans-dialog-textarea" id="import-text" rows="6" spellcheck="false" autocomplete="off"
 				placeholder="https://lukas-hosek.github.io/trip-planner/#plan=…"></textarea>
 			<div class="plans-dialog-button-row">
-				<button class="plans-dialog-button" id="paste-from-clipboard-button" type="button">Vložit ze schránky</button>
-				<button class="plans-dialog-button" id="choose-file-button" type="button">Vybrat soubor…</button>
+				<button class="button" id="paste-from-clipboard-button" type="button">Vložit ze schránky</button>
+				<button class="button" id="choose-file-button" type="button">Vybrat soubor…</button>
 				<input type="file" id="import-file-input" accept=".json,application/json,text/plain" hidden>
 			</div>
 			<p class="plans-dialog-error" id="import-error" role="alert" hidden></p>
-			<button class="plans-dialog-button plans-dialog-button--primary" id="import-button" type="button">Importovat</button>
+			<button class="button button--primary plans-dialog-primary-button" id="import-button" type="button">Importovat</button>
+		</div>
+
+		<div class="plans-dialog-view" id="plans-help-view" hidden>
+			<header class="plans-dialog-header">
+				<button class="icon-button" type="button" data-show-list-view aria-label="Zpět na seznam plánů">
+					<span class="icon icon--back" aria-hidden="true"></span>
+				</button>
+				<h2>Jak vytvořit plán?</h2>
+				<button class="icon-button" type="button" data-close-dialog aria-label="Zavřít">
+					<span class="icon icon--close" aria-hidden="true"></span>
+				</button>
+			</header>
+
+			<div class="plans-dialog-help">
+				<p>Plány připravuje Claude. Stáhněte si skill <a href="trip-map-skill.zip" download>trip-map</a> a v Claude ho nahrajte v <strong>Nastavení → Funkce → Skills</strong>. Až budete mít výlet naplánovaný, napište třeba „Exportuj plán do mapy“. Claude pošle odkaz, který plán otevře tady.</p>
+				<p>Plán se stejným názvem nahradí ten dřívější, takže upravený plán stačí znovu otevřít.</p>
+				<p>Na iPhonu se odkaz otevře v prohlížeči. Do aplikace na ploše ho přeneste přes <strong>Importovat plán → Vložit ze schránky</strong>.</p>
+			</div>
 		</div>
 	</dialog>
 

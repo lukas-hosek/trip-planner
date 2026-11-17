@@ -19,11 +19,18 @@ const MAXIMUM_REDIRECT_HOPS = 4;
 // Every language is a request to another Wikipedia host. Real plans use two or three; a crafted one could name thousands.
 const MAXIMUM_WIKIPEDIA_LANGUAGE_COUNT = 10;
 
-/**
- * Publishes photosByPlaceId: placeId -> { imageUrl, sourcePageUrl, source: "commons" | "wikipedia", subject },
- * where subject names what a Commons photo shows when it isn't the place itself (e.g. the town).
- */
+/** Finds the photos of the open plan's places and publishes them for the detail card. */
 export async function loadPlacePhotos(places) {
+	const { photosByPlaceId, status } = await findPlacePhotos(places);
+	setPlacePhotos(photosByPlaceId, status);
+}
+
+/**
+ * Finds the photos without publishing them, so the offline download can use it for any stored plan.
+ * @returns {{ photosByPlaceId, status }}  photosByPlaceId: placeId -> { imageUrl, sourcePageUrl, source: "commons" | "wikipedia", subject },
+ *   where subject names what a Commons photo shows when it isn't the place itself (e.g. the town); status is a PHOTO_LOADING_STATUS
+ */
+export async function findPlacePhotos(places) {
 	const photosByPlaceId = new Map();
 	let failedLookupCount = 0;
 
@@ -75,7 +82,7 @@ export async function loadPlacePhotos(places) {
 	}
 
 	const status = photosByPlaceId.size === 0 && failedLookupCount > 0 ? PHOTO_LOADING_STATUS.unavailable : PHOTO_LOADING_STATUS.ready;
-	setPlacePhotos(photosByPlaceId, status);
+	return { photosByPlaceId, status };
 }
 
 /** @returns a function from a requested "File:…" title to { imageUrl, sourcePageUrl, source } or null */

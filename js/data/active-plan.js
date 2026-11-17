@@ -28,11 +28,6 @@ export function findPlaceById(placeId) {
 	return activePlan.places.find(place => place.id === placeId) ?? null;
 }
 
-/** The number printed on the pin and in the list; it follows the order of places in the plan. */
-export function getPlaceNumber(place) {
-	return activePlan.places.indexOf(place) + 1;
-}
-
 export function hasItinerary() {
 	return activePlan.places.some(place => place.isPlanned);
 }

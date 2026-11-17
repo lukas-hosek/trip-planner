@@ -9,14 +9,22 @@
 	--color-ink: #1d2a23;
 	--color-muted: #5b6960;
 	--color-line: #d3d9d1;
+	--color-hover: #e6e9e1;
+	--color-grabber: #a9b2a8;
 	--color-accent: #b0731c;
 	--color-elbe: #2e6d8e;
 	--color-map-background: #e6e9e1;
 
 	--color-warning: #a8641a;
+	--color-danger: #b03a3a;
+	--color-success: #2f7a4b;
 	--color-user-location: #1a73e8;
+	/* Pins sit on map tiles, which stay light in dark mode, so their ring keeps the light-mode ink. */
+	--color-pin-ring-planned: #1d2a23;
 
 	--shadow-floating: 0 10px 30px rgba(29, 42, 35, .18), 0 2px 6px rgba(29, 42, 35, .10);
+	--shadow-sheet: 0 -6px 20px rgba(29, 42, 35, .16);
+	--color-backdrop: rgba(10, 16, 13, .45);
 
 	--font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
 	--font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
@@ -31,13 +39,19 @@
 		--color-ink: #e4eae5;
 		--color-muted: #9aa89f;
 		--color-line: #2c3731;
+		--color-hover: #26302b;
+		--color-grabber: #56625b;
 		--color-accent: #e0a24a;
 		--color-elbe: #6fb0d2;
 		--color-map-background: #1b2420;
 
 		--color-warning: #e6a35a;
+		--color-danger: #f17b87;
+		--color-success: #6eb885;
 
 		--shadow-floating: 0 10px 30px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .35);
+		--shadow-sheet: 0 -6px 20px rgba(0, 0, 0, .45);
+		--color-backdrop: rgba(0, 0, 0, .55);
 
 		color-scheme: dark;
 	}
@@ -46,14 +60,17 @@
 /*
 	Plan colours: categories and tags bring their own colours in the plan's JSON, set inline as --plan-color.
 	Stylesheets use --plan-color-shown, which falls back to a neutral colour when an item has none.
-	The colours are chosen for light backgrounds; in dark mode they are lifted, so pins stand out
-	on dark tiles and coloured tag text stays readable on the dark panel.
+	The colours are chosen for light backgrounds with white numbers and icons on them.
 */
 .place-pin,
-.place-number,
-.filter-swatch,
-.tag,
+.place-badge,
 .photo-placeholder {
+	/* White text sits on these, so they keep the plan's colour in dark mode too (and pins sit on light tiles). */
+	--plan-color-shown: var(--plan-color, #6f7a73);
+}
+
+.filter-swatch,
+.tag {
 	--plan-color-shown: var(--plan-color, var(--color-muted));
 }
 
@@ -63,13 +80,11 @@
 	--plan-color-shown: var(--plan-color, var(--color-ink));
 }
 
+/* Coloured text and swatches on the dark panel are lifted, so they stay readable. */
 @media (prefers-color-scheme: dark) {
 	@supports (color: oklch(from red l c h)) {
-		.place-pin,
-		.place-number,
 		.filter-swatch,
-		.tag,
-		.photo-placeholder {
+		.tag {
 			--plan-color-shown: oklch(from var(--plan-color, var(--color-muted)) max(l, .72) c h);
 		}
 

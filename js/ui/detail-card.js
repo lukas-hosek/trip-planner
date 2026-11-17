@@ -1,6 +1,9 @@
-/* Detail card for the selected place: photo, description, practical tip, links and distance from the user. */
+/*
+	Detail card for the selected place: photo, description, practical tip, links and distance from the user.
+	On phones it is a bottom sheet that opens half-way and can be pulled up to full height.
+*/
 
-import { getPlaceNumber, getPlaces, placeMatchesFilter } from "../data/active-plan.js";
+import { getPlaces, placeMatchesFilter } from "../data/active-plan.js";
 import {
 	appState,
 	clearSelectedPlace,
@@ -11,6 +14,8 @@ import {
 } from "../state/app-state.js";
 import { distanceInKilometers, formatDistance } from "../utils/geo-distance.js";
 import { escapeHtml } from "../utils/html.js";
+import { computeSheetStops, createBottomSheet } from "./bottom-sheet.js";
+import { renderPlaceBadge } from "./place-badge.js";
 import { planColorStyle, renderCategoryTag, renderTags } from "./tags.js";
 
 // Rock towers drawn over the category colour while the photo loads or when there is none.
@@ -21,8 +26,11 @@ const ROCK_SILHOUETTE_SVG = `
 	</svg>`;
 
 const PHOTO_FAILED_MESSAGE = "Fotku se nepodařilo načíst.";
+// What a tap on the sheet's handle does at each stop (half, full).
+const DETAIL_SHEET_HANDLE_LABELS = ["Rozbalit detail", "Zmenšit detail"];
 
 let elements = null;
+let detailSheet = null;
 
 export function initDetailCard() {
 	elements = {
@@ -30,15 +38,19 @@ export function initDetailCard() {
 		scrollArea: document.getElementById("detail-card-scroll-area"),
 		photo: document.getElementById("detail-card-photo"),
 		content: document.getElementById("detail-card-content"),
-		position: document.getElementById("detail-card-position"),
 		closeButton: document.getElementById("detail-card-close"),
-		previousButton: document.getElementById("detail-card-previous"),
-		nextButton: document.getElementById("detail-card-next"),
 	};
 
+	detailSheet = createBottomSheet(elements.card, {
+		handleElement: elements.card.querySelector(".sheet-handle"),
+		getSnapHeights: () => {
+			const { half, full } = computeSheetStops();
+			return [half, full];
+		},
+		getHandleLabel: snapIndex => DETAIL_SHEET_HANDLE_LABELS[snapIndex],
+	});
+
 	elements.closeButton.addEventListener("click", clearSelectedPlace);
-	elements.previousButton.addEventListener("click", () => selectNeighbourPlace(-1));
-	elements.nextButton.addEventListener("click", () => selectNeighbourPlace(+1));
 	// In the capture phase, so the shortcuts are handled before Leaflet's own keyboard handler sees the key.
 	document.addEventListener("keydown", handleKeyboardShortcuts, { capture: true });
 
@@ -68,7 +80,10 @@ export function initDetailCard() {
 function showCardFor(place) {
 	renderPhoto(place);
 	renderContent(place);
-	elements.position.textContent = `${getPlaceNumber(place)} / ${getPlaces().length}`;
+	if (elements.card.hidden) {
+		// A freshly opened sheet starts half-way, so the map above still shows the place.
+		detailSheet.snapTo(0, { animate: false });
+	}
 	elements.card.hidden = false;
 	elements.scrollArea.scrollTop = 0;
 }
@@ -76,7 +91,7 @@ function showCardFor(place) {
 function renderContent(place) {
 	elements.content.innerHTML = `
 		<div class="detail-card-heading">
-			<span class="place-number" style="${planColorStyle(place.category.color)}">${getPlaceNumber(place)}</span>
+			${renderPlaceBadge(place)}
 			<h2>${escapeHtml(place.name)}</h2>
 		</div>
 		<div class="detail-card-tags">
@@ -86,7 +101,7 @@ function renderContent(place) {
 		${renderParagraphs(place.description)}
 		${place.tip ? `<p class="detail-card-tip"><span class="detail-card-tip-label">Jak na to</span>${renderLineBreaks(place.tip)}</p>` : ""}
 		<div class="detail-card-links">
-			${buildLinks(place).map(link => `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`).join("")}
+			${buildLinks(place).map(link => `<a class="button button--small" href="${escapeHtml(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`).join("")}
 		</div>
 		<p class="detail-card-coordinates">
 			${formatCoordinates(place)}<span id="distance-from-user">${renderDistanceFromUser(place)}</span>
@@ -166,13 +181,13 @@ function formatCoordinates({ latitude, longitude }) {
 	return `${latitudeText}, ${longitudeText}`;
 }
 
-/** Previous/next respects the active filter, so paging through "Náš plán" stays within the plan. */
+/** The arrow keys page through the places; they respect the active filter, so paging through "Náš plán" stays within the plan. */
 function selectNeighbourPlace(direction) {
 	const places = getPlaces();
 	const placesInFilter = places.filter(place => placeMatchesFilter(place, appState.activeFilterId));
 	const candidates = placesInFilter.length > 0 ? placesInFilter : places;
 	const currentIndex = candidates.indexOf(appState.selectedPlace);
-	// Wrap around at both ends so the pager never dead-ends.
+	// Wrap around at both ends so paging never dead-ends.
 	const neighbourIndex = (currentIndex + direction + candidates.length) % candidates.length;
 	selectPlace(candidates[neighbourIndex], { moveMap: true });
 }

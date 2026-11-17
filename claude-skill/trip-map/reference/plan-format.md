@@ -11,9 +11,9 @@ One JSON object per trip. Unknown fields are ignored. Fields marked *optional* c
 | `name` | string | Trip name, shown at the top of the app, for example "Saské Švýcarsko" or "Řím 2027". **It identifies the plan**: a plan with the same name replaces the stored one. |
 | `description` | string, *optional* | One or two sentences under the name: dates, the idea of the trip. |
 | `note` | string, *optional* | Small print at the bottom of the list: when facts were checked, caveats. |
-| `categories` | object | Kinds of places, keyed by an id you choose (lowercase, hyphens): `{ "castle": { "label": "Hrady", "color": "#575c93" } }`. Object order is the order of the filter buttons. |
+| `categories` | object | Kinds of places, keyed by an id you choose (lowercase, hyphens): `{ "castle": { "label": "Hrady", "color": "#575c93", "icon": "castle" } }`. Object order is the order of the filter buttons. |
 | `tags` | object | Labels attached to places, keyed by id: `{ "sat": { "label": "Sobota", "itinerary": true } }`. Object order is the display order, so list days chronologically. |
-| `places` | array | The places, in itinerary order. The position in the array is the number on the pin. |
+| `places` | array | The places, in itinerary order. Places with an itinerary tag are numbered 1, 2, 3… in this order, on the pin and in the list; the other places show their icon instead. |
 
 ### Category
 
@@ -21,13 +21,14 @@ One JSON object per trip. Unknown fields are ignored. Fields marked *optional* c
 |---|---|---|
 | `label` | string | Name of the category, for example "Vyhlídky". |
 | `color` | `"#rrggbb"` | Pin and label colour. Pick from the palette below. |
+| `icon` | string, *optional* | Key of one of the app's icons (see [Icons](#icons)), shown in white on the pins of places outside the itinerary. A category whose id is itself an icon key (`"castle"`) gets that icon without it. |
 
 ### Tag
 
 | Field | Type | Meaning |
 |---|---|---|
 | `label` | string | Text of the tag, up to about 30 characters. |
-| `itinerary` | boolean, *optional* | `true` for a day of the itinerary ("Sobota", "Den 2"). Places with an itinerary tag get a dark ring on the map and appear under the "Náš plán" filter. Itinerary tags are always filterable. |
+| `itinerary` | boolean, *optional* | `true` for a day of the itinerary ("Sobota", "Den 2"). Places with an itinerary tag are numbered, get a dark ring on the map and appear under the "Náš plán" filter. Itinerary tags are always filterable. |
 | `filterable` | boolean, *optional* | `true` gives the tag a filter button. Default `false`. Use it only for groupings the user would want to filter by: an area ("Rathen") or a trait several places share ("Vstup zdarma"). Never for status notes ("Hrad zavřený", "Otevřeno celý rok"). Not needed on itinerary tags. |
 | `color` | `"#rrggbb"`, *optional* | Text and outline colour (fill colour for itinerary tags). Without a colour, itinerary tags are dark and other tags grey. |
 
@@ -40,6 +41,7 @@ A tag gets a filter button in exactly two cases: (1) it is an itinerary tag (`"i
 | `id` | string, *optional* | Short unique id (lowercase, hyphens), used in links to one place (`#bastei`). Made from the name if missing. |
 | `name` | string | Name of the place. |
 | `category` | string | Id of one of the plan's categories. |
+| `icon` | string, *optional* | Icon key for this place only, when it differs from its category's: an airport in "Doprava" (`"airport"`), a church among "Památky" (`"church"`). |
 | `lat`, `lng` | numbers | Latitude and longitude in decimal degrees (WGS84), 4–5 decimals. Verified, never guessed. |
 | `tags` | array of strings, *optional* | Ids of the plan's tags, itinerary tag first. |
 | `description` | string | 3–6 sentences about the place. A blank line (`\n\n`) starts a new paragraph. |
@@ -57,6 +59,50 @@ A tag gets a filter button in exactly two cases: (1) it is an itinerary tag (`"i
 | `category` | URL, *optional* | The place's own Commons category, `https://commons.wikimedia.org/wiki/Category:…`. The "Další fotky" button opens it; without it, the button searches Commons for the place's name. |
 | `subject` | string, *optional* | Only when Commons has no photo of the place itself and `file` shows a broader subject instead (the village, the town, the valley): its name, e.g. `"Bad Schandau"`. The photo credit then reads "Foto: Bad Schandau (Wikimedia Commons)". Leave `category` out in that case. |
 
+## Icons
+
+Pins of places outside the itinerary show a white icon instead of a number; the list and the detail card show it too. The icons are built into the app, so a plan only names one by its key. Never put SVG or emoji into the plan.
+
+A place's icon is, in this order: the place's own `icon`, its category's `icon`, the category id if it is an icon key, otherwise a plain white dot. An unknown key also gives the dot (and a warning from `build_link.py`).
+
+| Key | The icon shows |
+|---|---|
+| `lodging` | a bed with a pillow |
+| `camping` | a tent |
+| `restaurant` | a fork and a knife |
+| `cafe` | a steaming cup |
+| `bar` | a wine glass |
+| `market` | a shopping basket |
+| `airport` | a plane seen from above |
+| `train` | the front of a train |
+| `bus` | the front of a bus |
+| `ferry` | a boat with a cabin |
+| `car` | the front of a car |
+| `bike` | a bicycle |
+| `landmark` | a classical building with columns |
+| `museum` | a framed picture |
+| `castle` | a castle wall with battlements and a gate |
+| `church` | a church with a cross |
+| `temple` | a pagoda with tiered roofs |
+| `ruins` | broken columns |
+| `event` | a ticket |
+| `conference` | a presentation screen with a chart |
+| `mountain` | mountain peaks |
+| `trail` | a signpost with two arrows |
+| `viewpoint` | binoculars |
+| `water` | waves |
+| `beach` | a beach umbrella |
+| `park` | a tree |
+| `ski` | a snowflake |
+| `zoo` | a paw print |
+| `amusement` | a Ferris wheel |
+| `pool` | a pool ladder over water |
+| `city` | city buildings |
+| `astronomy` | a sun with rays |
+| `observatory` | a telescope on a tripod |
+| `info` | an "i" in a circle |
+| `star` | a star |
+
 ## Limits
 
 The app refuses a plan that exceeds any of these, and `build_link.py` reports it as an error:
@@ -72,7 +118,7 @@ Beyond the following, the app shortens the plan without refusing it, and `build_
 
 ## Colour palette
 
-The colours are designed for a light background with white numbers on the pins; the app lightens them by itself in dark mode.
+The colours are designed for white numbers and icons on the pins. The app keeps them on the pins in dark mode and lightens them by itself only for coloured text.
 
 Categories (pick distinct ones):
 
@@ -109,8 +155,8 @@ Itinerary tags usually have no colour.
   "description": "Sobota a neděle v historickém centru, pěšky z Hradčan přes Malou Stranu na Petřín.",
   "note": "Otevírací doby ověřené v listopadu 2026.",
   "categories": {
-    "landmark": { "label": "Památky", "color": "#575c93" },
-    "viewpoint": { "label": "Vyhlídky", "color": "#b0731c" }
+    "landmark": { "label": "Památky", "color": "#575c93", "icon": "landmark" },
+    "viewpoint": { "label": "Vyhlídky", "color": "#b0731c", "icon": "viewpoint" }
   },
   "tags": {
     "saturday": { "label": "Sobota", "itinerary": true },

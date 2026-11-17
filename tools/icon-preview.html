@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- Resolve every path from the repository root, as the app does, so the app's modules and icon URLs work unchanged. -->
+	<base href="../">
+	<title>Náhled ikon · TripMap</title>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+	<link rel="stylesheet" href="css/theme.css">
+	<link rel="stylesheet" href="css/layout.css">
+	<link rel="stylesheet" href="css/components.css">
+	<link rel="stylesheet" href="css/map.css">
+	<link rel="stylesheet" href="tools/icon-preview.css">
+</head>
+<body>
+	<main class="preview">
+		<h1>Náhled ikon</h1>
+		<p class="preview-intro">
+			Vývojářská stránka pro skill <code>tripmap-icons</code>. Ikony míst v kapce a v kolečku, jak je kreslí aplikace,
+			a ikony rozhraní ve velikostech 18 a 24 px na světlém i tmavém panelu. Nová ikona musí působit stejně jako sousední.
+		</p>
+		<section>
+			<h2>Místa</h2>
+			<div class="preview-icon-grid" id="place-icons"></div>
+		</section>
+		<section>
+			<h2>Rozhraní</h2>
+			<div class="preview-ui-panels">
+				<div class="preview-ui-panel preview-ui-panel--light" id="ui-icons-light"></div>
+				<div class="preview-ui-panel preview-ui-panel--dark" id="ui-icons-dark"></div>
+			</div>
+		</section>
+	</main>
+	<script type="module" src="tools/icon-preview.js"></script>
+</body>
+</html>

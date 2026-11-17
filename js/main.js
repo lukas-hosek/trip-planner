@@ -19,10 +19,11 @@ import {
 	takePlanThatFailedToOpen,
 } from "./data/plan-store.js";
 import { selectPlace } from "./state/app-state.js";
-import { addBaseLayers, computePlacesBounds, createMap } from "./map/base-map.js";
+import { addBaseLayers, computePlacesBounds, createMap, fitMapToPlaces } from "./map/base-map.js";
 import { addPlaceMarkers } from "./map/place-markers.js";
 import { enableFocusOnSelectedPlace } from "./map/map-focus.js";
 import { addUserLocationControl } from "./map/user-location.js";
+import { trackSheetsCoveringMap } from "./ui/bottom-sheet.js";
 import { initSidebar } from "./ui/sidebar.js";
 import { initDetailCard } from "./ui/detail-card.js";
 import { showMapNotice } from "./ui/map-notice.js";
@@ -30,6 +31,7 @@ import { initPlansPanel } from "./ui/plans-panel.js";
 import { showPendingToast, showToast, showToastAfterReload } from "./ui/toast.js";
 import { initUrlHashSync, readPlaceFromUrlHash } from "./ui/url-hash.js";
 import { loadPlacePhotos } from "./services/place-photos.js";
+import { isPhoneLayout } from "./utils/media-queries.js";
 
 const APP_NAME = "TripMap";
 // Shown on the very first visit and whenever no plan is stored.
@@ -62,7 +64,12 @@ async function startApp() {
 	// The detail card must subscribe before map focusing, so the card is visible when the map measures it.
 	const detailCardElement = initDetailCard();
 	enableFocusOnSelectedPlace(map, detailCardElement);
-	initSidebar();
+	const placeSheetElement = initSidebar();
+	trackSheetsCoveringMap([placeSheetElement, detailCardElement]);
+	if (isPhoneLayout()) {
+		// The list sheet now covers the lower part of the map; the places should all be visible above it.
+		fitMapToPlaces(map, placesBounds, { coveredHeightAtBottom: placeSheetElement.getBoundingClientRect().height });
+	}
 	initUrlHashSync();
 	initPlansPanel({ placesBounds });
 	loadPlacePhotos(plan.places);

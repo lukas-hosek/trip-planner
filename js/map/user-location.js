@@ -19,12 +19,7 @@ const GEOLOCATION_ERROR = { permissionDenied: 1, positionUnavailable: 2, timeout
 // Leaflet draws the accuracy circle as SVG with inline colours, so it can't read the CSS variable; keep in sync with --color-user-location.
 const USER_LOCATION_COLOR = "#1a73e8";
 
-const CROSSHAIR_ICON_SVG = `
-	<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-		<circle cx="12" cy="12" r="4"/>
-		<circle cx="12" cy="12" r="8"/>
-		<path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-	</svg>`;
+const CROSSHAIR_ICON_HTML = `<span class="icon icon--crosshair" aria-hidden="true"></span>`;
 
 const USER_LOCATION_MARKER_HTML = `
 	<div class="user-location-marker">
@@ -51,7 +46,7 @@ export function addUserLocationControl(map) {
 			locationButton.title = "Moje poloha";
 			locationButton.setAttribute("aria-label", "Ukázat moji polohu");
 			locationButton.setAttribute("aria-pressed", "false");
-			locationButton.innerHTML = CROSSHAIR_ICON_SVG;
+			locationButton.innerHTML = CROSSHAIR_ICON_HTML;
 			// Without this, a click on the button would also count as a click on the map below.
 			L.DomEvent.disableClickPropagation(controlContainer);
 			L.DomEvent.on(locationButton, "click", handleLocationButtonClick);

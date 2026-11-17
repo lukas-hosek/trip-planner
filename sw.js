@@ -5,20 +5,39 @@
 	  and local edits show up on reload; the cache answers when offline or when the network is too slow.
 	- Map tiles, photos, Leaflet and fonts: cache first; they don't change.
 	  Tiles and photos seen while browsing go to shared caches, which are trimmed when they grow too large.
-	  "Stáhnout pro offline" (js/services/offline-download.js) keeps its files in one cache per plan;
+	  "Stáhnout offline data" (js/services/offline-download.js) keeps its files in one cache per plan;
 	  those are only read here, never trimmed, and the app deletes them together with the plan.
 	- Photo lookups (Wikimedia Commons and Wikipedia APIs): network first, cache as fallback; trimmed like tiles and photos.
 
 	APP_SHELL_FILES must list every file the app loads. Bump APP_SHELL_VERSION whenever the list changes.
 */
 
-const APP_SHELL_VERSION = 3;
+const APP_SHELL_VERSION = 4;
 const APP_SHELL_CACHE_PREFIX = "app-shell-v";
 const APP_SHELL_CACHE = `${APP_SHELL_CACHE_PREFIX}${APP_SHELL_VERSION}`;
 const LIBRARY_CACHE = "libraries";
 const TILE_CACHE = "map-tiles";
 const PHOTO_CACHE = "photos";
 const PHOTO_LOOKUP_CACHE = "photo-lookups";
+
+/*
+	All place icons are precached, so a plan opened offline for the first time still gets its icons.
+	The worker can't import the app's ES modules, so this copies PLACE_ICON_KEYS from js/data/place-icons.js; keep both in sync.
+*/
+const PLACE_ICON_KEYS = [
+	"lodging", "camping", "restaurant", "cafe", "bar", "market",
+	"airport", "train", "bus", "ferry", "car", "bike",
+	"landmark", "museum", "castle", "church", "temple", "ruins", "event", "conference",
+	"mountain", "trail", "viewpoint", "water", "beach", "park", "ski",
+	"zoo", "amusement", "pool",
+	"city", "astronomy", "observatory", "info", "star",
+];
+
+const UI_ICON_NAMES = [
+	"menu", "close", "more", "chevron-down", "back",
+	"share", "export", "download", "release", "delete",
+	"import", "offline", "crosshair",
+];
 
 const APP_SHELL_FILES = [
 	"./",
@@ -33,6 +52,7 @@ const APP_SHELL_FILES = [
 	"css/plans-panel.css",
 	"js/main.js",
 	"js/data/active-plan.js",
+	"js/data/place-icons.js",
 	"js/data/plan-format.js",
 	"js/data/plan-link.js",
 	"js/data/plan-store.js",
@@ -43,8 +63,10 @@ const APP_SHELL_FILES = [
 	"js/services/offline-download.js",
 	"js/services/place-photos.js",
 	"js/state/app-state.js",
+	"js/ui/bottom-sheet.js",
 	"js/ui/detail-card.js",
 	"js/ui/map-notice.js",
+	"js/ui/place-badge.js",
 	"js/ui/plans-panel.js",
 	"js/ui/sidebar.js",
 	"js/ui/tags.js",
@@ -59,6 +81,8 @@ const APP_SHELL_FILES = [
 	"icons/icon-512.png",
 	"icons/icon-maskable-512.png",
 	"icons/apple-touch-icon.png",
+	...UI_ICON_NAMES.map(name => `icons/ui/${name}.svg`),
+	...PLACE_ICON_KEYS.map(key => `icons/places/${key}.svg`),
 ];
 
 // The font files themselves differ per browser, so they are cached on first use instead.
@@ -142,7 +166,7 @@ function isPhotoLookupRequest(url) {
 }
 
 /**
- * Images shown in the detail card, plus photos fetched by "Stáhnout pro offline"
+ * Images shown in the detail card, plus photos fetched by "Stáhnout offline data"
  * (served from upload. or thumb.wikimedia.org; a plain fetch() of those has no "image" destination).
  */
 function isPhotoRequest(request, url) {

@@ -1,7 +1,8 @@
 /*
-	"Stáhnout pro offline": fetches the map tiles around the plan's places and the place photos
+	"Stáhnout offline data": fetches the map tiles around a plan's places and the place photos
 	and keeps them in a cache of the plan's own, so the map works without signal on the trail.
-	The service worker answers from that cache but never trims it; it is deleted together with the plan.
+	The service worker answers from that cache but never trims it; it is deleted together with the plan
+	or by "Uvolnit offline data". Any stored plan can be downloaded, not only the open one.
 
 	Tile servers are run by volunteers and discourage bulk downloads, so this stays modest:
 	an overview of the whole area, close-ups only around the places, a hard cap, and few parallel requests.
@@ -9,10 +10,14 @@
 */
 
 import { BASE_LAYER_DEFINITIONS, buildTileUrl, HIGHEST_DOWNLOADED_ZOOM } from "../map/base-map.js";
-import { appState } from "../state/app-state.js";
 
 // One cache per downloaded plan. sw.js finds the files by searching all caches and never deletes these.
 const DOWNLOADED_PLAN_CACHE_PREFIX = "downloaded-plan:";
+/*
+	Written into the plan's cache when a download finishes: only then does the plan count as offline.
+	It lives in the same cache, so it goes with it. The app never requests this address, so it can't answer anything else.
+*/
+const DOWNLOAD_SUMMARY_URL = new URL("offline-download-summary.json", window.location.href).href;
 
 const OVERVIEW_ZOOM_LEVELS = [9, 10, 11, 12];
 // The screen shows more than just the places' bounds, so the overview reaches this far beyond them (as a share of their size).
@@ -28,29 +33,34 @@ const KILOMETERS_PER_DEGREE_OF_LATITUDE = 111.32;
 
 /**
  * @param planKey     the stored plan's key; it names the cache the download goes to
+ * @param photoUrls   the image URLs of the plan's photos (js/services/place-photos.js finds them)
  * @param onProgress  called with { completedCount, totalCount } after every finished file
  * @returns {{ totalCount, failedCount }}
  */
-export async function downloadPlanForOffline(planKey, places, placesBounds, onProgress) {
+export async function downloadPlanForOffline(planKey, places, placesBounds, photoUrls, onProgress) {
 	const tileUrls = listTileUrls(places, placesBounds);
-	const photoUrls = [...appState.photosByPlaceId.values()].map(photo => photo.imageUrl);
 	const urls = [...tileUrls, ...photoUrls];
 	const planCache = await caches.open(DOWNLOADED_PLAN_CACHE_PREFIX + planKey);
+	// Until this download finishes, the plan no longer counts as complete.
+	await planCache.delete(DOWNLOAD_SUMMARY_URL);
 
 	let completedCount = 0;
 	let failedCount = 0;
+	let byteCount = 0;
 	await runInParallel(urls, PARALLEL_REQUEST_COUNT, async url => {
 		try {
 			// A repeated download (after a weak signal, or of an updated plan) only fetches what is missing.
-			if (!await planCache.match(url, { ignoreVary: true })) {
+			let response = await planCache.match(url, { ignoreVary: true });
+			if (!response) {
 				// CORS mode, exactly as the map and the detail card load tiles and photos, so the stored copies can answer them.
 				// The service worker serves the file from its own caches if the user has already seen it.
-				const response = await fetch(url, { mode: "cors", credentials: "omit" });
+				response = await fetch(url, { mode: "cors", credentials: "omit" });
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}`);
 				}
-				await planCache.put(url, response);
+				await planCache.put(url, response.clone());
 			}
+			byteCount += await measureResponseSize(response);
 		} catch {
 			failedCount++;
 		}
@@ -59,10 +69,35 @@ export async function downloadPlanForOffline(planKey, places, placesBounds, onPr
 	});
 
 	await removeTilesNoLongerNeeded(planCache, tileUrls);
+	const summary = { byteCount, failedCount, completedAt: new Date().toISOString() };
+	await planCache.put(DOWNLOAD_SUMMARY_URL, new Response(JSON.stringify(summary), { headers: { "Content-Type": "application/json" } }));
 	return { totalCount: urls.length, failedCount };
 }
 
-/** Removes the plan's offline map and photos; called when the plan is deleted. */
+/**
+ * @returns null when the plan has no offline data; otherwise { isComplete, byteCount, failedCount },
+ *   where an interrupted download (or one from an older app version) has isComplete false and byteCount null
+ */
+export async function getPlanDownloadSummary(planKey) {
+	try {
+		// The Cache API only exists on https:// (or localhost).
+		const cacheName = DOWNLOADED_PLAN_CACHE_PREFIX + planKey;
+		if (!globalThis.caches || !await caches.has(cacheName)) {
+			return null;
+		}
+		const summaryResponse = await (await caches.open(cacheName)).match(DOWNLOAD_SUMMARY_URL);
+		const summary = summaryResponse ? await summaryResponse.json() : null;
+		if (!summary) {
+			return { isComplete: false, byteCount: null, failedCount: null };
+		}
+		return { isComplete: summary.failedCount === 0, byteCount: Number(summary.byteCount) || 0, failedCount: summary.failedCount };
+	} catch (error) {
+		console.warn("The plan's offline status could not be read:", error);
+		return null;
+	}
+}
+
+/** Removes the plan's offline map and photos: "Uvolnit offline data", and when the plan is deleted. */
 export async function deletePlanDownload(planKey) {
 	try {
 		// The Cache API only exists on https:// (or localhost).
@@ -84,6 +119,15 @@ async function removeTilesNoLongerNeeded(planCache, neededTileUrls) {
 			await planCache.delete(cachedRequest);
 		}
 	}
+}
+
+/** Content-Length when the server sends it (it is readable even for CORS responses), else the body's real size. */
+async function measureResponseSize(response) {
+	const contentLength = Number(response.headers.get("Content-Length"));
+	if (contentLength > 0) {
+		return contentLength;
+	}
+	return (await response.clone().blob()).size;
 }
 
 function listTileUrls(places, placesBounds) {
