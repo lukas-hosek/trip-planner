@@ -3,23 +3,29 @@
 Validates a trip plan JSON file and prints the link that opens it in TripMap.
 
 Usage:
-	python build_link.py plan.json [--base-url https://localhost/]
+	python build_link.py plan.json [--base-url https://localhost/] [--card card.html]
+
+With --card, it writes a share card instead of printing the link: an HTML page with buttons
+that open the plan, copy the link and download the JSON, in the browser's language (cs, en or de).
 
 The link is <base URL>#plan=<data>, where <data> is the plan JSON (UTF-8, minified),
 compressed with raw DEFLATE and encoded as base64url without padding.
 The app (js/data/plan-link.js) decodes exactly this; keep both sides in sync.
 
-Exit code 0: the link was printed (warnings may be listed above it).
+Exit code 0: the link was printed or the card written (warnings may be listed above it).
 Exit code 1: the plan has errors that would stop the app from opening it.
 """
 
 import argparse
 import base64
 import collections
+import html
 import json
 import math
+import pathlib
 import re
 import statistics
+import string
 import sys
 import zlib
 
@@ -54,7 +60,48 @@ PLACE_ICON_KEYS = frozenset({
 	"city", "astronomy", "observatory", "info", "star",
 })
 
-HEX_COLOR_PATTERN = re.compile(r"^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+CARD_TEMPLATE_PATH = pathlib.Path(__file__).with_name("plan-card-template.html")
+# The card's own text in the app's interface languages, with the app's wording (languages/*.json).
+# The card is written in the fallback language and switches to the browser's language when it has it.
+# Counts are plural objects by CLDR category, as in the app; the browser picks the category.
+CARD_FALLBACK_LANGUAGE = "en"
+CARD_TEXTS = {
+	"en": {
+		"locale": "en-GB",
+		"openInApp": "Open in TripMap",
+		"copyLink": "Copy link",
+		"downloadJson": "Download JSON",
+		"linkCopied": "Link copied.",
+		"copyFailed": "The link couldn't be copied. Open the plan with the button above and copy the link from the address bar.",
+		"iphoneHint": "On iPhone the link opens in the browser. To get the plan into the app on your home screen, copy the link, then in the app choose My plans → Import plan → Paste from clipboard.",
+		"placeCount": {"one": "{count} place", "other": "{count} places"},
+		"dayCount": {"one": "{count} day", "other": "{count} days"},
+	},
+	"cs": {
+		"locale": "cs",
+		"openInApp": "Otevřít v TripMap",
+		"copyLink": "Kopírovat odkaz",
+		"downloadJson": "Stáhnout JSON",
+		"linkCopied": "Odkaz je ve schránce.",
+		"copyFailed": "Odkaz se nepodařilo zkopírovat. Otevřete plán tlačítkem nahoře a zkopírujte odkaz z adresního řádku.",
+		"iphoneHint": "Na iPhonu se odkaz otevře v prohlížeči. Do aplikace na ploše plán přenesete takto: zkopírujte odkaz a v aplikaci zvolte Moje plány → Importovat plán → Vložit ze schránky.",
+		"placeCount": {"one": "{count} místo", "few": "{count} místa", "other": "{count} míst"},
+		"dayCount": {"one": "{count} den", "few": "{count} dny", "other": "{count} dní"},
+	},
+	"de": {
+		"locale": "de",
+		"openInApp": "In TripMap öffnen",
+		"copyLink": "Link kopieren",
+		"downloadJson": "JSON herunterladen",
+		"linkCopied": "Link kopiert.",
+		"copyFailed": "Der Link konnte nicht kopiert werden. Öffnen Sie den Plan über die Schaltfläche oben und kopieren Sie den Link aus der Adresszeile.",
+		"iphoneHint": "Auf dem iPhone öffnet sich der Link im Browser. Um den Plan in die App auf dem Home-Bildschirm zu holen, kopieren Sie den Link und wählen Sie in der App Meine Pläne → Plan importieren → Aus Zwischenablage einfügen.",
+		"placeCount": {"one": "{count} Ort", "other": "{count} Orte"},
+		"dayCount": {"one": "{count} Tag", "other": "{count} Tage"},
+	},
+}
+
+HEX_COLOR_PATTERN =re.compile(r"^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
 WIKIPEDIA_URL_PATTERN = re.compile(r"^https://[a-z]{2,3}(-[a-z]+)?\.(m\.)?wikipedia\.org/wiki/.+")
 COMMONS_FILE_URL_PATTERN = re.compile(r"^https://commons\.(m\.)?wikimedia\.org/wiki/(File|Image):.+\.\w+$", re.IGNORECASE)
 COMMONS_CATEGORY_URL_PATTERN = re.compile(r"^https://commons\.(m\.)?wikimedia\.org/wiki/Category:.+", re.IGNORECASE)
@@ -290,6 +337,56 @@ def encode_plan(plan_json_bytes):
 	return base64.urlsafe_b64encode(compressed).decode("ascii").rstrip("=")
 
 
+def build_card(plan, plan_file_bytes, plan_file_name, link):
+	"""Returns the share card HTML. Every plan string is escaped, since plans can come from anywhere."""
+	texts = CARD_TEXTS[CARD_FALLBACK_LANGUAGE]
+	place_count = len(plan["places"])
+	tag_definitions = plan.get("tags") if isinstance(plan.get("tags"), dict) else {}
+	day_count = sum(1 for definition in tag_definitions.values() if isinstance(definition, dict) and definition.get("itinerary") is True)
+	summary_parts = [format_fallback_count(texts["placeCount"], place_count)]
+	if day_count:
+		summary_parts.append(format_fallback_count(texts["dayCount"], day_count))
+
+	description = plan.get("description")
+	description_html = f'<p class="description">{html.escape(description.strip())}</p>' if is_non_empty_string(description) else ""
+
+	category_items = []
+	category_definitions = plan.get("categories") if isinstance(plan.get("categories"), dict) else {}
+	for definition in category_definitions.values():
+		if not isinstance(definition, dict) or not is_non_empty_string(definition.get("label")):
+			continue
+		color = definition.get("color")
+		dot_style = f' style="--category-color: {color}"' if isinstance(color, str) and HEX_COLOR_PATTERN.match(color) else ""
+		category_items.append(f'<li class="category"><span class="category-dot"{dot_style}></span>{html.escape(definition["label"].strip())}</li>')
+	categories_html = f'<ul class="categories">{"".join(category_items)}</ul>' if category_items else ""
+
+	template = string.Template(CARD_TEMPLATE_PATH.read_text(encoding="utf-8"))
+	# "</" would end the <script> element that holds the texts.
+	card_texts_json = json.dumps({"languages": CARD_TEXTS}, ensure_ascii=False).replace("</", "<\\/")
+	return template.substitute(
+		fallback_language=CARD_FALLBACK_LANGUAGE,
+		plan_name=html.escape(plan["name"].strip()),
+		summary=html.escape(" · ".join(summary_parts)),
+		place_count=place_count,
+		day_count=day_count,
+		description_html=description_html,
+		categories_html=categories_html,
+		plan_link=html.escape(link),
+		plan_json_base64=base64.b64encode(plan_file_bytes).decode("ascii"),
+		json_file_name=html.escape(plan_file_name),
+		open_in_app_text=html.escape(texts["openInApp"]),
+		copy_link_text=html.escape(texts["copyLink"]),
+		download_json_text=html.escape(texts["downloadJson"]),
+		iphone_hint_text=html.escape(texts["iphoneHint"]),
+		card_texts_json=card_texts_json,
+	)
+
+
+def format_fallback_count(plural_texts, count):
+	"""The count in the fallback language (English: one/other), shown until the card's script picks the browser's language."""
+	return plural_texts["one" if count == 1 else "other"].replace("{count}", str(count))
+
+
 def warn_if_too_long(text, maximum_length, what, warnings):
 	if isinstance(text, str) and len(text.strip()) > maximum_length:
 		warnings.append(f"{what} is {len(text.strip())} characters long; the app will cut it to {maximum_length}.")
@@ -318,12 +415,13 @@ def main():
 	parser = argparse.ArgumentParser(description="Validate a trip plan and print the link that opens it in TripMap.")
 	parser.add_argument("plan_file", help="path to the plan JSON file")
 	parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help=f"app URL (default: {DEFAULT_BASE_URL})")
+	parser.add_argument("--card", metavar="CARD_FILE", help="write a share card (HTML) here instead of printing the link")
 	arguments = parser.parse_args()
 
 	try:
-		with open(arguments.plan_file, encoding="utf-8") as plan_file:
-			plan = json.load(plan_file)
-	except (OSError, json.JSONDecodeError) as error:
+		plan_file_bytes = pathlib.Path(arguments.plan_file).read_bytes()
+		plan = json.loads(plan_file_bytes.decode("utf-8"))
+	except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
 		print(f"ERROR: cannot read the plan: {error}", file=sys.stderr)
 		return 1
 
@@ -344,6 +442,12 @@ def main():
 	print(f"OK: \"{plan['name']}\", {place_count} places, link length {len(link)} characters.")
 	if len(link) > LINK_LENGTH_WARNING_THRESHOLD:
 		print("WARNING: the link is very long; some apps may cut it. Make sure the user also gets the JSON file.")
+	if arguments.card:
+		# The link stays out of the output on purpose: the card carries it, so nobody has to copy it by hand.
+		card_html = build_card(plan, plan_file_bytes, pathlib.Path(arguments.plan_file).name, link)
+		pathlib.Path(arguments.card).write_text(card_html, encoding="utf-8", newline="\n")
+		print(f"Card written to {arguments.card}.")
+		return 0
 	print()
 	print(link)
 	return 0

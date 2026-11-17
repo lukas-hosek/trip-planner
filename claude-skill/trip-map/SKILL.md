@@ -1,16 +1,18 @@
 ---
 name: trip-map
-description: Exports a finished trip plan to TripMap, the user's interactive trip map app (an offline-capable web app at https://lukas-hosek.github.io/trip-planner/) as a plan JSON file plus a link that opens it. Use when the user has settled a trip itinerary and asks to export it, put it on a map, make a map or link of the plan, open it in TripMap or their trip app ("exportuj do mapy", "pošli plán do aplikace"), or update a plan exported earlier.
+description: Exports a finished trip plan to TripMap, the user's interactive trip map app (an offline-capable web app at https://lukas-hosek.github.io/trip-planner/) as a plan JSON file plus a share card with a button that opens it. Use when the user has settled a trip itinerary and asks to export it, put it on a map, make a map or link of the plan, open it in TripMap or their trip app ("exportuj do mapy", "pošli plán do aplikace"), or update a plan exported earlier.
 ---
 
 # TripMap export
 
 The user plans trips with you, then opens them in TripMap, their trip map app: colour-coded pins on a hiking map (numbered along the itinerary, with an icon for the other places), a list of places, a detail card per place (photo, description, practical tip, the place's website and other links), filters by category and by day, GPS location and offline use.
 
-The app reads one JSON document per trip, the **plan**. You deliver it in two forms:
+The app reads one JSON document per trip, the **plan**. A **link**, `https://lukas-hosek.github.io/trip-planner/#plan=…`, opens the plan in the app and stores it there. The link carries the whole plan, compressed, so it is thousands of characters long. You deliver two files:
 
-1. A **link**, `https://lukas-hosek.github.io/trip-planner/#plan=…`, which opens and stores the plan in the app. It is produced by `scripts/build_link.py` in this skill's directory. Never write or edit the encoded part by hand.
-2. The **JSON file** itself, as a fallback the user can import in the app.
+1. A **share card**: a small HTML page with buttons that open the plan in the app, copy the link and download the JSON. `scripts/build_link.py` in this skill's directory writes it, link included, so you never have to copy the link yourself.
+2. The **JSON file** itself, which the user can also import in the app.
+
+Never write or edit the encoded part of a link by hand.
 
 Read [reference/plan-format.md](reference/plan-format.md) for the full format, the colour palette and a complete example before writing a plan.
 
@@ -62,19 +64,19 @@ Read [reference/plan-format.md](reference/plan-format.md) for the full format, t
    - `tip`: practical advice, such as how to get there, parking, how long it takes, tickets, and the best time of day.
    - Plan `description`: one or two sentences introducing the trip (dates, idea). Plan `note`: when facts were checked, plus any caveat ("Otevírací doby si ověřte před cestou").
 
-10. **Build the link.** Save the plan as `<trip-slug>.json`, then run:
+10. **Build the share card.** Save the plan as `<trip-slug>.json` in `/mnt/user-data/outputs/` (or the current directory when that doesn't exist), then run:
 
     ```
-    python <this skill's directory>/scripts/build_link.py <trip-slug>.json
+    python <this skill's directory>/scripts/build_link.py <trip-slug>.json --card <trip-slug>.html
     ```
 
-    The script validates the plan and prints the link and its length, or a list of problems. Fix every error and re-run. Review the warnings; they usually point at real mistakes such as an undefined tag, a malformed Commons link or a place far away from all the others.
+    Put the card next to the JSON file. The card's buttons and labels follow the language of the user's browser (Czech, English or German). The script validates the plan and writes the card, or lists the problems. Fix every error and re-run. Review the warnings; they usually point at real mistakes such as an undefined tag, a malformed Commons link or a place far away from all the others.
 
 11. **Reply to the user** with:
-    - The link as a Markdown link, copied exactly as the script printed it: `[Otevřít plán v mapě](https://lukas-hosek.github.io/trip-planner/#plan=…)`.
-    - The JSON file as a downloadable attachment (save it to `/mnt/user-data/outputs/` when that directory exists).
-    - One line for iPhone users. A link opens in the browser, not in the app on the home screen, so to get the plan there: copy the link, open the app, then **My plans → Import plan → Paste from clipboard**. Give the labels in the user's language: Czech **Moje plány → Importovat plán → Vložit ze schránky**, German **Meine Pläne → Plan importieren → Aus Zwischenablage einfügen**.
+    - The share card and the JSON file, as files shown in the chat. Show the card first. Don't put the link itself in your reply; the card's "open" and "copy" buttons carry it.
     - A short summary: number of places, days, and anything approximate or unverified, including places whose photo shows a broader subject.
+
+    Only if you can't show files in the chat, run the script without `--card`. It then prints the link instead. Give it as a Markdown link, copied exactly as printed: `[Otevřít plán v mapě](https://lukas-hosek.github.io/trip-planner/#plan=…)`. Add one line for iPhone users. A link opens in the browser, not in the app on the home screen. To get the plan into the app, copy the link, open the app, then choose **My plans → Import plan → Paste from clipboard**. Give the labels in the user's language: Czech **Moje plány → Importovat plán → Vložit ze schránky**, German **Meine Pläne → Plan importieren → Aus Zwischenablage einfügen**.
 
 ## Updating a plan
 

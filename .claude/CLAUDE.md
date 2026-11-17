@@ -30,7 +30,7 @@ Plain HTML + CSS + native ES modules, **no build step and no npm**. Leaflet 1.9.
 - `js/ui/` covers the sidebar, detail card, plans dialog and its app settings view (`settings-panel.js`), drop-down menus (`menu.js`), the theme (`theme.js`), bottom sheets, tags and place badges, toast, map notice, and URL hash sync.
 - `js/services/` holds the photo lookup (the plan's Wikimedia Commons file, else a Wikipedia lead image) and the offline download of tiles and photos.
 - `js/utils/` holds HTML escaping, distance maths, metric/imperial formatting (`units.js`), localStorage access and media queries.
-- `claude-skill/trip-map/` is the Claude skill: `SKILL.md`, `reference/plan-format.md`, and `scripts/build_link.py` (validates a plan, prints its link).
+- `claude-skill/trip-map/` is the Claude skill: `SKILL.md`, `reference/plan-format.md`, and `scripts/build_link.py` (validates a plan, then prints its link or writes a share card from `scripts/plan-card-template.html`, which Claude shows in the chat instead of the long link).
 - `.claude/skills/` holds Claude Code skills for this repo, not part of the skill zip: `tripmap-icons/` (the style guide for drawing icons) and `tripmap-lang/` (the language file format and the translation conventions).
 - `.localdoc/` holds local working documents (design handoffs, notes). It is not versioned.
 - `.github/workflows/pages.yml` deploys to GitHub Pages (Source: GitHub Actions) and builds `trip-map-skill.zip` from the skill; the help text ("How do I create a plan?", `help.skillHtml` in `languages/*.json`) links to that zip.
