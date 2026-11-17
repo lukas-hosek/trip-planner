@@ -162,7 +162,7 @@
 		"failed": "Plán se nepodařilo načíst."
 	},
 	"help": {
-		"skillHtml": "Plány připravuje Claude. Stáhněte si skill <a href=\"trip-map-skill.zip\" download>trip-map</a> a v Claude ho nahrajte v <strong>Nastavení → Funkce → Skills</strong>. Až budete mít výlet naplánovaný, napište třeba „Exportuj plán do mapy“. Claude pošle odkaz, který plán otevře tady.",
+		"skillHtml": "Plány připravuje Claude nebo ChatGPT. Stáhněte si skill <a href=\"trip-map-skill.zip\" download>trip-map</a> a v Claude ho nahrajte v <strong>Nastavení → Funkce → Skills</strong>, nebo ho v ChatGPT přidejte mezi své skills. Až budete mít výlet naplánovaný, napište třeba „Exportuj plán do mapy“. Asistent pošle malou stránku s tlačítkem, které plán otevře tady.",
 		"replacing": "Plán se stejným názvem nahradí ten dřívější, takže upravený plán stačí znovu otevřít.",
 		"iphoneHtml": "Na iPhonu se odkaz otevře v prohlížeči. Do aplikace na ploše ho přeneste přes <strong>Importovat plán → Vložit ze schránky</strong>."
 	},

@@ -162,7 +162,7 @@
 		"failed": "The plan could not be loaded."
 	},
 	"help": {
-		"skillHtml": "Plans are made by Claude. Download the <a href=\"trip-map-skill.zip\" download>trip-map</a> skill and upload it in Claude under <strong>Settings → Capabilities → Skills</strong>. Once your trip is planned, write something like “Export the plan to the map”. Claude sends a link that opens the plan here.",
+		"skillHtml": "Plans are made by Claude or ChatGPT. Download the <a href=\"trip-map-skill.zip\" download>trip-map</a> skill and upload it in Claude under <strong>Settings → Capabilities → Skills</strong>, or add it to your skills in ChatGPT. Once your trip is planned, write something like “Export the plan to the map”. The assistant sends a small page with a button that opens the plan here.",
 		"replacing": "A plan with the same name replaces the earlier one, so to update a plan, just open the new version.",
 		"iphoneHtml": "On an iPhone, the link opens in the browser. To get it into the app on your home screen, use <strong>Import plan → Paste from clipboard</strong>."
 	},

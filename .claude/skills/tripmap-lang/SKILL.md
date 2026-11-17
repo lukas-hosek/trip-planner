@@ -127,12 +127,12 @@ Tabs, UTF-8, LF, a final newline. Write the real characters ("„“", "…", "�
   - filter chips
   - menu items
   - the offline status in the plan list
-- **Brand names stay** as they are: TripMap, Claude, Wikimedia Commons, OpenStreetMap, Google Maps. The code adds the " · " separators and the "↗" link arrows, so they never appear in translations, except where a separator is part of a template ("V plánu · {label}").
+- **Brand names stay** as they are: TripMap, Claude, ChatGPT, Wikimedia Commons, OpenStreetMap, Google Maps. The code adds the " · " separators and the "↗" link arrows, so they never appear in translations, except where a separator is part of a template ("V plánu · {label}").
 - **Labels quoted inside other texts** must match the quoted label's own translation exactly:
   - "Moje plány → ⋯ → Stáhnout offline data" in `map.offlineNotice`
   - "Moje plány → Importovat plán" in `startup.iosHint`
   - "Importovat plán → Vložit ze schránky" in `help.iphoneHtml`
-  - Claude's own menu path in `help.skillHtml` uses the labels claude.ai shows in that language.
+  - Claude's own menu path in `help.skillHtml` uses the labels claude.ai shows in that language. ChatGPT is named without a menu path.
 
 ### Glossary
 

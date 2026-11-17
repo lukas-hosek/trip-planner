@@ -1,5 +1,5 @@
 /*
-	Reads a trip plan in the JSON format produced by the Claude skill (see claude-skill/trip-map/reference/plan-format.md)
+	Reads a trip plan in the JSON format produced by the Claude skill (see skills/trip-map/reference/plan-format.md)
 	and turns it into the shape the app works with.
 
 	Validation is strict only where the map can't work without the data (a name, places, coordinates).
@@ -22,7 +22,7 @@ const UNCATEGORIZED_CATEGORY_ID = "other";
 /*
 	Limits. A link can come from anyone, so a plan must not be able to grow until the app stops responding.
 	Real plans stay far below them. Too many places, categories or tags refuse the plan; everything else is shortened.
-	claude-skill/trip-map/scripts/build_link.py checks the same values; keep both in sync.
+	skills/trip-map/scripts/build_link.py checks the same values; keep both in sync.
 */
 const MAXIMUM_PLACE_COUNT = 300;
 const MAXIMUM_CATEGORY_COUNT = 50;

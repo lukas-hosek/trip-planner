@@ -162,7 +162,7 @@
 		"failed": "Der Plan konnte nicht geladen werden."
 	},
 	"help": {
-		"skillHtml": "Pläne erstellt Claude. Laden Sie den Skill <a href=\"trip-map-skill.zip\" download>trip-map</a> herunter und laden Sie ihn in Claude unter <strong>Einstellungen → Funktionen → Skills</strong> hoch. Wenn Ihre Reise geplant ist, schreiben Sie zum Beispiel „Exportiere den Plan in die Karte“. Claude schickt einen Link, der den Plan hier öffnet.",
+		"skillHtml": "Pläne erstellt Claude oder ChatGPT. Laden Sie den Skill <a href=\"trip-map-skill.zip\" download>trip-map</a> herunter und laden Sie ihn in Claude unter <strong>Einstellungen → Funktionen → Skills</strong> hoch, oder fügen Sie ihn in ChatGPT Ihren Skills hinzu. Wenn Ihre Reise geplant ist, schreiben Sie zum Beispiel „Exportiere den Plan in die Karte“. Der Assistent schickt eine kleine Seite mit einer Schaltfläche, die den Plan hier öffnet.",
 		"replacing": "Ein Plan mit demselben Namen ersetzt den früheren. Einen geänderten Plan müssen Sie also nur erneut öffnen.",
 		"iphoneHtml": "Auf dem iPhone öffnet sich der Link im Browser. In die App auf dem Home-Bildschirm übertragen Sie ihn über <strong>Plan importieren → Aus Zwischenablage einfügen</strong>."
 	},

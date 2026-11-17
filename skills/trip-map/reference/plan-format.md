@@ -28,11 +28,9 @@ One JSON object per trip. Unknown fields are ignored. Fields marked *optional* c
 | Field | Type | Meaning |
 |---|---|---|
 | `label` | string | Text of the tag, up to about 30 characters. |
-| `itinerary` | boolean, *optional* | `true` for a day of the itinerary ("Sobota", "Den 2"). Places with an itinerary tag are numbered, get a dark ring on the map and appear under the "Our plan" filter ("Náš plán" in Czech). Itinerary tags are always filterable. |
-| `filterable` | boolean, *optional* | `true` gives the tag a filter button. Default `false`. Use it only for groupings the user would want to filter by: an area ("Rathen") or a trait several places share ("Vstup zdarma"). Never for status notes ("Hrad zavřený", "Otevřeno celý rok"). Not needed on itinerary tags. |
+| `itinerary` | boolean, *optional* | `true` for a day of the itinerary ("Sobota", "Den 2"). Its places are numbered and ringed on the map. Always gets a filter button. |
+| `filterable` | boolean, *optional* | `true` gives the tag a filter button (default `false`); see SKILL.md step 8. |
 | `color` | `"#rrggbb"`, *optional* | Text and outline colour (fill colour for itinerary tags). Without a colour, itinerary tags are dark and other tags grey. |
-
-A tag gets a filter button in exactly two cases: (1) it is an itinerary tag (`"itinerary": true`), or (2) it has `"filterable": true`. Every other tag is not filterable; it is shown only on its places. How many places use a tag doesn't matter.
 
 ## Place
 
@@ -42,28 +40,26 @@ A tag gets a filter button in exactly two cases: (1) it is an itinerary tag (`"i
 | `name` | string | Name of the place. |
 | `category` | string | Id of one of the plan's categories. |
 | `icon` | string, *optional* | Icon key for this place only, when it differs from its category's: an airport in "Doprava" (`"airport"`), a church among "Památky" (`"church"`). |
-| `lat`, `lng` | numbers | Latitude and longitude in decimal degrees (WGS84), 4–5 decimals. Verified, never guessed. |
+| `lat`, `lng` | numbers | Latitude and longitude in decimal degrees (WGS84). |
 | `tags` | array of strings, *optional* | Ids of the plan's tags, itinerary tag first. |
 | `description` | string | 3–6 sentences about the place. A blank line (`\n\n`) starts a new paragraph. |
-| `tip` | string, *optional* | Practical advice (getting there, parking, duration, tickets). Shown under "Practical tips" ("Jak na to" in Czech). |
-| `website` | URL, *optional* | The place's own website, for opening hours and prices: its official site or operator, a village's own site, the site of the inn or hut at a natural sight, or (for a lift, ferry or small museum without a site) its page on the official regional tourism portal. Shown as the first link, "Web". Leave it out when there's none; never use booking, review or aggregator sites. |
-| `wikipedia` | array of URLs, *optional* | Wikipedia articles about the place, each checked to exist. Order: the plan's language first, then English, then the language of the country where the place is. For example, a Czech plan in Germany lists `https://cs.wikipedia.org/wiki/…`, then `https://en.wikipedia.org/wiki/…`, then `https://de.wikipedia.org/wiki/…`, leaving out any that don't exist. The app links to the first article. If the Commons photo can't be found, it shows the lead photo of the first article that has one. |
-| `commons` | object | The place's photo on Wikimedia Commons; see below. Not shown as a link of its own. |
+| `tip` | string, *optional* | Practical advice, shown under "Practical tips". |
+| `website` | URL, *optional* | The place's own website (SKILL.md step 6), shown as the first link. |
+| `wikipedia` | array of URLs, *optional* | Wikipedia articles (`https://xx.wikipedia.org/wiki/…`) in the order of SKILL.md step 4. |
+| `commons` | object | The place's photo on Wikimedia Commons; see below. |
 | `links` | array, *optional* | Extra links: `[{ "label": "Vstupenky", "url": "https://…" }]`. Links to Mapy.cz, Google Maps, Wikipedia and more photos are added automatically. |
 
 ### Commons photo
 
 | Field | Type | Meaning |
 |---|---|---|
-| `file` | URL | The Commons file page of one good photo, copied exactly from Commons: `https://commons.wikimedia.org/wiki/File:…`. A real photo (not a map, drawing or logo), preferably landscape and at least about 1000 px wide. |
-| `category` | URL, *optional* | The place's own Commons category, `https://commons.wikimedia.org/wiki/Category:…`. The "Další fotky" button opens it; without it, the button searches Commons for the place's name. |
-| `subject` | string, *optional* | Only when Commons has no photo of the place itself and `file` shows a broader subject instead (the village, the town, the valley): its name, e.g. `"Bad Schandau"`. The photo credit then reads "Foto: Bad Schandau (Wikimedia Commons)". Leave `category` out in that case. |
+| `file` | URL | A Commons file page: `https://commons.wikimedia.org/wiki/File:…`. |
+| `category` | URL, *optional* | The place's own Commons category, `https://commons.wikimedia.org/wiki/Category:…`, opened by the "more photos" button. |
+| `subject` | string, *optional* | Only when `file` shows a broader subject (village, town, valley): its name, e.g. `"Bad Schandau"`, used in the photo credit. |
 
 ## Icons
 
-Pins of places outside the itinerary show a white icon instead of a number; the list and the detail card show it too. The icons are built into the app, so a plan only names one by its key. Never put SVG or emoji into the plan.
-
-A place's icon is, in this order: the place's own `icon`, its category's `icon`, the category id if it is an icon key, otherwise a plain white dot. An unknown key also gives the dot (and a warning from `build_link.py`).
+Places outside the itinerary show an icon instead of a number. A plan names one by its key. A place's icon is its own `icon`, else its category's `icon`, else the category id if that is a key, else a plain dot.
 
 | Key | The icon shows |
 |---|---|
@@ -105,20 +101,14 @@ A place's icon is, in this order: the place's own `icon`, its category's `icon`,
 
 ## Limits
 
-The app refuses a plan that exceeds any of these, and `build_link.py` reports it as an error:
+`build_link.py` reports these. The app refuses a plan with more than 300 places, 50 categories, 100 tags or 1 MB of JSON. Beyond the following it shortens the plan:
 
-- 300 places, 50 categories, 100 tags;
-- 1 MB of JSON.
-
-Beyond the following, the app shortens the plan without refusing it, and `build_link.py` warns:
 
 - per place: 20 tags, 10 Wikipedia articles, 10 extra links (the first ones are kept);
 - names of the plan and of places, and `commons.subject`: 150 characters; labels and ids: 80; the plan's `description` and `note`: 2,000; a place's `description` and `tip`: 5,000 (longer texts are cut);
 - URLs: 2,000 characters (a longer one is ignored).
 
 ## Colour palette
-
-The colours are designed for white numbers and icons on the pins. The app keeps them on the pins in dark mode and lightens them by itself only for coloured text.
 
 Categories (pick distinct ones):
 
@@ -161,8 +151,8 @@ Itinerary tags usually have no colour.
   "tags": {
     "saturday": { "label": "Sobota", "itinerary": true },
     "sunday": { "label": "Neděle", "itinerary": true },
-    "free-entry": { "label": "Vstup zdarma", "color": "#2f7a4b" },
-    "ticket": { "label": "Placený vstup", "color": "#5b6960", "filterable": true }
+    "free-entry": { "label": "Vstup zdarma", "color": "#2f7a4b", "filterable": true },
+    "ticket": { "label": "Placený vstup", "color": "#5b6960" }
   },
   "places": [
     {
@@ -171,7 +161,7 @@ Itinerary tags usually have no colour.
       "category": "landmark",
       "lat": 50.09083,
       "lng": 14.40056,
-      "tags": ["saturday", "ticket"],
+      "tags": ["saturday", "free-entry"],
       "description": "Největší hradní komplex na světě a sídlo prezidenta. Uvnitř stojí katedrála svatého Víta, Starý královský palác a Zlatá ulička.\n\nStřídání stráží před hlavní branou je každou celou hodinu, v poledne s fanfárami.",
       "tip": "Nejlepší je přijít hned po otevření. Areál je zdarma, vnitřní expozice jsou na okruhovou vstupenku.",
       "website": "https://www.hrad.cz/",

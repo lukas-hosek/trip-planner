@@ -8,7 +8,7 @@ import { renderPinHtml } from "../js/map/place-markers.js";
 import { renderPlaceBadge, renderPlaceIcon } from "../js/ui/place-badge.js";
 import { escapeHtml } from "../js/utils/html.js";
 
-// The category palette from claude-skill/trip-map/reference/plan-format.md, cycled so every icon is seen on several colours.
+// The category palette from skills/trip-map/reference/plan-format.md, cycled so every icon is seen on several colours.
 const SAMPLE_CATEGORY_COLORS = ["#575c93", "#2f7a4b", "#8a4f7d", "#4a6fa5", "#b0731c", "#9c4a2f", "#2b7c7f", "#7a6a2e", "#a83a4a"];
 
 // Must match the .icon--… classes in css/components.css and the files in icons/ui/.

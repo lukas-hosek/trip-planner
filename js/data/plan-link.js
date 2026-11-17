@@ -2,7 +2,7 @@
 	Plans travel inside links: https://…/trip-planner/#plan=<data>,
 	where <data> is the plan JSON (UTF-8), compressed with raw DEFLATE and encoded as base64url.
 	The plan sits in the URL fragment, so it never reaches the web server and no URL length limit of the host applies.
-	claude-skill/trip-map/scripts/build_link.py produces the same encoding.
+	skills/trip-map/scripts/build_link.py produces the same encoding.
 */
 
 import { PlanFormatError } from "./plan-format.js";

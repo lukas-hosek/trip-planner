@@ -87,8 +87,8 @@ Build icons the way the set already does:
 1. `icons/places/<key>.svg`, following everything above.
 2. `PLACE_ICON_KEYS` in `js/data/place-icons.js`.
 3. `PLACE_ICON_KEYS` in `sw.js` (the precache list; bump `APP_SHELL_VERSION`).
-4. `PLACE_ICON_KEYS` in `claude-skill/trip-map/scripts/build_link.py`.
-5. The icon table in `claude-skill/trip-map/reference/plan-format.md`: the key and a short English description of what the drawing shows ("a tent", "binoculars"), so the agent writing plans can pick it without seeing it.
+4. `PLACE_ICON_KEYS` in `skills/trip-map/scripts/build_link.py`.
+5. The icon table in `skills/trip-map/reference/plan-format.md`: the key and a short English description of what the drawing shows ("a tent", "binoculars"), so the agent writing plans can pick it without seeing it.
 
 **Interface icon** `<name>`:
 

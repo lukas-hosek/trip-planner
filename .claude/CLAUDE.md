@@ -1,6 +1,6 @@
 # TripMap
 
-Installable, offline-capable Leaflet map for trip plans. Plans are JSON documents, written by Claude through the skill in `claude-skill/trip-map/`, opened from `#plan=…` links and stored in localStorage. The first visit shows a demo plan (Spain 2026: 21 places from Bilbao to Barcelona, in English). The interface is in Czech, English or German (the browser's language, else English; changeable in the app settings), and all its text comes from the language files in `languages/`. Plans keep the language they are written in. Code and comments are in English. Deployed to GitHub Pages at `https://lukas-hosek.github.io/trip-planner/`.
+Installable, offline-capable Leaflet map for trip plans. Plans are JSON documents, written by Claude or ChatGPT through the skill in `skills/trip-map/`, opened from `#plan=…` links and stored in localStorage. The first visit shows a demo plan (Spain 2026: 21 places from Bilbao to Barcelona, in English). The interface is in Czech, English or German (the browser's language, else English; changeable in the app settings), and all its text comes from the language files in `languages/`. Plans keep the language they are written in. Code and comments are in English. Deployed to GitHub Pages at `https://lukas-hosek.github.io/trip-planner/`.
 
 Plain HTML + CSS + native ES modules, **no build step and no npm**. Leaflet 1.9.4 comes from unpkg as a classic script (global `L`). ES modules don't load from `file://`, and GPS and the service worker need HTTPS or localhost.
 
@@ -30,7 +30,7 @@ Plain HTML + CSS + native ES modules, **no build step and no npm**. Leaflet 1.9.
 - `js/ui/` covers the sidebar, detail card, plans dialog and its app settings view (`settings-panel.js`), drop-down menus (`menu.js`), the theme (`theme.js`), bottom sheets, tags and place badges, toast, map notice, and URL hash sync.
 - `js/services/` holds the photo lookup (the plan's Wikimedia Commons file, else a Wikipedia lead image) and the offline download of tiles and photos.
 - `js/utils/` holds HTML escaping, distance maths, metric/imperial formatting (`units.js`), localStorage access and media queries.
-- `claude-skill/trip-map/` is the Claude skill: `SKILL.md`, `reference/plan-format.md`, and `scripts/build_link.py` (validates a plan, then prints its link or writes a share card from `scripts/plan-card-template.html`, which Claude shows in the chat instead of the long link).
+- `skills/trip-map/` is the plan-export skill for Claude and ChatGPT: `SKILL.md`, `reference/plan-format.md`, and `scripts/build_link.py` (validates a plan, then prints its link or writes a share card from `scripts/plan-card-template.html`, which the assistant shows in the chat instead of the long link). The folder is named `skills/` because ChatGPT expects `skills/<name>/` inside the zip.
 - `.claude/skills/` holds Claude Code skills for this repo, not part of the skill zip: `tripmap-icons/` (the style guide for drawing icons) and `tripmap-lang/` (the language file format and the translation conventions).
 - `.localdoc/` holds local working documents (design handoffs, notes). It is not versioned.
 - `.github/workflows/pages.yml` deploys to GitHub Pages (Source: GitHub Actions) and builds `trip-map-skill.zip` from the skill; the help text ("How do I create a plan?", `help.skillHtml` in `languages/*.json`) links to that zip.
